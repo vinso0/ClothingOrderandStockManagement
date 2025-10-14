@@ -1,0 +1,50 @@
+﻿@model ClothingOrderAndStockManagement.Application.Dtos.Users.CreateUserDto
+
+<div class="modal fade customer-modal" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCustomerModalLabel">Adding User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm" asp-action="Create" method="post" autocomplete="off">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label asp-for="UserName" class="form-label">Username</label>
+                        <input asp-for="UserName" id="addUserName" class="form-control" />
+                        <span id="addUserNameError" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" id="addEmail" class="form-control" />
+                        <span id="addEmailError" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <div class="position-relative">
+                            <input asp-for="Password" id="addPassword" type="password" class="form-control" />
+                        </div>
+                        <span id="addPasswordError" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Role" class="form-label"></label>
+                        <select asp-for="Role" id="addRole" class="form-select" asp-items="ViewBag.Roles"></select>
+                        <span id="addRoleError" class="text-danger"></span>
+                    </div>
+
+                    <div class="btn-group-actions">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Back</button>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+

@@ -1,0 +1,77 @@
+﻿@using ClothingOrderAndStockManagement.Web.ViewModels.Account
+@model LoginViewModel;
+@{
+    ViewData["Title"] = "Login";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+}
+
+<div class="container-fluid vh-100 p-0">
+    <div class="row h-100 g-0">
+        <!-- Left Side - Brand Section (Hidden on mobile) -->
+        <div class="col-md-6 d-none d-md-flex flex-column justify-content-center align-items-center brand-bg">
+            <div class="text-center">
+                <div class="logo-circle mx-auto mb-4">
+                    <img src="~/Images/Logo.png" alt="Logo" class="main-logo" style="width: 200px !important; height: 200px !important;">
+                </div>
+                <img src="~/Images/Logo-Name.png" alt="Melodies Direct Supplier" class="business-name-img" style="width: 400px !important; height: 80px !important;">
+            </div>
+        </div>
+
+        <!-- Right Side - Login Form (Full width on mobile) -->
+        <div class="col-12 col-md-6 d-flex flex-column justify-content-center align-items-center brand-bg">
+            <div class="w-100" style="max-width: 400px;">
+                <div class="text-center mb-4">
+                    <div class="mini-logo-circle mx-auto mb-3">
+                        <img src="~/Images/Logo.png" alt="Logo" class="mini-logo">
+                    </div>
+                    <img src="~/Images/Logo-Name.png" alt="Melodies Direct Supplier" class="business-name-img-mobile d-block d-md-none">
+                </div>
+
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold text-dark mb-2">Log in to your account</h2>
+                    <p class="text-muted">Welcome, Admin! Enter your details.</p>
+                </div>
+
+                <form asp-action="Login" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="UsernameOrEmail" class="form-label fw-medium text-dark">Email or Username</label>
+                        <input asp-for="UsernameOrEmail" class="form-control custom-input" placeholder="Enter your email or username" />
+                        <span asp-validation-for="UsernameOrEmail" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label fw-medium text-dark">Password</label>
+                        <div class="password-input-container">
+                            <input asp-for="Password" class="form-control custom-input password-input" type="password" placeholder="Enter your password" id="loginPasswordInput" />
+                            <button type="button" class="password-toggle-btn" data-target="loginPasswordInput" onclick="togglePasswordVisibility(this)">
+                                <svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="form-check">
+                            <input asp-for="RememberMe" class="form-check-input" id="remember">
+                            <label for="remember" class="form-check-label text-dark">@Html.DisplayNameFor(a => a.RememberMe)</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn custom-btn w-100 py-3 fw-medium" style="background-color: #8b7355 !important;">Log in</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial.cshtml");
+    }
+}

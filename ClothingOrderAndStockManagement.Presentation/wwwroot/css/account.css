@@ -1,0 +1,181 @@
+﻿/* Custom brand background */
+.brand-bg {
+    background: linear-gradient(135deg, #f5f1eb 0%, #ede4d3 0%);
+}
+
+/* Logo circle styling */
+.logo-circle {
+    width: 250px !important;
+    height: 250px !important;
+    border-radius: 50%;
+    border: 3px solid #8b7355;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ede4d3;
+}
+
+.main-logo {
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain;
+}
+
+/* Business name image styling for desktop */
+.business-name-img {
+    width: 400px !important;
+    height: 80px !important;
+    object-fit: contain;
+}
+
+/* Business name image styling for mobile */
+.business-name-img-mobile {
+    width: 300px !important;
+    height: 60px !important;
+    object-fit: contain;
+    margin-top: 10px;
+}
+
+/* Mini logo centered above form */
+.mini-logo-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 2px solid #8b7355;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ede4d3;
+}
+
+.mini-logo {
+    width: 65px;
+    height: 65px;
+    object-fit: contain;
+}
+
+/* Custom form inputs */
+.custom-input {
+    padding: 1rem;
+    border: 2px solid #d4c4a8;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.7);
+    transition: border-color 0.3s ease;
+}
+
+    .custom-input:focus {
+        border-color: #8b7355;
+        box-shadow: 0 0 0 0.2rem rgba(139, 115, 85, 0.25);
+    }
+
+/* Custom button - more specific selector */
+button.custom-btn,
+input[type="submit"].custom-btn,
+.btn.custom-btn {
+    background-color: #8b7355 !important;
+    border-color: #8b7355 !important;
+    color: white !important;
+}
+
+    button.custom-btn:hover,
+    input[type="submit"].custom-btn:hover,
+    .btn.custom-btn:hover {
+        background-color: #6d5a42 !important;
+        border-color: #6d5a42 !important;
+        color: white !important;
+    }
+
+/* Custom link */
+.custom-link {
+    color: #8b7355;
+}
+
+    .custom-link:hover {
+        color: #6d5a42;
+    }
+
+/* Password toggle styles */
+.password-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input {
+    padding-right: 45px !important;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+    .password-toggle-btn:hover {
+        color: #495057;
+    }
+
+.eye-icon {
+    transition: all 0.2s ease;
+}
+
+.password-toggle-btn:focus {
+    outline: none;
+    color: #007bff;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+
+    .col-12 {
+        padding: 20px;
+    }
+
+    .mini-logo-circle {
+        width: 80px;
+        height: 80px;
+    }
+
+    .mini-logo {
+        width: 65px;
+        height: 65px;
+    }
+
+    .business-name-img-mobile {
+        max-width: 300px !important;
+        max-height: 76px !important;
+        margin-left: 20px;
+    }
+
+    .w-100 {
+        max-width: 350px !important;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 576px) {
+    .business-name-img-mobile {
+        max-width: 280px !important;
+        max-height: 60px !important;
+        margin-left: 20px;
+    }
+
+    .w-100 {
+        max-width: 320px !important;
+    }
+
+    .col-12 {
+        padding: 15px;
+    }
+}
+

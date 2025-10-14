@@ -1,0 +1,50 @@
+﻿@model ClothingOrderAndStockManagement.Application.Dtos.Users.EditUserDto
+<div class="modal fade customer-modal edit-customer-modal"
+     id="editUserModal-@Model.Id"
+     tabindex="-1"
+     aria-labelledby="editUserModalLabel-@Model.Id"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserModalLabel-@Model.Id">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm-@Model.Id" asp-action="Edit" method="post" autocomplete="off" novalidate>
+                    <input type="hidden" asp-for="Id" />
+                    <div class="mb-3">
+                        <label asp-for="UserName" class="form-label">Username</label>
+                        <input asp-for="UserName" class="form-control" required minlength="3" />
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" type="email" class="form-control" required />
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <div class="position-relative">
+                            <input asp-for="Password" type="password" class="form-control"
+                                   placeholder="Leave blank to keep current password" minlength="6" />
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Role" class="form-label">Role</label>
+                        <select asp-for="Role" class="form-control" asp-items="@(ViewData["Roles"] as SelectList)" required>
+                            <option value="">-- Select Role --</option>
+                        </select>
+                        <div class="invalid-feedback">Please select a role.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    initializeUserEditValidation("editUserForm-@Model.Id");
+</script>

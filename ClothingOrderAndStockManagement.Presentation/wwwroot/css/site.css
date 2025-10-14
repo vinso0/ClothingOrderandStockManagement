@@ -1,0 +1,197 @@
+/* Layout Styles */
+body {
+    background-color: #fff6ef;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.top-nav {
+    background-color: #b8a082;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    color: white;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-icon {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.logo-image {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+.company-name {
+    font-weight: 600;
+    font-size: 18px;
+    color: black;
+}
+
+.user-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: black;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background-color: #8b7355;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+}
+
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 60px;
+    width: 200px;
+    height: calc(100vh - 60px);
+    background-color: #e8ddd4;
+    padding: 20px 0;
+    overflow-y: auto;
+}
+
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    text-decoration: none;
+    color: #5a4a3a;
+    transition: background-color 0.3s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+}
+
+    .sidebar-item:hover {
+        background-color: rgba(139, 115, 85, 0.1);
+        color: #5a4a3a;
+        text-decoration: none;
+    }
+
+    .sidebar-item.active {
+        background-color: rgba(139, 115, 85, 0.2);
+        border-right: 3px solid #8b7355;
+    }
+
+/* Sidebar Icon Styles for Images */
+.sidebar-icon-img {
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
+    filter: brightness(0.3) sepia(1) saturate(2) hue-rotate(25deg); /* Brown tint to match sidebar color */
+    transition: all 0.3s ease;
+}
+
+.sidebar-item:hover .sidebar-icon-img {
+    filter: brightness(0.2) sepia(1) saturate(2) hue-rotate(25deg); /* Darker brown on hover */
+}
+
+.sidebar-item.active .sidebar-icon-img {
+    filter: brightness(0.1) sepia(1) saturate(3) hue-rotate(25deg); /* Even darker brown for active state */
+}
+
+/* Legacy SVG icon support (in case you still have some SVG icons) */
+.sidebar-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
+    fill: currentColor;
+}
+
+.main-content {
+    margin-left: 200px;
+    margin-top: 60px;
+    padding: 30px;
+}
+/* Customer Page Specific Styles */
+.reports-section {
+    background-color: #e8ddd4;
+    min-height: 400px;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.btn-outline-primary {
+    border-color: #6c757d;
+    color: #6c757d;
+    background-color: transparent;
+}
+
+    .btn-outline-primary:hover {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: white;
+    }
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+
+.btn-group .btn {
+    transition: all 0.2s ease;
+}
+
+    .btn-group .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+.form-control.is-valid,
+.form-control.is-invalid {
+    background-image: none !important;
+}
+
+.is-invalid ~ .invalid-feedback,
+.is-invalid + .invalid-feedback {
+    display: block !important;
+}
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .sidebar.show {
+        transform: translateX(0);
+    }
+
+    .mobile-menu-toggle {
+        display: block;
+    }
+}

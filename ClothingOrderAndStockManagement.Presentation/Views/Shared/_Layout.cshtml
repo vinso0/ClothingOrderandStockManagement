@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ClothingOrderAndStockManagement</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/ClothingOrderAndStockManagement.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/customers.css" />
+    <link rel="stylesheet" href="~/css/passwordToggle.css" />
+</head>
+<body>
+    <!-- Top Navigation -->
+    <div class="top-nav">
+        <div class="logo-section">
+            <div class="logo-icon">
+                <img src="~/images/Logo.png" alt="Company Logo" class="logo-image" />
+            </div>
+            <span class="company-name">MHELODHIES DIRECT SUPPLIER</span>
+        </div>
+        <div class="user-section">
+            @{
+                var userRole = "User"; // Default
+                if (User.IsInRole("Owner")) userRole = "Owner";
+                else if (User.IsInRole("Orders Admin")) userRole = "Orders Admin";
+                else if (User.IsInRole("Inventory Admin")) userRole = "Inventory Admin";
+                else if (User.IsInRole("Returns Admin")) userRole = "Returns Admin";
+                else if (User.IsInRole("Staff")) userRole = "Staff";
+            }
+            <span>@userRole</span>
+            <div class="logo-icon">
+                <img src="~/images/Admin-Logo.png" alt="User Logo" class="logo-image" />
+            </div>
+            <partial name="_LoginPartial" />
+        </div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <a class="sidebar-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")"
+           asp-controller="Home" asp-action="Index">
+            <img src="~/images/icons/dashboard.png" alt="Dashboard" class="sidebar-icon-img" />
+            Dashboard
+        </a>
+
+        <!-- Roles -->
+        @if (User.IsInRole("Orders Admin"))
+        {
+            <a class="sidebar-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Customers" ? "active" : "")"
+               asp-controller="Customers" asp-action="Index">
+                <img src="~/images/icons/Customer.png" alt="Customers" class="sidebar-icon-img" />
+                Customers
+            </a>
+        }
+
+        @if (User.IsInRole("Orders Admin"))
+        {
+            <a class="sidebar-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["Action"]?.ToString() == "OrdersAdmin" ? "active" : "")"
+               asp-controller="Home" asp-action="OrdersAdmin">
+                <img src="~/images/icons/Orders.png" alt="Orders" class="sidebar-icon-img" />
+                Orders
+            </a>
+        }
+
+        @if (User.IsInRole("Inventory Admin"))
+        {
+            <a class="sidebar-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["Action"]?.ToString() == "InventoryAdmin" ? "active" : "")"
+               asp-controller="Home" asp-action="InventoryAdmin">
+                <img src="~/images/icons/Inventory.png" alt="Inventory" class="sidebar-icon-img" />
+                Inventory
+            </a>
+        }
+
+         @if (User.IsInRole("Returns Admin"))
+        {
+            <a class="sidebar-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["Action"]?.ToString() == "ReturnsAdmin" ? "active" : "")"
+               asp-controller="Home" asp-action="ReturnsAdmin">
+                <img src="~/images/icons/Returns.png" alt="Returns" class="sidebar-icon-img" />
+                Returns
+            </a>
+        }
+
+        @if (User.IsInRole("Owner"))
+        {
+            <a class="sidebar-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["Action"]?.ToString() == "Owner" ? "active" : "")"
+            asp-controller="Home" asp-action="Owner">
+                <img src="~/images/icons/Reports.png" alt="Reports" class="sidebar-icon-img" />
+                Reports
+            </a>
+        }
+
+        @if (User.IsInRole("Owner"))
+        {
+        <a class="sidebar-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Users" && ViewContext.RouteData.Values["Action"]?.ToString() == "Owner" ? "active" : "")"
+               asp-controller="Users" asp-action="Index">
+                <img src="~/images/icons/User.png" alt="Users" class="sidebar-icon-img" />
+                Users
+            </a>
+        }
+
+        @if (User.IsInRole("Staff"))
+        {
+            <a class="sidebar-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["Action"]?.ToString() == "Owner" ? "active" : "")"
+            asp-controller="Home" asp-action="Staff">
+                <img src="~/images/icons/Orders.png" alt="Orders to Sort" class="sidebar-icon-img" />
+                Orders to Sort
+            </a>
+        }
+
+        <a class="sidebar-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["Action"]?.ToString() == "Privacy" ? "active" : "")"
+           asp-controller="Home" asp-action="Privacy">
+            <img src="~/images/icons/Setting.png" alt="Settings" class="sidebar-icon-img" />
+            Settings
+        </a>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div class="content-area">
+            @RenderBody()
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/js/userEditValidation.js"></script>
+    <script src="~/js/userAddValidation.js"></script>
+    <script src="~/js/passwordToggle.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

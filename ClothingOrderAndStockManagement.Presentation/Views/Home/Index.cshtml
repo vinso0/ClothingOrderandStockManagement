@@ -1,0 +1,33 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+    var roles = ViewData["UserRoles"] as IList<string> ?? new List<string>();
+}
+
+<h1>Dashboard</h1>
+
+@if (roles.Contains("Owner"))
+{
+    <partial name="Owner" />
+}
+@if (roles.Contains("Inventory Admin"))
+{
+    <partial name="InventoryAdmin" />
+}
+@if (roles.Contains("Orders Admin"))
+{
+    <partial name="OrdersAdmin" />
+}
+@if (roles.Contains("Returns Admin"))
+{
+    <partial name="ReturnsAdmin" />
+}
+@if (roles.Contains("Staff"))
+{
+    <partial name="Staff" />
+}
+
+@if (!roles.Any())
+{
+    <p>You have no assigned role dashboard.</p>
+}
+

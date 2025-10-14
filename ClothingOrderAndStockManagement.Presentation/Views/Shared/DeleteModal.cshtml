@@ -1,0 +1,23 @@
+﻿@model (string EntityName, string DeleteAction, string Id, string ItemDisplayName)
+
+<div class="modal fade" id="deleteModal-@Model.Id" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white position-relative">
+                <h5 class="modal-title w-100 text-center">Delete @Model.EntityName</h5>
+                <button type="button" class="btn-close btn-close-white position-absolute end-0 me-2" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                Are you sure you want to delete <strong>@Model.ItemDisplayName</strong>?
+            </div>
+            <div class="modal-footer">
+                <form asp-action="@Model.DeleteAction" method="post">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
