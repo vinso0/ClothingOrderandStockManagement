@@ -1,4 +1,5 @@
 ﻿using ClothingOrderAndStockManagement.Application.Dtos.Customers;
+using ClothingOrderAndStockManagement.Application.Helpers;
 using ClothingOrderAndStockManagement.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,13 +17,16 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         public async Task<IActionResult> Index(string searchString, int pageIndex = 1)
         {
             int pageSize = 5;
-
-            // Directly get DTOs from service
-            var customersPaginated = await _customerService.GetCustomersAsync(searchString, pageIndex, pageSize);
+            var result = await _customerService.GetCustomersAsync(searchString, pageIndex, pageSize);
 
             ViewData["CurrentFilter"] = searchString;
 
-            return View(customersPaginated);
+            if (result.IsSuccess)
+                return View(result.Value);
+
+            // Optionally, show an error view or message
+            ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
+            return View(new PaginatedList<CustomerDto>(new List<CustomerDto>(), 0, pageIndex, pageSize));
         }
 
         [HttpPost]
@@ -31,36 +35,32 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                try
-                {
-                    await _customerService.AddCustomerAsync(customerDto);
+                var result = await _customerService.AddCustomerAsync(customerDto);
+                if (result.IsSuccess)
                     return RedirectToAction(nameof(Index));
-                }
-                catch (InvalidOperationException ex)
-                {
-                    ModelState.AddModelError(string.Empty, ex.Message);
-                }
+
+                ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
             }
 
             int pageIndex = 1;
             int pageSize = 5;
+            var customersResult = await _customerService.GetCustomersAsync("", pageIndex, pageSize);
 
-            // Fetch DTOs again to redisplay Index with validation errors
-            var customersPaginated = await _customerService.GetCustomersAsync("", pageIndex, pageSize);
-
-            // Preserve modal state
             ViewData["ShowAddCustomerModal"] = true;
             ViewData["AddCustomerModel"] = customerDto;
 
-            return View("Index", customersPaginated);
+            return View("Index", customersResult.IsSuccess
+                ? customersResult.Value
+                : new PaginatedList<CustomerDto>(new List<CustomerDto>(), 0, pageIndex, pageSize));
         }
 
         public async Task<IActionResult> Edit(int id)
         {
-            var customerDto = await _customerService.GetCustomerByIdAsync(id);
-            if (customerDto == null) return NotFound();
+            var result = await _customerService.GetCustomerByIdAsync(id);
+            if (!result.IsSuccess)
+                return NotFound();
 
-            return View(customerDto); // Directly pass DTO to view
+            return View(result.Value);
         }
 
         [HttpPost]
@@ -69,16 +69,20 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                await _customerService.UpdateCustomerAsync(customerDto);
-                return RedirectToAction(nameof(Index));
+                var result = await _customerService.UpdateCustomerAsync(customerDto);
+                if (result.IsSuccess)
+                    return RedirectToAction(nameof(Index));
+
+                ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
             }
 
-            return View(customerDto); // Keep entered values if validation fails
+            return View(customerDto);
         }
 
         public async Task<IActionResult> Delete(int id)
         {
-            await _customerService.DeleteCustomerAsync(id);
+            var result = await _customerService.DeleteCustomerAsync(id);
+            // Optionally, handle errors (e.g., show a message)
             return RedirectToAction(nameof(Index));
         }
     }

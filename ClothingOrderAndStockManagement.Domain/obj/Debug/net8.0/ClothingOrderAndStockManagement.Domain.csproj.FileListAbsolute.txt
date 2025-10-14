@@ -1,0 +1,13 @@
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Domain\bin\Debug\net8.0\ClothingOrderAndStockManagement.Domain.deps.json
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Domain\bin\Debug\net8.0\ClothingOrderAndStockManagement.Domain.dll
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Domain\bin\Debug\net8.0\ClothingOrderAndStockManagement.Domain.pdb
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Domain\obj\Debug\net8.0\ClothingOrderAndStockManagement.Domain.csproj.AssemblyReference.cache
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Domain\obj\Debug\net8.0\ClothingOrderAndStockManagement.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Domain\obj\Debug\net8.0\ClothingOrderAndStockManagement.Domain.AssemblyInfoInputs.cache
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Domain\obj\Debug\net8.0\ClothingOrderAndStockManagement.Domain.AssemblyInfo.cs
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Domain\obj\Debug\net8.0\ClothingOrderAndStockManagement.Domain.csproj.CoreCompileInputs.cache
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Domain\obj\Debug\net8.0\ClothingOrderAndStockManagement.Domain.sourcelink.json
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Domain\obj\Debug\net8.0\ClothingOrderAndStockManagement.Domain.dll
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Domain\obj\Debug\net8.0\refint\ClothingOrderAndStockManagement.Domain.dll
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Domain\obj\Debug\net8.0\ClothingOrderAndStockManagement.Domain.pdb
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Domain\obj\Debug\net8.0\ref\ClothingOrderAndStockManagement.Domain.dll

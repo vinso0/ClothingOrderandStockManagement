@@ -1,0 +1,16 @@
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Application\bin\Debug\net8.0\ClothingOrderAndStockManagement.Application.deps.json
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Application\bin\Debug\net8.0\ClothingOrderAndStockManagement.Application.dll
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Application\bin\Debug\net8.0\ClothingOrderAndStockManagement.Application.pdb
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Application\bin\Debug\net8.0\ClothingOrderAndStockManagement.Domain.dll
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Application\bin\Debug\net8.0\ClothingOrderAndStockManagement.Domain.pdb
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Application\obj\Debug\net8.0\ClothingOrderAndStockManagement.Application.csproj.AssemblyReference.cache
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Application\obj\Debug\net8.0\ClothingOrderAndStockManagement.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Application\obj\Debug\net8.0\ClothingOrderAndStockManagement.Application.AssemblyInfoInputs.cache
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Application\obj\Debug\net8.0\ClothingOrderAndStockManagement.Application.AssemblyInfo.cs
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Application\obj\Debug\net8.0\ClothingOrderAndStockManagement.Application.csproj.CoreCompileInputs.cache
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Application\obj\Debug\net8.0\ClothingOrderAndStockManagement.Application.sourcelink.json
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Application\obj\Debug\net8.0\Clothing.2451FEEC.Up2Date
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Application\obj\Debug\net8.0\ClothingOrderAndStockManagement.Application.dll
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Application\obj\Debug\net8.0\refint\ClothingOrderAndStockManagement.Application.dll
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Application\obj\Debug\net8.0\ClothingOrderAndStockManagement.Application.pdb
+C:\Users\Arvin\Documents\3B1SEM\Major Elective I\CODES\ClothingOrderAndStockManagement\ClothingOrderAndStockManagement.Application\obj\Debug\net8.0\ref\ClothingOrderAndStockManagement.Application.dll

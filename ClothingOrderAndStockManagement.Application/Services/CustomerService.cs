@@ -2,6 +2,7 @@
 using ClothingOrderAndStockManagement.Application.Helpers;
 using ClothingOrderAndStockManagement.Application.Interfaces;
 using ClothingOrderAndStockManagement.Domain.Entities.Customers;
+using FluentResults;
 
 namespace ClothingOrderAndStockManagement.Application.Services
 {
@@ -14,85 +15,134 @@ namespace ClothingOrderAndStockManagement.Application.Services
             _customerRepository = customerRepository;
         }
 
-        public async Task<PaginatedList<CustomerDto>> GetCustomersAsync(string searchString, int pageIndex, int pageSize)
+        public async Task<Result<PaginatedList<CustomerDto>>> GetCustomersAsync(string searchString, int pageIndex, int pageSize)
         {
-            var query = _customerRepository.Query();
-
-            if (!string.IsNullOrWhiteSpace(searchString))
+            try
             {
-                query = query.Where(c =>
-                    c.CustomerName.Contains(searchString) ||
-                    c.ContactNumber.Contains(searchString));
+                var query = _customerRepository.Query();
+
+                if (!string.IsNullOrWhiteSpace(searchString))
+                {
+                    query = query.Where(c =>
+                        c.CustomerName.Contains(searchString) ||
+                        c.ContactNumber.Contains(searchString));
+                }
+
+                var dtoQuery = query.Select(c => new CustomerDto
+                {
+                    CustomerId = c.CustomerId,
+                    CustomerName = c.CustomerName,
+                    Address = c.Address,
+                    ContactNumber = c.ContactNumber,
+                    ZipCode = c.ZipCode
+                });
+
+                var paginatedList = await PaginatedList<CustomerDto>.CreateAsync(dtoQuery, pageIndex, pageSize);
+                return Result.Ok(paginatedList);
             }
-
-            // Project to DTO directly in EF query
-            var dtoQuery = query.Select(c => new CustomerDto
+            catch (Exception ex)
             {
-                CustomerId = c.CustomerId,
-                CustomerName = c.CustomerName,
-                Address = c.Address,
-                ContactNumber = c.ContactNumber,
-                ZipCode = c.ZipCode
-            });
-
-            return await PaginatedList<CustomerDto>.CreateAsync(dtoQuery, pageIndex, pageSize);
-        }
-
-        public async Task<CustomerDto?> GetCustomerByIdAsync(int id)
-        {
-            var customer = await _customerRepository.GetByIdAsync(id);
-            if (customer == null) return null;
-
-            return new CustomerDto
-            {
-                CustomerId = customer.CustomerId,
-                CustomerName = customer.CustomerName,
-                Address = customer.Address,
-                ContactNumber = customer.ContactNumber,
-                ZipCode = customer.ZipCode
-            };
-        }
-
-        public async Task AddCustomerAsync(CustomerDto customerDto)
-        {
-            var existingCustomer = await _customerRepository
-                .GetCustomerByNameAndContactNumberAsync(customerDto.CustomerName, customerDto.ContactNumber);
-
-            if (existingCustomer != null)
-            {
-                throw new InvalidOperationException("A customer with the same name and contact number already exists.");
+                return Result.Fail<PaginatedList<CustomerDto>>(ex.Message);
             }
+        }
 
-            var newCustomer = new Customer
+        public async Task<Result<CustomerDto>> GetCustomerByIdAsync(int id)
+        {
+            try
             {
-                CustomerName = customerDto.CustomerName,
-                Address = customerDto.Address,
-                ContactNumber = customerDto.ContactNumber,
-                ZipCode = customerDto.ZipCode
-            };
+                var customer = await _customerRepository.GetByIdAsync(id);
+                if (customer == null)
+                    return Result.Fail<CustomerDto>("Customer not found.");
 
-            await _customerRepository.AddAsync(newCustomer);
-            await _customerRepository.SaveChangesAsync();
+                var dto = new CustomerDto
+                {
+                    CustomerId = customer.CustomerId,
+                    CustomerName = customer.CustomerName,
+                    Address = customer.Address,
+                    ContactNumber = customer.ContactNumber,
+                    ZipCode = customer.ZipCode
+                };
+
+                return Result.Ok(dto);
+            }
+            catch (Exception ex)
+            {
+                return Result.Fail<CustomerDto>(ex.Message);
+            }
         }
 
-        public async Task UpdateCustomerAsync(CustomerDto customerDto)
+        public async Task<Result> AddCustomerAsync(CustomerDto customerDto)
         {
-            var customer = await _customerRepository.GetByIdAsync(customerDto.CustomerId);
-            if (customer == null) throw new KeyNotFoundException("Customer not found.");
+            try
+            {
+                var existingCustomer = await _customerRepository
+                    .GetCustomerByNameAndContactNumberAsync(customerDto.CustomerName, customerDto.ContactNumber);
 
-            customer.CustomerName = customerDto.CustomerName;
-            customer.Address = customerDto.Address;
-            customer.ContactNumber = customerDto.ContactNumber;
-            customer.ZipCode = customerDto.ZipCode;
+                if (existingCustomer != null)
+                {
+                    return Result.Fail("A customer with the same name and contact number already exists.");
+                }
 
-            await _customerRepository.UpdateAsync(customer);
-            await _customerRepository.SaveChangesAsync();
+                var newCustomer = new Customer
+                {
+                    CustomerName = customerDto.CustomerName,
+                    Address = customerDto.Address,
+                    ContactNumber = customerDto.ContactNumber,
+                    ZipCode = customerDto.ZipCode
+                };
+
+                await _customerRepository.AddAsync(newCustomer);
+                await _customerRepository.SaveChangesAsync();
+
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                return Result.Fail(ex.Message);
+            }
         }
 
-        public async Task DeleteCustomerAsync(int id)
+        public async Task<Result> UpdateCustomerAsync(CustomerDto customerDto)
         {
-            await _customerRepository.DeleteAsync(id);
-            await _customerRepository.SaveChangesAsync();
+            try
+            {
+                var customer = await _customerRepository.GetByIdAsync(customerDto.CustomerId);
+                if (customer == null)
+                    return Result.Fail("Customer not found.");
+
+                customer.CustomerName = customerDto.CustomerName;
+                customer.Address = customerDto.Address;
+                customer.ContactNumber = customerDto.ContactNumber;
+                customer.ZipCode = customerDto.ZipCode;
+
+                await _customerRepository.UpdateAsync(customer);
+                await _customerRepository.SaveChangesAsync();
+
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                return Result.Fail(ex.Message);
+            }
+        }
+
+        public async Task<Result> DeleteCustomerAsync(int id)
+        {
+            try
+            {
+                var customer = await _customerRepository.GetByIdAsync(id);
+                if (customer == null)
+                    return Result.Fail("Customer not found.");
+
+                await _customerRepository.DeleteAsync(id);
+                await _customerRepository.SaveChangesAsync();
+
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                return Result.Fail(ex.Message);
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using ClothingOrderAndStockManagement.Application.Dtos.Users;
+using ClothingOrderAndStockManagement.Application.Helpers;
 using ClothingOrderAndStockManagement.Application.Interfaces;
 using ClothingOrderAndStockManagement.Domain.Entities.Users;
 using Microsoft.AspNetCore.Authorization;
@@ -26,7 +27,7 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         public async Task<IActionResult> Index(string searchString, int pageIndex = 1)
         {
             int pageSize = 5;
-            var usersPaginated = await _userService.GetUsersAsync(searchString, pageIndex, pageSize);
+            var result = await _userService.GetUsersAsync(searchString, pageIndex, pageSize);
 
             ViewData["CurrentFilter"] = searchString;
 
@@ -37,7 +38,11 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
 
             ViewBag.Roles = new SelectList(roles);
 
-            return View(usersPaginated);
+            if (result.IsSuccess)
+                return View(result.Value);
+
+            ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
+            return View(new PaginatedList<UserDto>(new List<UserDto>(), 0, pageIndex, pageSize));
         }
 
         [HttpPost]
@@ -45,8 +50,11 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                await _userService.CreateUserAsync(model);
-                return RedirectToAction(nameof(Index));
+                var result = await _userService.CreateUserAsync(model);
+                if (result.IsSuccess)
+                    return RedirectToAction(nameof(Index));
+
+                ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
             }
             return BadRequest(ModelState);
         }
@@ -57,27 +65,24 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             if (string.IsNullOrEmpty(id))
                 return NotFound();
 
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
+            var result = await _userService.GetUserByIdAsync(id);
+            if (!result.IsSuccess)
                 return NotFound();
-
-            var userRoles = await _userManager.GetRolesAsync(user);
-            var currentRole = userRoles.FirstOrDefault();
 
             var roles = await _roleManager.Roles
                 .Where(r => r.Name != "Owner")
                 .Select(r => r.Name)
                 .ToListAsync();
 
+            ViewBag.Roles = new SelectList(roles, result.Value.Role);
+
             var model = new EditUserDto
             {
-                Id = user.Id,
-                UserName = user.UserName,
-                Email = user.Email,
-                Role = currentRole
+                Id = result.Value.Id,
+                UserName = result.Value.UserName,
+                Email = result.Value.Email,
+                Role = result.Value.Role
             };
-
-            ViewBag.Roles = new SelectList(roles, model.Role);
 
             return PartialView("_EditUserModal", model);
         }
@@ -87,8 +92,11 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                await _userService.UpdateUserAsync(model);
-                return RedirectToAction(nameof(Index));
+                var result = await _userService.UpdateUserAsync(model);
+                if (result.IsSuccess)
+                    return RedirectToAction(nameof(Index));
+
+                ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
             }
             return BadRequest(ModelState);
         }
@@ -96,7 +104,8 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(string id)
         {
-            await _userService.DeleteUserAsync(id);
+            var result = await _userService.DeleteUserAsync(id);
+            // Optionally handle errors here
             return RedirectToAction(nameof(Index));
         }
     }
