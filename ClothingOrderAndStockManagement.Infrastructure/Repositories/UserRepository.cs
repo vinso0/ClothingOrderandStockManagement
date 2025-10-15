@@ -1,5 +1,5 @@
 ﻿using ClothingOrderAndStockManagement.Application.Interfaces;
-using ClothingOrderAndStockManagement.Domain.Entities.Users;
+using ClothingOrderAndStockManagement.Domain.Entities.Account;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,6 +1,4 @@
-﻿using ClothingOrderAndStockManagement.Domain.Entities.Report;
-
-namespace ClothingOrderAndStockManagement.Domain.Entities.Orders;
+﻿namespace ClothingOrderAndStockManagement.Domain.Entities.Orders;
 
 public partial class OrderRecord
 {
@@ -21,6 +19,4 @@ public partial class OrderRecord
     public virtual ICollection<PaymentRecord> PaymentRecords { get; set; } = new List<PaymentRecord>();
 
     public virtual ICollection<ReturnLog> ReturnLogs { get; set; } = new List<ReturnLog>();
-
-    public virtual ICollection<SalesReport> SalesReports { get; set; } = new List<SalesReport>();
 }

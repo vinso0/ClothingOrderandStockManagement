@@ -4,13 +4,13 @@ namespace ClothingOrderAndStockManagement.Application.Interfaces
 {
     public interface ICustomerRepository
     {
-        Task<IEnumerable<Customer>> GetAllAsync();
-        Task<Customer?> GetByIdAsync(int id);
-        Task<Customer?> GetCustomerByNameAndContactNumberAsync(string name, string contactNumber);
-        Task AddAsync(Customer customer);
-        Task UpdateAsync(Customer customer);
+        Task<IEnumerable<CustomerInfo>> GetAllAsync();
+        Task<CustomerInfo?> GetByIdAsync(int id);
+        Task<CustomerInfo?> GetCustomerByNameAndContactNumberAsync(string name, string contactNumber);
+        Task AddAsync(CustomerInfo customer);
+        Task UpdateAsync(CustomerInfo customer);
         Task DeleteAsync(int id);
-        IQueryable<Customer> Query();
+        IQueryable<CustomerInfo> Query();
         Task SaveChangesAsync();
     }
 }

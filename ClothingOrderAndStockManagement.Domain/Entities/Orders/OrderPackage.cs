@@ -12,6 +12,8 @@ public partial class OrderPackage
 
     public int Quantity { get; set; }
 
+    public decimal PriceAtPurchase { get; set; }
+
     public virtual OrderRecord OrderRecords { get; set; } = null!;
 
     public virtual Package Packages { get; set; } = null!;

@@ -1,6 +1,6 @@
 ﻿namespace ClothingOrderAndStockManagement.Domain.Entities.Customers;
 
-public partial class Customer
+public partial class CustomerInfo
 {
     public int CustomerId { get; set; }
 

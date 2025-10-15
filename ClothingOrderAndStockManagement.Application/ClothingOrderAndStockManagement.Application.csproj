@@ -18,9 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Dtos\Items\" />
+    <Folder Include="Dtos\Packages\" />
     <Folder Include="Dtos\Orders\" />
     <Folder Include="Dtos\Report\" />
-    <Folder Include="Dtos\Products\" />
   </ItemGroup>
 
 </Project>

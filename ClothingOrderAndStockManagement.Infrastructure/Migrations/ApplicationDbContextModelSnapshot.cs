@@ -22,7 +22,7 @@ namespace ClothingOrderAndStockManagement.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("ClothingOrderAndStockManagement.Domain.Entities.Customer", b =>
+            modelBuilder.Entity("ClothingOrderAndStockManagement.Domain.Entities.CustomerInfo", b =>
                 {
                     b.Property<int>("CustomerId")
                         .ValueGeneratedOnAdd()
@@ -59,7 +59,7 @@ namespace ClothingOrderAndStockManagement.Migrations
                     b.ToTable("Customers");
                 });
 
-            modelBuilder.Entity("ClothingOrderAndStockManagement.Domain.Entities.Users.Users", b =>
+            modelBuilder.Entity("ClothingOrderAndStockManagement.Domain.Entities.Account.Users", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -268,7 +268,7 @@ namespace ClothingOrderAndStockManagement.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("ClothingOrderAndStockManagement.Domain.Entities.Users.Users", null)
+                    b.HasOne("ClothingOrderAndStockManagement.Domain.Entities.Account.Users", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -277,7 +277,7 @@ namespace ClothingOrderAndStockManagement.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("ClothingOrderAndStockManagement.Domain.Entities.Users.Users", null)
+                    b.HasOne("ClothingOrderAndStockManagement.Domain.Entities.Account.Users", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -292,7 +292,7 @@ namespace ClothingOrderAndStockManagement.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ClothingOrderAndStockManagement.Domain.Entities.Users.Users", null)
+                    b.HasOne("ClothingOrderAndStockManagement.Domain.Entities.Account.Users", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -301,7 +301,7 @@ namespace ClothingOrderAndStockManagement.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("ClothingOrderAndStockManagement.Domain.Entities.Users.Users", null)
+                    b.HasOne("ClothingOrderAndStockManagement.Domain.Entities.Account.Users", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

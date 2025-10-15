@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using ClothingOrderAndStockManagement.Domain.Entities;
-using ClothingOrderAndStockManagement.Domain.Entities.Users;
+using ClothingOrderAndStockManagement.Domain.Entities.Account;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

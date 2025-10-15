@@ -11,7 +11,7 @@ namespace ClothingOrderAndStockManagement.Migrations
             // Alter CustomerName column to nvarchar(max) for Unicode support
             migrationBuilder.AlterColumn<string>(
                 name: "CustomerName",
-                table: "Customer",
+                table: "CustomerInfo",
                 type: "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
@@ -21,7 +21,7 @@ namespace ClothingOrderAndStockManagement.Migrations
             // Alter Address column
             migrationBuilder.AlterColumn<string>(
                 name: "Address",
-                table: "Customer",
+                table: "CustomerInfo",
                 type: "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
@@ -31,7 +31,7 @@ namespace ClothingOrderAndStockManagement.Migrations
             // Alter ContactNumber column
             migrationBuilder.AlterColumn<string>(
                 name: "ContactNumber",
-                table: "Customer",
+                table: "CustomerInfo",
                 type: "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
@@ -41,7 +41,7 @@ namespace ClothingOrderAndStockManagement.Migrations
             // Alter ZipCode column
             migrationBuilder.AlterColumn<string>(
                 name: "ZipCode",
-                table: "Customer",
+                table: "CustomerInfo",
                 type: "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
@@ -54,7 +54,7 @@ namespace ClothingOrderAndStockManagement.Migrations
             // Revert columns back to previous lengths
             migrationBuilder.AlterColumn<string>(
                 name: "CustomerName",
-                table: "Customer",
+                table: "CustomerInfo",
                 type: "nvarchar(100)",
                 maxLength: 100,
                 nullable: false,
@@ -63,7 +63,7 @@ namespace ClothingOrderAndStockManagement.Migrations
 
             migrationBuilder.AlterColumn<string>(
                 name: "Address",
-                table: "Customer",
+                table: "CustomerInfo",
                 type: "nvarchar(255)",
                 maxLength: 255,
                 nullable: false,
@@ -72,7 +72,7 @@ namespace ClothingOrderAndStockManagement.Migrations
 
             migrationBuilder.AlterColumn<string>(
                 name: "ContactNumber",
-                table: "Customer",
+                table: "CustomerInfo",
                 type: "nvarchar(20)",
                 maxLength: 20,
                 nullable: false,
@@ -81,7 +81,7 @@ namespace ClothingOrderAndStockManagement.Migrations
 
             migrationBuilder.AlterColumn<string>(
                 name: "ZipCode",
-                table: "Customer",
+                table: "CustomerInfo",
                 type: "nvarchar(10)",
                 maxLength: 10,
                 nullable: false,

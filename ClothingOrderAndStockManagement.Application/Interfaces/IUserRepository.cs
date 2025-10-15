@@ -1,5 +1,5 @@
 ﻿using ClothingOrderAndStockManagement.Domain.Entities.Customers;
-using ClothingOrderAndStockManagement.Domain.Entities.Users;
+using ClothingOrderAndStockManagement.Domain.Entities.Account;
 
 namespace ClothingOrderAndStockManagement.Application.Interfaces
 {

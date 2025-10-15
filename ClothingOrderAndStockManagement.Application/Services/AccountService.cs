@@ -1,6 +1,6 @@
 ﻿using ClothingOrderAndStockManagement.Application.Interfaces;
 using Microsoft.AspNetCore.Identity; // Ensure this is included
-using ClothingOrderAndStockManagement.Domain.Entities.Users;
+using ClothingOrderAndStockManagement.Domain.Entities.Account;
 using ClothingOrderAndStockManagement.Application.Services;
 
 namespace ClothingOrderAndStockManagement.Infrastructure.Services

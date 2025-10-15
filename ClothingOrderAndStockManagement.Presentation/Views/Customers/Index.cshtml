@@ -26,7 +26,7 @@
     <button class="btn btn-outline-primary customer-add-btn"
             data-bs-toggle="modal" data-bs-target="#addCustomerModal">
         <img src="~/images/icons/Add.png" alt="Add" class="add-icon-img" />
-        Add Customer
+        Add CustomerInfo
     </button>
 
 	<!-- Add Customer Modal -->
@@ -91,7 +91,7 @@
                                     </button>
                                     <!-- Delete Customer Modal -->
                                     @await Html.PartialAsync("_DeleteModal",
-                                    ("Customer", "Delete", customer.CustomerId, customer.CustomerName))
+                                    ("CustomerInfo", "Delete", customer.CustomerId, customer.CustomerName))
                                 </div>
                             </td>
                         </tr>

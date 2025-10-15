@@ -1,4 +1,4 @@
-﻿using ClothingOrderAndStockManagement.Domain.Entities.Users;
+﻿using ClothingOrderAndStockManagement.Domain.Entities.Account;
 using ClothingOrderAndStockManagement.Application.Interfaces;
 using ClothingOrderAndStockManagement.Infrastructure.Data;
 using ClothingOrderAndStockManagement.Infrastructure.Repositories;

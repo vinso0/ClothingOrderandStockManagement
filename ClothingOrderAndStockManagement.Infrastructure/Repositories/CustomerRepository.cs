@@ -14,28 +14,28 @@ namespace ClothingOrderAndStockManagement.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<Customer>> GetAllAsync()
+        public async Task<IEnumerable<CustomerInfo>> GetAllAsync()
         {
             return await _context.Customers.ToListAsync();
         }
 
-        public async Task<Customer?> GetByIdAsync(int id)
+        public async Task<CustomerInfo?> GetByIdAsync(int id)
         {
             return await _context.Customers.FindAsync(id);
         }
 
-        public async Task<Customer?> GetCustomerByNameAndContactNumberAsync(string name, string contactNumber)
+        public async Task<CustomerInfo?> GetCustomerByNameAndContactNumberAsync(string name, string contactNumber)
         {
             return await _context.Customers
                 .FirstOrDefaultAsync(c => c.CustomerName == name && c.ContactNumber == contactNumber);
         }
 
-        public async Task AddAsync(Customer customer)
+        public async Task AddAsync(CustomerInfo customer)
         {
             await _context.Customers.AddAsync(customer);
         }
 
-        public async Task UpdateAsync(Customer customer)
+        public async Task UpdateAsync(CustomerInfo customer)
         {
             _context.Customers.Update(customer);
             await Task.CompletedTask;
@@ -50,7 +50,7 @@ namespace ClothingOrderAndStockManagement.Infrastructure.Repositories
             }
         }
 
-        public IQueryable<Customer> Query()
+        public IQueryable<CustomerInfo> Query()
         {
             return _context.Customers.AsQueryable();
         }

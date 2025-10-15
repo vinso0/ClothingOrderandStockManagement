@@ -1,4 +1,4 @@
-﻿using ClothingOrderAndStockManagement.Domain.Entities.Users;
+﻿using ClothingOrderAndStockManagement.Domain.Entities.Account;
 using Microsoft.AspNetCore.Identity;
 
 namespace ClothingOrderAndStockManagement.Application.Interfaces

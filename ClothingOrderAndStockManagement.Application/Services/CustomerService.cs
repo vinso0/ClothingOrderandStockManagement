@@ -52,7 +52,7 @@ namespace ClothingOrderAndStockManagement.Application.Services
             {
                 var customer = await _customerRepository.GetByIdAsync(id);
                 if (customer == null)
-                    return Result.Fail<CustomerDto>("Customer not found.");
+                    return Result.Fail<CustomerDto>("CustomerInfo not found.");
 
                 var dto = new CustomerDto
                 {
@@ -83,7 +83,7 @@ namespace ClothingOrderAndStockManagement.Application.Services
                     return Result.Fail("A customer with the same name and contact number already exists.");
                 }
 
-                var newCustomer = new Customer
+                var newCustomer = new CustomerInfo
                 {
                     CustomerName = customerDto.CustomerName,
                     Address = customerDto.Address,
@@ -108,7 +108,7 @@ namespace ClothingOrderAndStockManagement.Application.Services
             {
                 var customer = await _customerRepository.GetByIdAsync(customerDto.CustomerId);
                 if (customer == null)
-                    return Result.Fail("Customer not found.");
+                    return Result.Fail("CustomerInfo not found.");
 
                 customer.CustomerName = customerDto.CustomerName;
                 customer.Address = customerDto.Address;
@@ -132,7 +132,7 @@ namespace ClothingOrderAndStockManagement.Application.Services
             {
                 var customer = await _customerRepository.GetByIdAsync(id);
                 if (customer == null)
-                    return Result.Fail("Customer not found.");
+                    return Result.Fail("CustomerInfo not found.");
 
                 await _customerRepository.DeleteAsync(id);
                 await _customerRepository.SaveChangesAsync();

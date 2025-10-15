@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ClothingOrderAndStockManagement.Infrastructure.Data.EntityMappings
 {
-    public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
+    public class CustomerConfiguration : IEntityTypeConfiguration<CustomerInfo>
     {
-        public void Configure(EntityTypeBuilder<Customer> entity)
+        public void Configure(EntityTypeBuilder<CustomerInfo> entity)
         {
             entity.ToTable("CustomerInfo");
 
