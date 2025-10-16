@@ -1,0 +1,51 @@
+﻿@model ClothingOrderAndStockManagement.Application.Dtos.Orders.OrderRecordDto
+
+<div class="modal fade" id="editStatusModal-@Model.OrderRecordsId" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Update Order Status - #@Model.OrderRecordsId</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-action="UpdateStatus" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="OrderRecordsId" value="@Model.OrderRecordsId" />
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Customer:</strong></label>
+                        <p>@Model.CustomerName</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Current Status:</strong></label>
+                        <p>
+                            <span class="badge bg-secondary">
+                                @Model.OrderStatus
+                            </span>
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">New Status <span class="text-danger">*</span></label>
+                        <select name="OrderStatus" class="form-select" required>
+                            <option value="">-- Select Status --</option>
+                            <option value="Pending Payment">Pending Payment</option>
+                            <option value="Partially Paid">Partially Paid</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Ready for Pickup">Ready for Pickup</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning">Update Status</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

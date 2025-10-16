@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Create Order";
     var customer = ViewBag.Customer as CustomerDto;
+    @using ClothingOrderAndStockManagement.Application.Dtos.Customers
     var packages = ViewBag.Packages as List<PackageDto> ?? new List<PackageDto>();
 }
 

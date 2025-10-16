@@ -8,13 +8,27 @@ namespace ClothingOrderAndStockManagement.Infrastructure.Data.EntityMappings
     {
         public void Configure(EntityTypeBuilder<PaymentRecord> entity)
         {
-            entity.HasKey(e => e.PaymentRecordsId).HasName("PK__PaymentR__A4C5C698D3DD885B");
+            entity.HasKey(e => e.PaymentRecordsId)
+                .HasName("PK__PaymentR__A4C5C698D3DD885B");
 
-            entity.Property(e => e.Amount).HasColumnType("decimal(10, 2)");
-            entity.Property(e => e.PaymentStatus).HasMaxLength(50);
-            entity.Property(e => e.ProofUrl).HasMaxLength(255);
+            entity.Property(e => e.Amount)
+                .HasColumnType("decimal(10, 2)");
 
-            entity.HasOne(d => d.OrderRecords).WithMany(p => p.PaymentRecords)
+            entity.Property(e => e.PaymentStatus)
+                .HasMaxLength(50);
+
+            entity.Property(e => e.ProofUrl)
+                .HasMaxLength(255);
+
+            entity.Property(e => e.ProofUrl2) // NEW
+                .HasMaxLength(255);
+
+            entity.Property(e => e.PaymentDate) // NEW
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("GETDATE()");
+
+            entity.HasOne(d => d.OrderRecords)
+                .WithMany(p => p.PaymentRecords)
                 .HasForeignKey(d => d.OrderRecordsId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_PaymentRecords_Order");
