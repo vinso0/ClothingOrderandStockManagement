@@ -1,6 +1,4 @@
 ﻿@model ClothingOrderAndStockManagement.Application.Helpers.PaginatedList<CustomerDto>
-@using ClothingOrderAndStockManagement.Application.Dtos
-
 @using ClothingOrderAndStockManagement.Application.Dtos.Customers
 @{
     ViewData["Title"] = "Customers";
@@ -18,7 +16,7 @@
             <input type="text" name="searchString" class="form-control" placeholder="Search customers..." value="@Context.Request.Query["searchString"]" />
             <button type="submit" class="btn btn-primary d-flex align-items-center">
                 <img src="~/images/icons/Search.png" alt="Search" class="search-icon-img" />
-             </button>
+            </button>
         </div>
     </form>
 
@@ -26,28 +24,16 @@
     <button class="btn btn-outline-primary customer-add-btn"
             data-bs-toggle="modal" data-bs-target="#addCustomerModal">
         <img src="~/images/icons/Add.png" alt="Add" class="add-icon-img" />
-        Add CustomerInfo
+        Add Customer
     </button>
 
-	<!-- Add Customer Modal -->
+    <!-- Add Customer Modal -->
     @await Html.PartialAsync("Partials/_AddCustomerModal", new CustomerDto())
-    @if (ViewData["ShowAddCustomerModal"] is bool showAddCustomerModal && showAddCustomerModal)
-    {
-        var addCustomerModel = ViewData["AddCustomerModel"] as CustomerDto;
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                var modalEl = document.getElementById('addCustomerModal');
-                var modal = new bootstrap.Modal(modalEl);
-                modal.show();
-            });
-        </script>
-    }
 </div>
 
-<div class="reports-section">       
+<div class="reports-section">
     @if (Model != null && Model.Any())
     {
-        <!-- Column Names -->
         <div class="table-responsive">
             <table class="table table-hover customer-table">
                 <thead>
@@ -61,27 +47,30 @@
                     </tr>
                 </thead>
 
-                <!-- Row Data -->
                 <tbody>
                     @foreach (var customer in Model)
                     {
                         <tr>
-                            <td>
-                                <span class="customer-id">@customer.CustomerId</span>
-                            </td>
-                            <td>
-                                <span class="customer-name">@customer.CustomerName</span>
-                            </td>
+                            <td><span class="customer-id">@customer.CustomerId</span></td>
+                            <td><span class="customer-name">@customer.CustomerName</span></td>
                             <td class="customer-details">@customer.Address</td>
                             <td class="customer-details">@customer.ContactNumber</td>
                             <td class="customer-details">@customer.ZipCode</td>
                             <td class="customer-actions">
                                 <div class="btn-group" role="group">
+                                    <!-- Add Order Button - NEW -->
+                                    <a class="btn btn-sm btn-outline-primary customer-order-btn"
+                                       asp-controller="Orders"
+                                       asp-action="Create"
+                                       asp-route-customerId="@customer.CustomerId">
+                                        <img src="~/images/icons/Add.png" alt="Order" style="width: 14px; height: 14px; margin-right: 4px;" />
+                                        Order
+                                    </a>
+
                                     <a class="btn btn-sm btn-outline-success customer-edit-btn"
-                                        data-bs-toggle="modal" data-bs-target="#editCustomerModal-@customer.CustomerId">
+                                       data-bs-toggle="modal" data-bs-target="#editCustomerModal-@customer.CustomerId">
                                         Edit
                                     </a>
-                                    <!-- Edit Customer Modal -->
                                     @await Html.PartialAsync("Partials/_EditCustomerModal", customer)
 
                                     <button class="btn btn-sm btn-outline-danger customer-delete-btn"
@@ -89,13 +78,12 @@
                                             data-bs-target="#deleteModal-@customer.CustomerId">
                                         Delete
                                     </button>
-                                    <!-- Delete Customer Modal -->
                                     @await Html.PartialAsync("_DeleteModal",
-                                    ("CustomerInfo", "Delete", customer.CustomerId, customer.CustomerName))
-                                </div>
-                            </td>
-                        </tr>
-                    }
+                                    ("Customer", "Delete", customer.CustomerId, customer.CustomerName))
+                        </div>
+                    </td>
+                </tr>
+                                }
                 </tbody>
             </table>
         </div>
@@ -137,3 +125,19 @@
         </div>
     </div>
 </div>
+
+<style>
+    .customer-order-btn {
+        border-radius: 4px;
+        font-size: 12px;
+        padding: 4px 12px;
+        margin-right: 0.25rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .customer-order-btn:hover {
+        background-color: #0d6efd;
+        color: white;
+    }
+</style>

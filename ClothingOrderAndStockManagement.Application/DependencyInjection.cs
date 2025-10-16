@@ -11,9 +11,11 @@ namespace ClothingOrderAndStockManagement.Application
         {
             // application-level services
             services.AddScoped<ICustomerService, CustomerService>();
-            services.AddScoped<IAccountService, AccountService>();
-            services.AddScoped<IUserService, UserService>();
             services.AddScoped<IOrderService, OrderService>();
+            services.AddScoped<IUserService, UserService>();
+
+            services.AddScoped<IPackageService, PackageService>();
+            services.AddScoped<IAccountService, AccountService>();
 
             return services;
         }

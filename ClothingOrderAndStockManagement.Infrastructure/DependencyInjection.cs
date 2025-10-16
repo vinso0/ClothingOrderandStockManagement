@@ -43,6 +43,7 @@ namespace ClothingOrderAndStockManagement.Infrastructure
             services.AddScoped<ICustomerRepository, CustomerRepository>();
             services.AddScoped<IOrderRepository, OrderRepository>();
 
+            services.AddScoped<IPackageRepository, PackageRepository>();
             return services;
         }
     }

@@ -1,0 +1,117 @@
+﻿/* Orders Page Styles */
+
+.order-form-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.customer-info-display {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+    .customer-info-display p {
+        margin-bottom: 0.5rem;
+    }
+
+.package-item {
+    background-color: #fafafa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.package-select,
+.quantity-input,
+.subtotal-display {
+    border-radius: 6px;
+}
+
+/* Orders Table Styles */
+.customer-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+    .customer-table tbody tr:hover {
+        background-color: rgba(184, 160, 130, 0.1);
+    }
+
+.btn-group-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+    .btn-group-vertical .btn {
+        text-align: left;
+        border-radius: 4px !important;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        white-space: nowrap;
+    }
+
+        .btn-group-vertical .btn img {
+            margin-right: 4px;
+        }
+
+/* Badge Styles */
+.badge {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* Modal Improvements */
+.modal-header.bg-info,
+.modal-header.bg-success,
+.modal-header.bg-warning {
+    color: white;
+}
+
+.modal-header.bg-warning {
+    color: #000;
+}
+
+/* Payment Summary Card */
+.alert-info {
+    border-left: 4px solid #0dcaf0;
+}
+
+.alert-warning {
+    border-left: 4px solid #ffc107;
+}
+
+/* Table in Modal */
+.modal .table {
+    font-size: 0.9rem;
+}
+
+    .modal .table thead {
+        background-color: #f8f9fa;
+    }
+
+/* File Input Styling */
+input[type="file"].form-control {
+    padding: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .btn-group-vertical .btn {
+        font-size: 0.85rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .customer-table {
+        font-size: 0.85rem;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.5rem;
+    }
+}

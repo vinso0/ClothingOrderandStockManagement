@@ -1,90 +1,152 @@
 ﻿@model IEnumerable<ClothingOrderAndStockManagement.Application.Dtos.Orders.OrderRecordDto>
-
 @{
     ViewData["Title"] = "Orders";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3>Orders</h3>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createOrderModal">
-            <i class="bi bi-plus-circle"></i> Create Order
-        </button>
-    </div>
-
-    <table class="table table-hover table-bordered align-middle">
-        <thead class="table-light">
-            <tr>
-                <th>Customer</th>
-                <th>Date & Time</th>
-                <th>Status</th>
-                <th>User</th>
-                <th>Packages</th>
-                <th>Payments</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var order in Model)
-        {
-            <tr>
-                <td>@order.CustomerName</td>
-                <td>@order.OrderDatetime.ToString("yyyy-MM-dd HH:mm")</td>
-                <td>@order.OrderStatus</td>
-                <td>@order.UserId</td>
-                <td>
-                    @if (order.OrderPackages != null && order.OrderPackages.Any())
-                    {
-                        <ul class="mb-0">
-                            @foreach (var pkg in order.OrderPackages)
-                            {
-                                <li>Package ID: @pkg.PackagesId × @pkg.Quantity (@pkg.PriceAtPurchase.ToString("C"))</li>
-                            }
-                        </ul>
-                    }
-                </td>
-                <td>
-                    @if (order.PaymentRecords != null && order.PaymentRecords.Any())
-                    {
-                        <ul class="mb-0">
-                            @foreach (var pay in order.PaymentRecords)
-                            {
-                                <li>@pay.Amount.ToString("C") - @pay.PaymentStatus
-                                    @if (!string.IsNullOrEmpty(pay.ProofUrl))
-                                    {
-                                        <a href="@pay.ProofUrl" target="_blank">[Proof]</a>
-                                    }
-                                </li>
-                            }
-                        </ul>
-                    }
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editOrderModal-@order.OrderRecordsId">
-                        <i class="bi bi-pencil-square"></i>
-                    </button>
-                    <form asp-action="DeleteConfirmed" asp-route-id="@order.OrderRecordsId" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-sm btn-danger">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </form>
-                </td>
-            </tr>
-
-            <!-- Include Edit Modal for each order -->
-            @await Html.PartialAsync("Partials/_EditOrderModal", new ClothingOrderAndStockManagement.Application.Dtos.Orders.UpdateOrderDto
-            {
-                OrderRecordsId = order.OrderRecordsId,
-                CustomerId = order.CustomerId,
-                OrderStatus = order.OrderStatus,
-                UserId = order.UserId
-            })
-
-        }
-        </tbody>
-    </table>
+<div class="customer-header">
+    <h2>Orders Management</h2>
 </div>
 
-<!-- Include Create Modal -->
-@await Html.PartialAsync("Partials/_AddOrderModal", new ClothingOrderAndStockManagement.Application.Dtos.Orders.CreateOrderDto())
+<div class="reports-section">
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover customer-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Date & Time</th>
+                        <th>Packages</th>
+                        <th>Total Amount</th>
+                        <th>Paid</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                        <th class="customer-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model)
+                    {
+                        <tr>
+                            <td><span class="customer-id">#@order.OrderRecordsId</span></td>
+                            <td><span class="customer-name">@order.CustomerName</span></td>
+                            <td class="customer-details">@order.OrderDatetime.ToString("MMM dd, yyyy hh:mm tt")</td>
+                            <td class="customer-details">
+                                @if (order.OrderPackages.Any())
+                                {
+                                    <ul class="mb-0 ps-3">
+                                        @foreach (var pkg in order.OrderPackages)
+                                        {
+                                            <li>@pkg.PackageName × @pkg.Quantity</li>
+                                        }
+                                    </ul>
+                                }
+                            </td>
+                            <td class="customer-details"><strong>₱@order.TotalAmount.ToString("N2")</strong></td>
+                            <td class="customer-details text-success">₱@order.TotalPaid.ToString("N2")</td>
+                            <td class="customer-details @(order.RemainingBalance > 0 ? "text-danger" : "text-success")">
+                                ₱@order.RemainingBalance.ToString("N2")
+                            </td>
+                            <td>
+                                <span class="badge @GetStatusBadgeClass(order.OrderStatus)">
+                                    @order.OrderStatus
+                                </span>
+                            </td>
+                            <td class="customer-actions">
+                                <div class="btn-group-vertical" role="group" style="gap: 0.25rem;">
+                                    <!-- View Payment Button -->
+                                    <button class="btn btn-sm btn-outline-info" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#paymentModal-@order.OrderRecordsId">
+                                        <img src="~/images/icons/payment.png" alt="Payment" style="width: 14px; height: 14px; margin-right: 4px;" />
+                                        Payment
+                                    </button>
+                                    
+                                    <!-- Add Payment Button -->
+                                    @if (order.RemainingBalance > 0)
+                                    {
+                                        <button class="btn btn-sm btn-outline-success" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#addPaymentModal-@order.OrderRecordsId">
+                                            <img src="~/images/icons/Add.png" alt="Add Payment" style="width: 14px; height: 14px; margin-right: 4px;" />
+                                            Add Payment
+                                        </button>
+                                    }
+                                    
+                                    <!-- Edit Status Button -->
+                                    <button class="btn btn-sm btn-outline-warning" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#editStatusModal-@order.OrderRecordsId">
+                                        Edit Status
+                                    </button>
+                                    
+                                    <!-- Delete Button -->
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteOrderModal-@order.OrderRecordsId">
+                                        Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Payment Details Modal -->
+                        @await Html.PartialAsync("Partials/_PaymentDetailsModal", order)
+                        
+                        <!-- Add Payment Modal -->
+                        @await Html.PartialAsync("Partials/_AddPaymentModal", order)
+                        
+                        <!-- Edit Status Modal -->
+                        @await Html.PartialAsync("Partials/_EditOrderStatusModal", order)
+                        
+                        <!-- Delete Confirmation Modal -->
+                        @await Html.PartialAsync("_DeleteModal", ("Order", "Delete", order.OrderRecordsId, $"Order #{order.OrderRecordsId} for {order.CustomerName}"))
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="no-customers-section">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+            <h5>No orders found</h5>
+            <p>Orders will appear here once customers place orders.</p>
+        </div>
+    }
+</div>
 
+@functions {
+    string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Pending Payment" => "bg-warning text-dark",
+            "Partially Paid" => "bg-info text-dark",
+            "Paid" => "bg-success",
+            "Processing" => "bg-primary",
+            "Ready for Pickup" => "bg-info",
+            "Completed" => "bg-success",
+            "Cancelled" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}
+
+<style>
+.btn-group-vertical .btn {
+    text-align: left;
+    border-radius: 4px !important;
+    margin-bottom: 0.25rem;
+}
+
+.badge {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+}
+</style>

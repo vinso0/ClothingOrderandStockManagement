@@ -12,6 +12,10 @@ public partial class PaymentRecord
 
     public string? ProofUrl { get; set; }
 
+    public string? ProofUrl2 { get; set; }
+
+    public DateTime PaymentDate { get; set; }
+
     public string PaymentStatus { get; set; } = null!;
 
     public virtual OrderRecord OrderRecords { get; set; } = null!;

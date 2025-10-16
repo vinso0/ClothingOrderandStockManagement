@@ -1,0 +1,258 @@
+﻿@model ClothingOrderAndStockManagement.Application.Dtos.Orders.CreateOrderDto
+@using ClothingOrderAndStockManagement.Application.Dtos.Packages
+@{
+    ViewData["Title"] = "Create Order";
+    var customer = ViewBag.Customer as CustomerDto;
+    var packages = ViewBag.Packages as List<PackageDto> ?? new List<PackageDto>();
+}
+
+<div class="customer-header">
+    <h2>Create Order for @customer?.CustomerName</h2>
+</div>
+
+<div class="order-form-container">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Order Information</h5>
+        </div>
+        <div class="card-body">
+            <!-- Customer Info Display -->
+            <div class="customer-info-display mb-4 p-3" style="background-color: #f8f9fa; border-radius: 8px;">
+                <h6 class="mb-3"><strong>Customer Details:</strong></h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Name:</strong> @customer?.CustomerName</p>
+                        <p><strong>Contact:</strong> @customer?.ContactNumber</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Address:</strong> @customer?.Address</p>
+                        <p><strong>Zip Code:</strong> @customer?.ZipCode</p>
+                    </div>
+                </div>
+            </div>
+
+            <form asp-action="Create" method="post" enctype="multipart/form-data" id="createOrderForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="CustomerId" value="@customer?.CustomerId" />
+                <input type="hidden" asp-for="UserId" value="@User.Identity.Name" />
+
+                <!-- Package Selection Section -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">Package Selection</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="packageContainer">
+                            <div class="package-item mb-3 p-3" style="border: 1px solid #dee2e6; border-radius: 8px;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Package</label>
+                                        <select class="form-select package-select" name="OrderPackages[0].PackagesId" required onchange="updatePrice(this, 0)">
+                                            <option value="">Select Package</option>
+                                            @foreach (var package in packages)
+                                            {
+                                                <option value="@package.PackagesId" data-price="@package.Price">
+                                                    @package.PackageName - ₱@package.Price.ToString("N2")
+                                                </option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Quantity</label>
+                                        <input type="number" class="form-control quantity-input"
+                                               name="OrderPackages[0].Quantity"
+                                               min="1" value="1" required
+                                               onchange="updatePrice(this, 0)" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Subtotal</label>
+                                        <input type="text" class="form-control subtotal-display"
+                                               id="subtotal-0" readonly value="₱0.00" />
+                                        <input type="hidden" name="OrderPackages[0].PriceAtPurchase"
+                                               id="price-0" value="0" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addPackageRow()">
+                            <img src="~/images/icons/Add.png" alt="Add" style="width: 14px; height: 14px; margin-right: 4px;" />
+                            Add Another Package
+                        </button>
+
+                        <div class="mt-3">
+                            <h5>Total Amount: <span id="totalAmount" class="text-primary">₱0.00</span></h5>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Information (Optional) -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">Initial Payment (Optional)</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">Amount Paid</label>
+                                <input type="number" class="form-control"
+                                       name="InitialPayment.Amount"
+                                       id="paymentAmount"
+                                       step="0.01" min="0" placeholder="0.00"
+                                       onchange="calculateRemainingBalance()" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Payment Status</label>
+                                <select class="form-select" name="InitialPayment.PaymentStatus">
+                                    <option value="">No Payment Yet</option>
+                                    <option value="Down Payment">Down Payment</option>
+                                    <option value="Full Payment">Full Payment</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Remaining Balance</label>
+                                <input type="text" class="form-control" id="remainingBalance" readonly value="₱0.00" />
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Payment Proof 1 (Image)</label>
+                                <input type="file" class="form-control"
+                                       name="InitialPayment.ProofImage"
+                                       accept="image/*" />
+                                <small class="text-muted">Upload receipt or payment proof</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Payment Proof 2 (Optional)</label>
+                                <input type="file" class="form-control"
+                                       name="InitialPayment.ProofImage2"
+                                       accept="image/*" />
+                                <small class="text-muted">For additional payment proof</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Status -->
+                <div class="mb-3">
+                    <label asp-for="OrderStatus" class="form-label">Order Status</label>
+                    <select asp-for="OrderStatus" class="form-select">
+                        <option value="Pending Payment">Pending Payment</option>
+                        <option value="Partially Paid">Partially Paid</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Ready for Pickup">Ready for Pickup</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-controller="Customers" asp-action="Index" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Create Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let packageCount = 1;
+
+    function addPackageRow() {
+        const container = document.getElementById('packageContainer');
+        const newRow = document.createElement('div');
+        newRow.className = 'package-item mb-3 p-3';
+        newRow.style.border = '1px solid #dee2e6';
+        newRow.style.borderRadius = '8px';
+        newRow.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Package</label>
+                    <select class="form-select package-select" name="OrderPackages[${packageCount}].PackagesId" required onchange="updatePrice(this, ${packageCount})">
+                        <option value="">Select Package</option>
+                        @foreach (var package in packages)
+                        {
+                                <option value="@package.PackagesId" data-price="@package.Price">
+                                    @package.PackageName - ₱@package.Price.ToString("N2")
+                                </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Quantity</label>
+                    <input type="number" class="form-control quantity-input"
+                           name="OrderPackages[${packageCount}].Quantity"
+                           min="1" value="1" required
+                           onchange="updatePrice(this, ${packageCount})" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Subtotal</label>
+                    <input type="text" class="form-control subtotal-display"
+                           id="subtotal-${packageCount}" readonly value="₱0.00" />
+                    <input type="hidden" name="OrderPackages[${packageCount}].PriceAtPurchase"
+                           id="price-${packageCount}" value="0" />
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removePackageRow(this)">×</button>
+                </div>
+            </div>
+        `;
+        container.appendChild(newRow);
+        packageCount++;
+    }
+
+    function removePackageRow(button) {
+        button.closest('.package-item').remove();
+        calculateTotal();
+    }
+
+    function updatePrice(element, index) {
+        const row = element.closest('.package-item');
+        const select = row.querySelector('.package-select');
+        const quantityInput = row.querySelector('.quantity-input');
+        const selectedOption = select.options[select.selectedIndex];
+        const price = parseFloat(selectedOption.getAttribute('data-price') || 0);
+        const quantity = parseInt(quantityInput.value) || 1;
+        const subtotal = price * quantity;
+
+        document.getElementById(`subtotal-${index}`).value = '₱' + subtotal.toFixed(2);
+        document.getElementById(`price-${index}`).value = price;
+
+        calculateTotal();
+    }
+
+    function calculateTotal() {
+        let total = 0;
+        document.querySelectorAll('.subtotal-display').forEach(input => {
+            const value = parseFloat(input.value.replace('₱', '').replace(',', '')) || 0;
+            total += value;
+        });
+        document.getElementById('totalAmount').textContent = '₱' + total.toFixed(2);
+        calculateRemainingBalance();
+    }
+
+    function calculateRemainingBalance() {
+        const totalText = document.getElementById('totalAmount').textContent;
+        const total = parseFloat(totalText.replace('₱', '').replace(',', '')) || 0;
+        const paid = parseFloat(document.getElementById('paymentAmount').value) || 0;
+        const remaining = total - paid;
+        document.getElementById('remainingBalance').value = '₱' + remaining.toFixed(2);
+    }
+</script>
+
+<style>
+    .order-form-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .customer-info-display p {
+        margin-bottom: 0.5rem;
+    }
+
+    .package-item {
+        background-color: #fafafa;
+    }
+</style>
