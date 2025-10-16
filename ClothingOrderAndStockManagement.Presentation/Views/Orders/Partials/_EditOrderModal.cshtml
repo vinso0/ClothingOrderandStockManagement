@@ -1,5 +1,35 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@model ClothingOrderAndStockManagement.Application.Dtos.Orders.UpdateOrderDto
+
+<div class="modal fade" id="editOrderModal-@Model.OrderRecordsId" tabindex="-1" aria-labelledby="editOrderLabel-@Model.OrderRecordsId" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editOrderLabel-@Model.OrderRecordsId">Edit Order #@Model.OrderRecordsId</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <form asp-action="Edit" method="post" id="editOrderForm-@Model.OrderRecordsId">
+                    <input type="hidden" asp-for="OrderRecordsId" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Customer ID</label>
+                        <input asp-for="CustomerId" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Order Status</label>
+                        <input asp-for="OrderStatus" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">User ID (Admin)</label>
+                        <input asp-for="UserId" class="form-control" required />
+                    </div>
+
+                    <button type="submit" class="btn btn-success">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

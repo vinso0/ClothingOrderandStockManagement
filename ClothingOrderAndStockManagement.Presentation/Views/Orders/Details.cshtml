@@ -1,0 +1,47 @@
+﻿@model ClothingOrderAndStockManagement.Application.Dtos.Orders.OrderRecordDto
+
+@{
+    ViewData["Title"] = "Order Details";
+}
+
+<h2>Order Details</h2>
+
+<div>
+    <h4>Order #@Model.OrderRecordsId</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">Customer</dt>
+        <dd class="col-sm-10">@Model.CustomerName</dd>
+
+        <dt class="col-sm-2">Order Date</dt>
+        <dd class="col-sm-10">@Model.OrderDatetime.ToShortDateString()</dd>
+
+        <dt class="col-sm-2">Status</dt>
+        <dd class="col-sm-10">@Model.OrderStatus</dd>
+    </dl>
+
+    <h4>Order Packages</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Package Name</th>
+                <th>Quantity</th>
+                <th>Price At Purchase</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var pkg in Model.OrderPackages)
+            {
+                <tr>
+                    <td>@pkg.PackageName</td>
+                    <td>@pkg.Quantity</td>
+                    <td>@pkg.PriceAtPurchase.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <p>
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </p>
+</div>

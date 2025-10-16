@@ -1,5 +1,6 @@
-﻿using ClothingOrderAndStockManagement.Domain.Entities.Account;
-using ClothingOrderAndStockManagement.Application.Interfaces;
+﻿using ClothingOrderAndStockManagement.Application.Interfaces;
+using ClothingOrderAndStockManagement.Application.Interfaces.Repositories;
+using ClothingOrderAndStockManagement.Domain.Entities.Account;
 using ClothingOrderAndStockManagement.Infrastructure.Data;
 using ClothingOrderAndStockManagement.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
@@ -40,6 +41,7 @@ namespace ClothingOrderAndStockManagement.Infrastructure
             // Repositories
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ICustomerRepository, CustomerRepository>();
+            services.AddScoped<IOrderRepository, OrderRepository>();
 
             return services;
         }

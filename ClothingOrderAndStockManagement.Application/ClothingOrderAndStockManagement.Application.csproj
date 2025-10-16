@@ -17,11 +17,4 @@
     <ProjectReference Include="..\ClothingOrderAndStockManagement.Domain\ClothingOrderAndStockManagement.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Dtos\Items\" />
-    <Folder Include="Dtos\Packages\" />
-    <Folder Include="Dtos\Orders\" />
-    <Folder Include="Dtos\Report\" />
-  </ItemGroup>
-
 </Project>

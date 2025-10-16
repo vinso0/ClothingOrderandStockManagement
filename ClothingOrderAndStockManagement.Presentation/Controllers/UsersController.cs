@@ -105,7 +105,6 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         public async Task<IActionResult> Delete(string id)
         {
             var result = await _userService.DeleteUserAsync(id);
-            // Optionally handle errors here
             return RedirectToAction(nameof(Index));
         }
     }
