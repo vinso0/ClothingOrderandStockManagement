@@ -60,8 +60,7 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         // Create order (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreateOrderDto dto,
-            IFormFile? ProofImage, IFormFile? ProofImage2)
+        public async Task<IActionResult> Create(CreateOrderDto dto, IFormFile? ProofImage, IFormFile? ProofImage2)
         {
             if (!ModelState.IsValid)
             {
@@ -133,8 +132,7 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         // Add payment to existing order
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddPayment(AddPaymentDto dto,
-            IFormFile? ProofImage, IFormFile? ProofImage2)
+        public async Task<IActionResult> AddPayment(AddPaymentDto dto, IFormFile? ProofImage, IFormFile? ProofImage2)
         {
             if (!ModelState.IsValid)
             {
@@ -152,24 +150,21 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
                 }
 
                 // Handle payment proof uploads
-                string? proofUrl = null;
-                string? proofUrl2 = null;
-
                 if (ProofImage != null)
                 {
-                    proofUrl = await SavePaymentProof(ProofImage);
+                    dto.ProofUrl = await SavePaymentProof(ProofImage);
                 }
                 if (ProofImage2 != null)
                 {
-                    proofUrl2 = await SavePaymentProof(ProofImage2);
+                    dto.ProofUrl2 = await SavePaymentProof(ProofImage2);
                 }
 
                 // Add new payment record
                 var newPayment = new PaymentRecordDto
                 {
                     Amount = dto.Amount,
-                    ProofUrl = proofUrl,
-                    ProofUrl2 = proofUrl2,
+                    ProofUrl = dto.ProofUrl,
+                    ProofUrl2 = dto.ProofUrl2,
                     PaymentStatus = dto.PaymentStatus,
                     PaymentDate = DateTime.Now
                 };
@@ -261,7 +256,7 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
                 Directory.CreateDirectory(uploadsFolder);
             }
 
-            var uniqueFileName = $"{Guid.NewGuid()}_{file.FileName}";
+            var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
             var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
             using (var fileStream = new FileStream(filePath, FileMode.Create))

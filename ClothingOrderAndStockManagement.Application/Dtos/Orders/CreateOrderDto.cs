@@ -25,7 +25,7 @@
     {
         public decimal Amount { get; set; }
         public string? ProofUrl { get; set; }
-        public string? ProofUrl2 { get; set; } // For second payment proof
-        public string PaymentStatus { get; set; } = "Down Payment"; // "Down Payment" or "Full Payment"
+        public string? ProofUrl2 { get; set; }
+        public string PaymentStatus { get; set; } = "Down Payment";
     }
 }

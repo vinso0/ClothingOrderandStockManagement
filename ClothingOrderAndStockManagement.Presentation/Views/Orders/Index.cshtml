@@ -2,40 +2,63 @@
 @{
     ViewData["Title"] = "Orders";
 }
-
-<div class="customer-header">
-    <h2>Orders Management</h2>
+<div class="orders-header">
+    <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        Orders Management
+    </h2>
+    @if (Model != null && Model.Any())
+    {
+        <div class="orders-stats">
+            <div class="stat-item">
+                <div class="stat-number">@Model.Count()</div>
+                <div>Total Orders</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">@Model.Count(o => o.OrderStatus == "Pending Payment")</div>
+                <div>Pending</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">@Model.Count(o => o.OrderStatus == "Paid")</div>
+                <div>Paid</div>
+            </div>
+        </div>
+    }
 </div>
 
-<div class="reports-section">
+<div class="orders-container">
     @if (Model != null && Model.Any())
     {
         <div class="table-responsive">
-            <table class="table table-hover customer-table">
+            <table class="table orders-table">
                 <thead>
                     <tr>
                         <th>Order ID</th>
                         <th>Customer</th>
                         <th>Date & Time</th>
                         <th>Packages</th>
-                        <th>Total Amount</th>
+                        <th>Total</th>
                         <th>Paid</th>
                         <th>Balance</th>
                         <th>Status</th>
-                        <th class="customer-actions">Actions</th>
+                        <th style="text-align: center;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var order in Model)
                     {
                         <tr>
-                            <td><span class="customer-id">#@order.OrderRecordsId</span></td>
+                            <td><span class="order-id">#@order.OrderRecordsId</span></td>
                             <td><span class="customer-name">@order.CustomerName</span></td>
-                            <td class="customer-details">@order.OrderDatetime.ToString("MMM dd, yyyy hh:mm tt")</td>
-                            <td class="customer-details">
+                            <td class="order-details">@order.OrderDatetime.ToString("MMM dd, yyyy")<br/><small>@order.OrderDatetime.ToString("hh:mm tt")</small></td>
+                            <td class="order-details">
                                 @if (order.OrderPackages.Any())
                                 {
-                                    <ul class="mb-0 ps-3">
+                                    <ul class="package-list">
                                         @foreach (var pkg in order.OrderPackages)
                                         {
                                             <li>@pkg.PackageName × @pkg.Quantity</li>
@@ -43,64 +66,61 @@
                                     </ul>
                                 }
                             </td>
-                            <td class="customer-details"><strong>₱@order.TotalAmount.ToString("N2")</strong></td>
-                            <td class="customer-details text-success">₱@order.TotalPaid.ToString("N2")</td>
-                            <td class="customer-details @(order.RemainingBalance > 0 ? "text-danger" : "text-success")">
-                                ₱@order.RemainingBalance.ToString("N2")
+                            <td><span class="amount amount-total">₱@order.TotalAmount.ToString("N2")</span></td>
+                            <td><span class="amount amount-paid">₱@order.TotalPaid.ToString("N2")</span></td>
+                            <td>
+                                <span class="amount @(order.RemainingBalance > 0 ? "amount-balance" : "amount-balance paid-full")">
+                                    ₱@order.RemainingBalance.ToString("N2")
+                                </span>
                             </td>
                             <td>
-                                <span class="badge @GetStatusBadgeClass(order.OrderStatus)">
+                                <span class="status-badge @GetStatusClass(order.OrderStatus)">
                                     @order.OrderStatus
                                 </span>
                             </td>
-                            <td class="customer-actions">
-                                <div class="btn-group-vertical" role="group" style="gap: 0.25rem;">
-                                    <!-- View Payment Button -->
-                                    <button class="btn btn-sm btn-outline-info" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#paymentModal-@order.OrderRecordsId">
-                                        <img src="~/images/icons/payment.png" alt="Payment" style="width: 14px; height: 14px; margin-right: 4px;" />
-                                        Payment
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn btn-payment" data-bs-toggle="modal" data-bs-target="#paymentModal-@order.OrderRecordsId">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <path d="M12 6v6l4 2"/>
+                                        </svg>
+                                        Payments
                                     </button>
                                     
-                                    <!-- Add Payment Button -->
                                     @if (order.RemainingBalance > 0)
                                     {
-                                        <button class="btn btn-sm btn-outline-success" 
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#addPaymentModal-@order.OrderRecordsId">
-                                            <img src="~/images/icons/Add.png" alt="Add Payment" style="width: 14px; height: 14px; margin-right: 4px;" />
+                                        <button class="action-btn btn-add-payment" data-bs-toggle="modal" data-bs-target="#addPaymentModal-@order.OrderRecordsId">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                                <line x1="5" y1="12" x2="19" y2="12"/>
+                                            </svg>
                                             Add Payment
                                         </button>
                                     }
                                     
-                                    <!-- Edit Status Button -->
-                                    <button class="btn btn-sm btn-outline-warning" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#editStatusModal-@order.OrderRecordsId">
+                                    <button class="action-btn btn-edit-status" data-bs-toggle="modal" data-bs-target="#editStatusModal-@order.OrderRecordsId">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                        </svg>
                                         Edit Status
                                     </button>
                                     
-                                    <!-- Delete Button -->
-                                    <button class="btn btn-sm btn-outline-danger" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#deleteOrderModal-@order.OrderRecordsId">
+                                    <button class="action-btn btn-delete" data-bs-toggle="modal" data-bs-target="#deleteOrderModal-@order.OrderRecordsId">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="3 6 5 6 21 6"/>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                        </svg>
                                         Delete
                                     </button>
                                 </div>
                             </td>
                         </tr>
                         
-                        <!-- Payment Details Modal -->
                         @await Html.PartialAsync("Partials/_PaymentDetailsModal", order)
-                        
-                        <!-- Add Payment Modal -->
                         @await Html.PartialAsync("Partials/_AddPaymentModal", order)
-                        
-                        <!-- Edit Status Modal -->
                         @await Html.PartialAsync("Partials/_EditOrderStatusModal", order)
-                        
-                        <!-- Delete Confirmation Modal -->
                         @await Html.PartialAsync("_DeleteModal", ("Order", "Delete", order.OrderRecordsId, $"Order #{order.OrderRecordsId} for {order.CustomerName}"))
                     }
                 </tbody>
@@ -109,8 +129,8 @@
     }
     else
     {
-        <div class="no-customers-section">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="no-orders-section">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
                 <line x1="3" y1="6" x2="21" y2="6"/>
                 <path d="M16 10a4 4 0 0 1-8 0"/>
@@ -122,31 +142,18 @@
 </div>
 
 @functions {
-    string GetStatusBadgeClass(string status)
+    string GetStatusClass(string status)
     {
         return status switch
         {
-            "Pending Payment" => "bg-warning text-dark",
-            "Partially Paid" => "bg-info text-dark",
-            "Paid" => "bg-success",
-            "Processing" => "bg-primary",
-            "Ready for Pickup" => "bg-info",
-            "Completed" => "bg-success",
-            "Cancelled" => "bg-danger",
-            _ => "bg-secondary"
+            "Pending Payment" => "status-pending",
+            "Partially Paid" => "status-partial",
+            "Paid" => "status-paid",
+            "Processing" => "status-processing",
+            "Ready for Pickup" => "status-ready",
+            "Completed" => "status-completed",
+            "Cancelled" => "status-cancelled",
+            _ => "status-pending"
         };
     }
 }
-
-<style>
-.btn-group-vertical .btn {
-    text-align: left;
-    border-radius: 4px !important;
-    margin-bottom: 0.25rem;
-}
-
-.badge {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
-}
-</style>
