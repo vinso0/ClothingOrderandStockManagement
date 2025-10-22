@@ -12,18 +12,22 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         private readonly ICustomerService _customerService;
         private readonly IPackageService _packageService;
         private readonly IWebHostEnvironment _environment;
+        private readonly ILogger<OrdersController> _logger; // ADD THIS
 
         public OrdersController(
             IOrderService orderService,
             ICustomerService customerService,
             IPackageService packageService,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            ILogger<OrdersController> logger) // ADD THIS
         {
             _orderService = orderService;
             _customerService = customerService;
             _packageService = packageService;
             _environment = environment;
+            _logger = logger; // ADD THIS
         }
+
 
         // List all orders
         public async Task<IActionResult> Index()
@@ -62,31 +66,50 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateOrderDto dto, IFormFile? ProofImage, IFormFile? ProofImage2)
         {
-            if (!ModelState.IsValid)
-            {
-                var customerResult = await _customerService.GetCustomerByIdAsync(dto.CustomerId);
-                var packages = await _packageService.GetAllPackagesAsync();
-                ViewBag.Customer = customerResult.Value;
-                ViewBag.Packages = packages.ToList();
-                return View(dto);
-            }
+            _logger.LogInformation("=== ORDER CREATION STARTED ===");
+            _logger.LogInformation($"Customer ID: {dto.CustomerId}");
+            _logger.LogInformation($"ProofImage: {(ProofImage?.FileName ?? "None")}");
+            _logger.LogInformation($"ProofImage2: {(ProofImage2?.FileName ?? "None")}");
 
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("ModelState is invalid");
+                    foreach (var error in ModelState)
+                    {
+                        _logger.LogWarning($"ModelState Error - Key: {error.Key}, Errors: {string.Join(", ", error.Value.Errors.Select(e => e.ErrorMessage))}");
+                    }
+
+                    var customerResult = await _customerService.GetCustomerByIdAsync(dto.CustomerId);
+                    var packages = await _packageService.GetAllPackagesAsync();
+                    ViewBag.Customer = customerResult.Value;
+                    ViewBag.Packages = packages.ToList();
+                    return View(dto);
+                }
+
                 // Handle payment proof uploads
                 if (dto.InitialPayment != null && dto.InitialPayment.Amount > 0)
                 {
+                    _logger.LogInformation($"Processing payment of {dto.InitialPayment.Amount}");
+
                     if (ProofImage != null)
                     {
+                        _logger.LogInformation($"Processing ProofImage: {ProofImage.FileName}, Size: {ProofImage.Length}");
                         dto.InitialPayment.ProofUrl = await SavePaymentProof(ProofImage);
+                        _logger.LogInformation($"ProofImage saved: {dto.InitialPayment.ProofUrl}");
                     }
+
                     if (ProofImage2 != null)
                     {
+                        _logger.LogInformation($"Processing ProofImage2: {ProofImage2.FileName}, Size: {ProofImage2.Length}");
                         dto.InitialPayment.ProofUrl2 = await SavePaymentProof(ProofImage2);
+                        _logger.LogInformation($"ProofImage2 saved: {dto.InitialPayment.ProofUrl2}");
                     }
                 }
 
                 // Map to OrderRecordDto
+                _logger.LogInformation("Mapping to OrderRecordDto...");
                 var orderDto = new OrderRecordDto
                 {
                     CustomerId = dto.CustomerId,
@@ -102,24 +125,37 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
                     PaymentRecords = dto.InitialPayment != null && dto.InitialPayment.Amount > 0
                         ? new List<PaymentRecordDto>
                         {
-                            new PaymentRecordDto
-                            {
-                                Amount = dto.InitialPayment.Amount,
-                                ProofUrl = dto.InitialPayment.ProofUrl,
-                                ProofUrl2 = dto.InitialPayment.ProofUrl2,
-                                PaymentStatus = dto.InitialPayment.PaymentStatus,
-                                PaymentDate = DateTime.Now
-                            }
+                    new PaymentRecordDto
+                    {
+                        Amount = dto.InitialPayment.Amount,
+                        ProofUrl = dto.InitialPayment.ProofUrl,
+                        ProofUrl2 = dto.InitialPayment.ProofUrl2,
+                        PaymentStatus = dto.InitialPayment.PaymentStatus,
+                        PaymentDate = DateTime.Now
+                    }
                         }
                         : new List<PaymentRecordDto>()
                 };
 
+                _logger.LogInformation("Calling _orderService.CreateAsync...");
                 await _orderService.CreateAsync(orderDto);
+                _logger.LogInformation("Order created successfully!");
+
                 TempData["Success"] = "Order created successfully!";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "=== ORDER CREATION FAILED ===");
+                _logger.LogError($"Exception Type: {ex.GetType().Name}");
+                _logger.LogError($"Message: {ex.Message}");
+                _logger.LogError($"Stack Trace: {ex.StackTrace}");
+
+                if (ex.InnerException != null)
+                {
+                    _logger.LogError($"Inner Exception: {ex.InnerException.Message}");
+                }
+
                 TempData["Error"] = $"Error creating order: {ex.Message}";
                 var customerResult = await _customerService.GetCustomerByIdAsync(dto.CustomerId);
                 var packages = await _packageService.GetAllPackagesAsync();
@@ -128,6 +164,7 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
                 return View(dto);
             }
         }
+
 
         // Add payment to existing order
         [HttpPost]
