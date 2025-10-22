@@ -19,6 +19,8 @@ namespace ClothingOrderAndStockManagement.Infrastructure.Data.EntityMappings
                 .HasForeignKey(d => d.PackagesId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_OrderPackages_Packages");
+
+            entity.Property(e => e.PriceAtPurchase).HasPrecision(10, 2);
         }
     }
 }

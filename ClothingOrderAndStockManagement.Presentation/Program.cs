@@ -1,10 +1,16 @@
-﻿using ClothingOrderAndStockManagement.Infrastructure;
-using ClothingOrderAndStockManagement.Application;
+﻿using ClothingOrderAndStockManagement.Application;
+using ClothingOrderAndStockManagement.Infrastructure;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplicationDI();
 builder.Services.AddInfrastructureDI(builder.Configuration);
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 10MB
+});
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();

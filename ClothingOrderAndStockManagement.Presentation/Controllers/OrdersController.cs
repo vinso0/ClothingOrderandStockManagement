@@ -250,21 +250,46 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             if (file == null || file.Length == 0)
                 return string.Empty;
 
-            var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "payment-proofs");
-            if (!Directory.Exists(uploadsFolder))
+            // Validate file type
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+            if (!allowedExtensions.Contains(fileExtension))
             {
-                Directory.CreateDirectory(uploadsFolder);
+                throw new InvalidOperationException("Only image files (JPG, JPEG, PNG, GIF) are allowed.");
             }
 
-            var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            // Validate file size (10MB max)
+            if (file.Length > 10 * 1024 * 1024)
             {
-                await file.CopyToAsync(fileStream);
+                throw new InvalidOperationException("File size must be less than 10MB.");
             }
 
-            return $"/uploads/payment-proofs/{uniqueFileName}";
+            // Create uploads directory in a local folder (not wwwroot)
+            var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "LocalStorage", "PaymentProofs");
+            if (!Directory.Exists(uploadsPath))
+            {
+                Directory.CreateDirectory(uploadsPath);
+            }
+
+            // Generate unique filename
+            var uniqueFileName = $"{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";
+            var filePath = Path.Combine(uploadsPath, uniqueFileName);
+
+            try
+            {
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(fileStream);
+                }
+
+                // Return the local file path (this will be saved to database)
+                return filePath;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error saving file: {ex.Message}");
+            }
         }
     }
 }

@@ -12,6 +12,7 @@ namespace ClothingOrderAndStockManagement.Infrastructure.Data.EntityMappings
 
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.Property(e => e.PackageName).HasMaxLength(100);
+            entity.Property(p => p.Price).HasPrecision(10, 2);
         }
     }
 }

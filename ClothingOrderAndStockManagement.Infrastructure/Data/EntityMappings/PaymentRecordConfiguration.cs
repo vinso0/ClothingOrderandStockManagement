@@ -17,13 +17,14 @@ namespace ClothingOrderAndStockManagement.Infrastructure.Data.EntityMappings
             entity.Property(e => e.PaymentStatus)
                 .HasMaxLength(50);
 
+            // INCREASE FROM 500 TO 500 CHARACTERS
             entity.Property(e => e.ProofUrl)
-                .HasMaxLength(255);
+                .HasMaxLength(500);
 
-            entity.Property(e => e.ProofUrl2) // NEW
-                .HasMaxLength(255);
+            entity.Property(e => e.ProofUrl2)
+                .HasMaxLength(500);
 
-            entity.Property(e => e.PaymentDate) // NEW
+            entity.Property(e => e.PaymentDate)
                 .HasColumnType("datetime")
                 .HasDefaultValueSql("GETDATE()");
 
@@ -33,5 +34,6 @@ namespace ClothingOrderAndStockManagement.Infrastructure.Data.EntityMappings
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_PaymentRecords_Order");
         }
+
     }
 }
