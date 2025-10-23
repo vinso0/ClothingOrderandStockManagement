@@ -42,14 +42,13 @@ namespace ClothingOrderAndStockManagement.Application.Services
             return MapToDto(order, customers);
         }
 
-        // Simplified order creation - NO PAYMENT
         public async Task<int> CreateAsync(CreateOrderDto dto)
         {
             var order = new OrderRecord
             {
                 CustomerId = dto.CustomerId,
                 OrderDatetime = dto.OrderDatetime,
-                OrderStatus = "Pending Payment", // Always start as Pending Payment
+                OrderStatus = "Awaiting Payment", // Changed from "Pending Payment"
                 UserId = dto.UserId ?? "System",
                 OrderPackages = dto.OrderPackages?.Select(p => new OrderPackage
                 {

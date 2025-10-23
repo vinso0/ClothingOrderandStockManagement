@@ -66,10 +66,13 @@
                                            name="OrderPackages[0].Quantity" min="1" value="1" required
                                            onchange="updatePrice(this, 0)" />
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label">Subtotal</label>
                                     <input type="text" class="form-control subtotal-display" id="subtotal-0" readonly value="₱0.00" />
                                     <input type="hidden" name="OrderPackages[0].PriceAtPurchase" id="price-0" value="0" />
+                                </div>
+                                <div class="col-md-1 d-flex align-items-end">
+                                    <button type="button" class="btn btn-remove" onclick="removePackageRow(this)" title="Remove package">×</button>
                                 </div>
                             </div>
                         </div>
@@ -96,6 +99,12 @@
 </div>
 
 @section Scripts {
-
     <script src="~/js/orders.js"></script>
+    <script>
+        // Pass packages data to JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            const packagesData = @Html.Raw(Json.Serialize(packages.Select(p => new { p.PackagesId, p.PackageName, p.Price })));
+            initializePackagesData(packagesData);
+        });
+    </script>
 }

@@ -1,22 +1,29 @@
 ﻿let packageCount = 1;
+let packagesData = []; // This will be populated from the view
+
+// Initialize packages data from the view
+function initializePackagesData(packages) {
+    packagesData = packages;
+}
 
 function addPackageRow() {
     const container = document.getElementById('packageContainer');
     const idx = packageCount;
     const row = document.createElement('div');
     row.className = 'package-item';
+
+    // Build options HTML from packages data
+    let optionsHtml = '<option value="">Select Package</option>';
+    packagesData.forEach(pkg => {
+        optionsHtml += `<option value="${pkg.PackagesId}" data-price="${pkg.Price}">${pkg.PackageName} - ₱${pkg.Price.toFixed(2)}</option>`;
+    });
+
     row.innerHTML = `
         <div class="row g-3">
             <div class="col-md-5">
                 <label class="form-label">Package</label>
                 <select class="form-select package-select" name="OrderPackages[${idx}].PackagesId" required onchange="updatePrice(this, ${idx})">
-                    <option value="">Select Package</option>
-                    @foreach (var package in packages)
-                    {
-                        <option value="@package.PackagesId" data-price="@package.Price">
-                            @package.PackageName - ₱@package.Price.ToString("N2")
-                        </option>
-                    }
+                    ${optionsHtml}
                 </select>
             </div>
             <div class="col-md-3">
@@ -47,11 +54,12 @@ function updatePrice(element, index) {
     const row = element.closest('.package-item');
     const select = row.querySelector('.package-select');
     const qty = parseInt(row.querySelector('.quantity-input').value) || 1;
-    const price = parseFloat(select.options[select.selectedIndex]?.getAttribute('data-price') || 0);
+    const selectedOption = select.options[select.selectedIndex];
+    const price = parseFloat(selectedOption?.getAttribute('data-price') || 0);
     const subtotal = price * qty;
 
     document.getElementById(`subtotal-${index}`).value = '₱' + subtotal.toFixed(2);
-    document.getElementById(`price-${index}`).value = price;
+    document.getElementById(`price-${index}`).value = price.toFixed(2);
 
     calculateTotal();
 }
@@ -65,7 +73,7 @@ function calculateTotal() {
     document.getElementById('totalAmount').textContent = '₱' + total.toFixed(2);
 }
 
-// FIXED: Add null check to prevent error on pages without the form
+// Fixed: Add null check to prevent error on pages without the form
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('createOrderForm');
     if (form) {
@@ -80,14 +88,21 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    var modals = document.querySelectorAll('.payment-modal');
-    modals.forEach(function(modal) {
-        new bootstrap.Modal(modal);
-    });
+    // Initialize the first row price calculation
+    const firstSelect = document.querySelector('.package-select');
+    if (firstSelect) {
+        firstSelect.addEventListener('change', function () {
+            updatePrice(this, 0);
+        });
+    }
 
-    // Initialize Bootstrap modals
-    const paymentModals = document.querySelectorAll('[id^="managePaymentModal-"]');
-    paymentModals.forEach(modal => {
-        new bootstrap.Modal(modal);
-    });
+    const firstQty = document.querySelector('.quantity-input');
+    if (firstQty) {
+        firstQty.addEventListener('change', function () {
+            const select = document.querySelector('.package-select');
+            if (select) {
+                updatePrice(select, 0);
+            }
+        });
+    }
 });
