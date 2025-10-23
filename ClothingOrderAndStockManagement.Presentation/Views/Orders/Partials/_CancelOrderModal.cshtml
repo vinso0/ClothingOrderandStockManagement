@@ -1,0 +1,49 @@
+﻿@model ClothingOrderAndStockManagement.Application.Dtos.Orders.OrderRecordDto
+
+<div class="modal fade" id="cancelOrderModal-@Model.OrderRecordsId" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem;">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="15" y1="9" x2="9" y2="15" />
+                        <line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                    Cancel Order
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> This action will mark the order as cancelled.
+                </div>
+
+                <p>Are you sure you want to cancel this order?</p>
+
+                <div class="order-details">
+                    <p><strong>Order:</strong> #@Model.OrderRecordsId</p>
+                    <p><strong>Customer:</strong> @Model.CustomerName</p>
+                    <p><strong>Total Amount:</strong> ₱@Model.TotalAmount.ToString("N2")</p>
+                    <p><strong>Amount Paid:</strong> ₱@Model.TotalPaid.ToString("N2")</p>
+                </div>
+
+                @if (Model.TotalPaid > 0)
+                {
+                    <div class="alert alert-info">
+                        <strong>Note:</strong> This order has payments totaling ₱@Model.TotalPaid.ToString("N2").
+                        You may need to process refunds separately.
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Order</button>
+                <form asp-action="Cancel" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.OrderRecordsId" />
+                    <button type="submit" class="btn btn-warning">Cancel Order</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

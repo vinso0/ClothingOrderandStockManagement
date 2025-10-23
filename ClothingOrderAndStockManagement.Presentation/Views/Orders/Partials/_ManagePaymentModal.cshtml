@@ -1,12 +1,11 @@
 ﻿@model ClothingOrderAndStockManagement.Application.Dtos.Orders.OrderRecordDto
 
-<!-- Change the modal div class -->
 <div class="modal fade" id="managePaymentModal-@Model.OrderRecordsId" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem;">
                         <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
                         <line x1="1" y1="10" x2="23" y2="10" />
                     </svg>
@@ -14,240 +13,180 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
+
             <div class="modal-body" style="padding: 2rem;">
-                <!-- Payment Summary -->
-                <div class="payment-summary-card">
-                    <div class="summary-row">
-                        <div>
-                            <div class="summary-label">Customer</div>
-                            <div>@Model.CustomerName</div>
+                <!-- Order Summary -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">Order Summary - @Model.CustomerName</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Total Amount:</strong><br>
+                                <span class="fs-5 text-primary">₱@Model.TotalAmount.ToString("N2")</span>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Amount Paid:</strong><br>
+                                <span class="fs-5 text-success">₱@Model.TotalPaid.ToString("N2")</span>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Remaining Balance:</strong><br>
+                                <span class="fs-5 @(Model.RemainingBalance > 0 ? "text-danger" : "text-success")">
+                                    ₱@Model.RemainingBalance.ToString("N2")
+                                </span>
+                            </div>
                         </div>
-                        <div style="text-align: right;">
-                            <div class="summary-label">Order Date</div>
-                            <div>@Model.OrderDatetime.ToString("MMM dd, yyyy")</div>
-                        </div>
-                    </div>
-                    <hr style="margin: 1rem 0; border-color: rgba(0,0,0,0.1);">
-                    <div class="summary-row">
-                        <span class="summary-label">Total Amount:</span>
-                        <span class="summary-value" style="color: #5a4a3a;">₱@Model.TotalAmount.ToString("N2")</span>
-                    </div>
-                    <div class="summary-row">
-                        <span class="summary-label">Amount Paid:</span>
-                        <span class="summary-value" style="color: #28a745;">₱@Model.TotalPaid.ToString("N2")</span>
-                    </div>
-                    <div class="summary-row" style="border-top: 2px solid rgba(0,0,0,0.1); padding-top: 1rem; margin-top: 0.5rem;">
-                        <span class="summary-label" style="font-size: 1.1rem;">Remaining Balance:</span>
-                        <span class="summary-value" style="font-size: 1.3rem; color: #dc3545;">₱@Model.RemainingBalance.ToString("N2")</span>
                     </div>
                 </div>
 
-                <!-- Payment Details Table -->
+                <!-- Payment History -->
                 @if (Model.PaymentRecords != null && Model.PaymentRecords.Any())
                 {
-                    <div class="table-responsive">
-                        <table class="table payment-history-table">
-                            <thead>
-                                <tr>
-                                    <th>Payment #</th>
-                                    <th>Date & Time</th>
-                                    <th>Amount</th>
-                                    <th>Type/Status</th>
-                                    <th>Proof</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var payment in Model.PaymentRecords)
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Payment History (@Model.PaymentRecords.Count)</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Amount</th>
+                                            <th>Type</th>
+                                            <th>Proof</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var payment in Model.PaymentRecords.OrderBy(p => p.PaymentDate))
+                                        {
+                                            <tr>
+                                                <td>@payment.PaymentDate.ToString("MMM dd, yyyy")</td>
+                                                <td class="text-success fw-bold">₱@payment.Amount.ToString("N2")</td>
+                                                <td>
+                                                    <span class="badge @(payment.PaymentStatus == "Full Payment" ? "bg-success" : "bg-warning")">
+                                                        @payment.PaymentStatus
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    @if (!string.IsNullOrEmpty(payment.ProofUrl))
+                                                    {
+                                                        <a href="@payment.ProofUrl" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                            View Proof
+                                                        </a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">No proof</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Payment Form -->
+                @if (Model.RemainingBalance > 0)
+                {
+                    var hasDownPayment = Model.PaymentRecords?.Any(p => p.PaymentStatus == "Down Payment") == true;
+                    var isFirstPayment = Model.PaymentRecords?.Any() != true;
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                @if (isFirstPayment)
                                 {
-                                    <tr>
-                                        <td><strong>#@payment.PaymentRecordsId</strong></td>
-                                        <td>
-                                            @payment.PaymentDate.ToString("MMM dd, yyyy")
-                                            <br />
-                                            <small style="color: #666;">@payment.PaymentDate.ToString("hh:mm tt")</small>
-                                        </td>
-                                        <td><strong style="color: #28a745;">₱@payment.Amount.ToString("N2")</strong></td>
-                                        <td>
-                                            <span class="payment-badge @(payment.PaymentStatus == "Full Payment" ? "badge-full" : "badge-down")">
-                                                @payment.PaymentStatus
-                                            </span>
-                                        </td>
-                                        <td>
-                                            @if (!string.IsNullOrEmpty(payment.ProofUrl))
-                                            {
-                                                <a href="@payment.ProofUrl" target="_blank" class="proof-link">
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                        <polyline points="14 2 14 8 20 8" />
-                                                    </svg>
-                                                    View Proof 1
-                                                </a>
-                                            }
-                                            @if (!string.IsNullOrEmpty(payment.ProofUrl2))
-                                            {
-                                                <br />
-                                                <a href="@payment.ProofUrl2" target="_blank" class="proof-link">
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                        <polyline points="14 2 14 8 20 8" />
-                                                    </svg>
-                                                    View Proof 2
-                                                </a>
-                                            }
-                                            @if (string.IsNullOrEmpty(payment.ProofUrl) && string.IsNullOrEmpty(payment.ProofUrl2))
-                                            {
-                                                <span style="color: #999; font-size: 0.85rem;">No proof</span>
-                                            }
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="editPayment(@payment.PaymentRecordsId)">
-                                                Update
-                                            </button>
-                                        </td>
-                                    </tr>
+                                    <text>Add Payment</text>
                                 }
-                            </tbody>
-                        </table>
+                                else if (hasDownPayment)
+                                {
+                                    <text>Complete Payment (Final Payment)</text>
+                                }
+                                else
+                                {
+                                    <text>Add Additional Payment</text>
+                                }
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <form asp-action="AddPayment" method="post" enctype="multipart/form-data">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="OrderRecordsId" value="@Model.OrderRecordsId" />
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Payment Amount <span class="text-danger">*</span></label>
+                                        <input type="number"
+                                               name="Amount"
+                                               class="form-control"
+                                               step="0.01"
+                                               min="0.01"
+                                               max="@Model.RemainingBalance"
+                                               placeholder="Enter amount"
+                                               required />
+                                        <small class="text-muted">Maximum: ₱@Model.RemainingBalance.ToString("N2")</small>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Payment Type <span class="text-danger">*</span></label>
+                                        <select name="PaymentStatus" class="form-select" required>
+                                            <option value="">Select payment type</option>
+                                            @if (isFirstPayment || !hasDownPayment)
+                                            {
+                                                <option value="Down Payment">Down Payment</option>
+                                            }
+                                            <option value="Full Payment">Full Payment</option>
+                                        </select>
+                                        @if (hasDownPayment)
+                                        {
+                                            <small class="text-info">Select "Full Payment" to complete this order</small>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <label class="form-label fw-bold">Payment Proof</label>
+                                        <input type="file"
+                                               name="ProofImage"
+                                               class="form-control"
+                                               accept="image/*" />
+                                        <small class="text-muted">Upload payment receipt or proof (PNG, JPG up to 10MB)</small>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem;">
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg>
+                                        @if (hasDownPayment)
+                                        {
+                                            <text>Complete Payment</text>
+                                        }
+                                        else
+                                        {
+                                            <text>Add Payment</text>
+                                        }
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 }
                 else
                 {
-                    <div class="empty-state">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                            <line x1="1" y1="10" x2="23" y2="10" />
-                        </svg>
-                        <h5>No payments yet</h5>
-                        <p>Add the first payment to get started.</p>
-                    </div>
-                }
-
-                <!-- Add Payment Section -->
-                @if (Model.RemainingBalance > 0)
-                {
-                    <div class="add-payment-form">
-                        <h6>Add New Payment</h6>
-                        <form asp-action="AddPayment" method="post" enctype="multipart/form-data" id="paymentForm-@Model.OrderRecordsId">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="OrderRecordsId" value="@Model.OrderRecordsId" />
-
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        Payment Amount <span class="text-danger">*</span>
-                                    </label>
-                                    <input type="number"
-                                           name="Amount"
-                                           class="form-control"
-                                           step="0.01"
-                                           min="0.01"
-                                           max="@Model.RemainingBalance"
-                                           placeholder="Enter amount"
-                                           required
-                                           style="padding: 0.75rem;" />
-                                    <small class="text-muted">Maximum: ₱@Model.RemainingBalance.ToString("N2")</small>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        Payment Type <span class="text-danger">*</span>
-                                    </label>
-                                    <select name="PaymentStatus" class="form-select" required style="padding: 0.75rem;">
-                                        <option value="">Select type</option>
-                                        <option value="Down Payment">Down Payment</option>
-                                        <option value="Full Payment">Full Payment</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Payment Proof 1</label>
-                                    <div class="file-upload-box" onclick="document.getElementById('proof1-@Model.OrderRecordsId').click()">
-                                        <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                            <polyline points="17 8 12 3 7 8" />
-                                            <line x1="12" y1="3" x2="12" y2="15" />
-                                        </svg>
-                                        <div>Click to upload</div>
-                                        <small class="text-muted">PNG, JPG up to 10MB</small>
-                                        <div class="file-name-display" id="fileName1-@Model.OrderRecordsId"></div>
-                                    </div>
-                                    <input type="file"
-                                           name="ProofImage"
-                                           id="proof1-@Model.OrderRecordsId"
-                                           accept="image/*"
-                                           style="display: none;"
-                                           onchange="displayFileName(this, 1, @Model.OrderRecordsId)" />
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Payment Proof 2 (Optional)</label>
-                                    <div class="file-upload-box" onclick="document.getElementById('proof2-@Model.OrderRecordsId').click()">
-                                        <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                            <polyline points="17 8 12 3 7 8" />
-                                            <line x1="12" y1="3" x2="12" y2="15" />
-                                        </svg>
-                                        <div>Click to upload</div>
-                                        <small class="text-muted">PNG, JPG up to 10MB</small>
-                                        <div class="file-name-display" id="fileName2-@Model.OrderRecordsId"></div>
-                                    </div>
-                                    <input type="file"
-                                           name="ProofImage2"
-                                           id="proof2-@Model.OrderRecordsId"
-                                           accept="image/*"
-                                           style="display: none;"
-                                           onchange="displayFileName(this, 2, @Model.OrderRecordsId)" />
-                                </div>
-                            </div>
-
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
-                                        <polyline points="20 6 9 17 4 12" />
-                                    </svg>
-                                    Add Payment
-                                </button>
-                            </div>
-                        </form>
+                    <div class="alert alert-success">
+                        <h5 class="alert-heading">✅ Order Fully Paid</h5>
+                        <p class="mb-0">This order has been completely paid. No additional payments needed.</p>
                     </div>
                 }
             </div>
         </div>
     </div>
 </div>
-
-<script>
-    function displayFileName(input, number, orderId) {
-    const el = document.getElementById('fileName' + number + '-' + orderId);
-    if (input.files && input.files[0]) {
-        const file = input.files[0];
-
-        // Validate size and type
-        if (file.size > 10 * 1024 * 1024) {
-            alert('File size must be less than 10MB');
-            input.value = '';
-            el.textContent = '';
-            return;
-        }
-
-        const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-        if (!allowed.includes(file.type)) {
-            alert('Only image files (JPG, PNG, GIF) are allowed');
-            input.value = '';
-            el.textContent = '';
-            return;
-        }
-
-        el.textContent = '📎 ' + file.name;
-    } else {
-        el.textContent = '';
-    }
-}
-
-function editPayment(paymentId) {
-    alert('Edit payment #' + paymentId + ' functionality');
-}
-</script>

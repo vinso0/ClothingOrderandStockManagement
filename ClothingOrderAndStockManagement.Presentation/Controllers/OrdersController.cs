@@ -1,7 +1,7 @@
 ﻿using ClothingOrderAndStockManagement.Application.Dtos.Orders;
+using ClothingOrderAndStockManagement.Application.Helpers;
 using ClothingOrderAndStockManagement.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClothingOrderAndStockManagement.Web.Controllers
@@ -27,11 +27,37 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         }
 
         // List all orders
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? status, int pageIndex = 1)
         {
+            // Get all orders first
             var orders = await _orderService.GetAllAsync();
-            return View(orders);
+
+            // Apply status filter
+            var allowed = new[] { "Awaiting Payment", "Partially Paid", "Fully Paid", "Completed", "Returned", "Cancelled" };
+            if (!string.IsNullOrWhiteSpace(status) && allowed.Contains(status))
+            {
+                orders = orders.Where(o => o.OrderStatus == status);
+                ViewData["CurrentStatus"] = status;
+            }
+            else
+            {
+                ViewData["CurrentStatus"] = "";
+            }
+
+            var sortedOrders = orders.OrderByDescending(o => o.OrderDatetime).ToList();
+
+            const int pageSize = 5;
+            var totalCount = sortedOrders.Count;
+            var pagedOrders = sortedOrders
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var paginatedList = new PaginatedList<OrderRecordDto>(pagedOrders, totalCount, pageIndex, pageSize);
+
+            return View(paginatedList);
         }
+
 
         // Create order for specific customer (GET)
         [HttpGet]
@@ -143,31 +169,34 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // Delete order
+        // Cancel order
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Cancel(int id)
         {
             try
             {
-                var result = await _orderService.DeleteAsync(id);
-                if (result)
-                {
-                    TempData["Success"] = "Order deleted successfully!";
-                }
-                else
+                var order = await _orderService.GetByIdAsync(id);
+                if (order == null)
                 {
                     TempData["Error"] = "Order not found.";
+                    return RedirectToAction(nameof(Index));
                 }
+
+                // Update status to Cancelled
+                order.OrderStatus = "Cancelled";
+                await _orderService.UpdateAsync(order);
+                TempData["Success"] = "Order cancelled successfully!";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting order");
-                TempData["Error"] = $"Error deleting order: {ex.Message}";
+                _logger.LogError(ex, "Error cancelling order");
+                TempData["Error"] = $"Error cancelling order: {ex.Message}";
             }
 
             return RedirectToAction(nameof(Index));
         }
+
 
         private async Task PopulateViewDataAsync(int customerId)
         {

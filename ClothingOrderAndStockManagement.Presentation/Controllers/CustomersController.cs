@@ -24,7 +24,6 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             if (result.IsSuccess)
                 return View(result.Value);
 
-            // Optionally, show an error view or message
             ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
             return View(new PaginatedList<CustomerDto>(new List<CustomerDto>(), 0, pageIndex, pageSize));
         }

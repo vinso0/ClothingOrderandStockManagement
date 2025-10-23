@@ -314,6 +314,18 @@ input[type="file"].form-control {
         color: white;
     }
 
+/* Payment Button */
+.btn-payment {
+    background-color: #0DCAF0; /* Bootstrap primary color */
+    color: #fff;
+    border-color: #007bff;
+}
+
+    .btn-payment:hover {
+        background-color: #0056b3;
+        border-color: #004085;
+    }
+
 .btn-add-payment {
     background: white;
     border-color: #28a745;
@@ -345,6 +357,18 @@ input[type="file"].form-control {
     .btn-delete:hover {
         background: #dc3545;
         color: white;
+    }
+
+/* Cancel Button */
+.btn-cancel {
+    background-color: orange; /* Bootstrap warning color */
+    color: #212529;
+    border-color: #ffc107;
+}
+
+    .btn-cancel:hover {
+        background-color: #e0a800;
+        border-color: #d39e00;
     }
 
 .no-orders-section {

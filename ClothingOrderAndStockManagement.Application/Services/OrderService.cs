@@ -107,10 +107,23 @@ namespace ClothingOrderAndStockManagement.Application.Services
 
             if (order == null) return false;
 
-            // Save payment proofs
-            string? url1 = null, url2 = null;
+            // Save payment proof
+            string? url1 = null;
             if (proof1 != null) url1 = await SavePaymentProofAsync(proof1);
-            if (proof2 != null) url2 = await SavePaymentProofAsync(proof2);
+
+            // Calculate totals
+            var totalAmount = order.OrderPackages.Sum(p => p.PriceAtPurchase * p.Quantity);
+            var currentTotalPaid = order.PaymentRecords.Sum(p => p.Amount);
+            var newTotalPaid = currentTotalPaid + dto.Amount;
+
+            // Determine payment status based on logic
+            string paymentStatus = dto.PaymentStatus;
+
+            // If this payment completes the order, force it to be "Full Payment"
+            if (newTotalPaid >= totalAmount)
+            {
+                paymentStatus = "Full Payment";
+            }
 
             // Add payment record
             var payment = new PaymentRecord
@@ -118,30 +131,25 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 OrderRecordsId = dto.OrderRecordsId,
                 CustomerId = order.CustomerId,
                 Amount = dto.Amount,
-                ProofUrl = url1 ?? dto.ProofUrl,
-                ProofUrl2 = url2 ?? dto.ProofUrl2,
-                PaymentStatus = dto.PaymentStatus,
+                ProofUrl = url1,
+                PaymentStatus = paymentStatus,
                 PaymentDate = DateTime.Now
             };
 
             order.PaymentRecords.Add(payment);
 
-            // Calculate totals and update order status
-            var totalAmount = order.OrderPackages.Sum(p => p.PriceAtPurchase * p.Quantity);
-            var totalPaid = order.PaymentRecords.Sum(p => p.Amount);
-
-            // Update order status based on payment
-            if (totalPaid >= totalAmount)
+            // Update order status based on total payments
+            if (newTotalPaid >= totalAmount)
             {
                 order.OrderStatus = "Fully Paid";
             }
-            else if (totalPaid > 0)
+            else if (newTotalPaid > 0)
             {
                 order.OrderStatus = "Partially Paid";
             }
             else
             {
-                order.OrderStatus = "Pending Payment";
+                order.OrderStatus = "Awaiting Payment";
             }
 
             await _orderRepository.UpdateAsync(order);

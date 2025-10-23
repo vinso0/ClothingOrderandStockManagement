@@ -39,7 +39,6 @@
             <form asp-action="Create" method="post" id="createOrderForm">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="CustomerId" value="@customer?.CustomerId" />
-                <input type="hidden" asp-for="UserId" value="@User.Identity?.Name" />
 
                 <!-- Package Selection -->
                 <div class="section-card">
