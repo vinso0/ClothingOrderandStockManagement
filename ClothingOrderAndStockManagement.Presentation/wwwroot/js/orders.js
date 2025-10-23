@@ -65,12 +65,15 @@ function calculateTotal() {
     document.getElementById('totalAmount').textContent = '₱' + total.toFixed(2);
 }
 
-document.getElementById('createOrderForm').addEventListener('submit', function (e) {
-    const firstSelect = this.querySelector('.package-select');
-    const firstQty = this.querySelector('.quantity-input');
-    if (!firstSelect || !firstSelect.value || !firstQty || parseInt(firstQty.value) <= 0) {
-        e.preventDefault();
-        alert('Please select at least one package and quantity.');
-        return;
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('createOrderForm');
+    if (!form) return;
+    form.addEventListener('submit', function (e) {
+        const firstSelect = this.querySelector('.package-select');
+        const firstQty = this.querySelector('.quantity-input');
+        if (!firstSelect || !firstSelect.value || !firstQty || parseInt(firstQty.value) <= 0) {
+            e.preventDefault();
+            alert('Please select at least one package and quantity.');
+        }
+    });
 });

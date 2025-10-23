@@ -24,6 +24,10 @@
                 <div>Pending</div>
             </div>
             <div class="stat-item">
+                <div class="stat-number">@Model.Count(o => o.OrderStatus == "Partially Paid")</div>
+                <div>Partial</div>
+            </div>
+            <div class="stat-item">
                 <div class="stat-number">@Model.Count(o => o.OrderStatus == "Fully Paid")</div>
                 <div>Paid</div>
             </div>
@@ -85,10 +89,11 @@
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <!-- View/Manage Payments Button -->
+                                    <!-- Manage Payments Button ONLY -->
                                     <button class="action-btn btn-payment" 
                                             data-bs-toggle="modal" 
-                                            data-bs-target="#managePaymentModal-@order.OrderRecordsId">
+                                            data-bs-target="#managePaymentModal-@order.OrderRecordsId"
+                                            title="Manage Payments">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
                                             <line x1="1" y1="10" x2="23" y2="10"/>
@@ -96,21 +101,23 @@
                                         Manage Payments
                                     </button>
                                     
-                                    <!-- Update Status Button -->
+                                    <!-- Status Button -->
                                     <button class="action-btn btn-edit-status" 
                                             data-bs-toggle="modal" 
-                                            data-bs-target="#editStatusModal-@order.OrderRecordsId">
+                                            data-bs-target="#editStatusModal-@order.OrderRecordsId"
+                                            title="Update Status">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                         </svg>
-                                        Update Status
+                                        Status
                                     </button>
                                     
                                     <!-- Delete Button -->
                                     <button class="action-btn btn-delete" 
                                             data-bs-toggle="modal" 
-                                            data-bs-target="#deleteOrderModal-@order.OrderRecordsId">
+                                            data-bs-target="#deleteOrderModal-@order.OrderRecordsId"
+                                            title="Delete Order">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <polyline points="3 6 5 6 21 6"/>
                                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -121,7 +128,7 @@
                             </td>
                         </tr>
                         
-                        <!-- Modals -->
+                        <!-- ONLY include the manage payment modal -->
                         @await Html.PartialAsync("Partials/_ManagePaymentModal", order)
                         @await Html.PartialAsync("Partials/_EditOrderStatusModal", order)
                         @await Html.PartialAsync("_DeleteModal", ("Order", "Delete", order.OrderRecordsId, $"Order #{order.OrderRecordsId} for {order.CustomerName}"))
@@ -140,6 +147,7 @@
             </svg>
             <h5>No orders found</h5>
             <p>Orders will appear here once customers place orders.</p>
+            <a href="@Url.Action("Index", "Customers")" class="btn btn-primary">Browse Customers</a>
         </div>
     }
 </div>
