@@ -11,7 +11,7 @@ namespace ClothingOrderAndStockManagement.Application.Interfaces
         Task<bool> UpdateAsync(OrderRecordDto orderDto);
         Task<bool> DeleteAsync(int id);
 
-        // NEW: Use case method for MVC form with file uploads
+        // Use-case method that handles files, mapping, and status rules
         Task<int> CreateWithPaymentAsync(CreateOrderDto dto, IFormFile? proof1, IFormFile? proof2);
     }
 }

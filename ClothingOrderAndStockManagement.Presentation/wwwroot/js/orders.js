@@ -2,44 +2,39 @@
 
 function addPackageRow() {
     const container = document.getElementById('packageContainer');
-    const newRow = document.createElement('div');
-    newRow.className = 'package-item';
-    newRow.innerHTML = `
+    const idx = packageCount;
+    const row = document.createElement('div');
+    row.className = 'package-item';
+    row.innerHTML = `
             <div class="row g-3">
                 <div class="col-md-5">
                     <label class="form-label">Package</label>
-                    <select class="form-select package-select" name="OrderPackages[${packageCount}].PackagesId" required onchange="updatePrice(this, ${packageCount})">
+                    <select class="form-select package-select" name="OrderPackages[${idx}].PackagesId" required onchange="updatePrice(this, ${idx})">
                         <option value="">Select Package</option>
                         @foreach (var package in packages)
                         {
-                                        <option value="@package.PackagesId" data-price="@package.Price">
-                                            @package.PackageName - ₱@package.Price.ToString("N2")
-                                        </option>
+                            <option value="@package.PackagesId" data-price="@package.Price">
+                                @package.PackageName - ₱@package.Price.ToString("N2")
+                            </option>
                         }
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Quantity</label>
                     <input type="number" class="form-control quantity-input"
-                           name="OrderPackages[${packageCount}].Quantity"
-                           min="1" value="1" required
-                           onchange="updatePrice(this, ${packageCount})" />
+                           name="OrderPackages[${idx}].Quantity" min="1" value="1" required
+                           onchange="updatePrice(this, ${idx})" />
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Subtotal</label>
-                    <input type="text" class="form-control subtotal-display"
-                           id="subtotal-${packageCount}" readonly value="₱0.00" />
-                    <input type="hidden" name="OrderPackages[${packageCount}].PriceAtPurchase"
-                           id="price-${packageCount}" value="0" />
+                    <input type="text" class="form-control subtotal-display" id="subtotal-${idx}" readonly value="₱0.00" />
+                    <input type="hidden" name="OrderPackages[${idx}].PriceAtPurchase" id="price-${idx}" value="0" />
                 </div>
                 <div class="col-md-1 d-flex align-items-end">
-                    <button type="button" class="btn btn-remove" onclick="removePackageRow(this)" title="Remove package">
-                        ×
-                    </button>
+                    <button type="button" class="btn btn-remove" onclick="removePackageRow(this)" title="Remove package">×</button>
                 </div>
-            </div>
-        `;
-    container.appendChild(newRow);
+            </div>`;
+    container.appendChild(row);
     packageCount++;
 }
 
@@ -51,11 +46,9 @@ function removePackageRow(button) {
 function updatePrice(element, index) {
     const row = element.closest('.package-item');
     const select = row.querySelector('.package-select');
-    const quantityInput = row.querySelector('.quantity-input');
-    const selectedOption = select.options[select.selectedIndex];
-    const price = parseFloat(selectedOption.getAttribute('data-price') || 0);
-    const quantity = parseInt(quantityInput.value) || 1;
-    const subtotal = price * quantity;
+    const qty = parseInt(row.querySelector('.quantity-input').value) || 1;
+    const price = parseFloat(select.options[select.selectedIndex]?.getAttribute('data-price') || 0);
+    const subtotal = price * qty;
 
     document.getElementById(`subtotal-${index}`).value = '₱' + subtotal.toFixed(2);
     document.getElementById(`price-${index}`).value = price;
@@ -66,7 +59,7 @@ function updatePrice(element, index) {
 function calculateTotal() {
     let total = 0;
     document.querySelectorAll('.subtotal-display').forEach(input => {
-        const value = parseFloat(input.value.replace('₱', '').replace(',', '')) || 0;
+        const value = parseFloat(input.value.replace('₱', '').replace(/,/g, '')) || 0;
         total += value;
     });
     document.getElementById('totalAmount').textContent = '₱' + total.toFixed(2);
@@ -75,68 +68,47 @@ function calculateTotal() {
 
 function calculateRemainingBalance() {
     const totalText = document.getElementById('totalAmount').textContent;
-    const total = parseFloat(totalText.replace('₱', '').replace(',', '')) || 0;
+    const total = parseFloat(totalText.replace('₱', '').replace(/,/g, '')) || 0;
     const paid = parseFloat(document.getElementById('paymentAmount').value) || 0;
-    const remaining = total - paid;
+    const remaining = Math.max(total - paid, 0);
     document.getElementById('remainingBalance').value = '₱' + remaining.toFixed(2);
 }
 
-// SINGLE, CORRECTED displayFileName function
 function displayFileName(input, number) {
-    console.log('displayFileName called for input', number);
-    const fileNameElement = document.getElementById('fileName' + number);
-
-    if (!fileNameElement) {
-        console.error('File name element not found:', 'fileName' + number);
-        return;
-    }
-
+    const el = document.getElementById('fileName' + number);
     if (input.files && input.files[0]) {
         const file = input.files[0];
-        console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
 
-        // Validate file size (10MB)
+        // Validate size (10MB) and type
         if (file.size > 10 * 1024 * 1024) {
             alert('File size must be less than 10MB');
             input.value = '';
-            fileNameElement.textContent = '';
+            el.textContent = '';
             return;
         }
-
-        // Validate file type
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-        if (!allowedTypes.includes(file.type)) {
+        const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        if (!allowed.includes(file.type)) {
             alert('Only image files (JPG, PNG, GIF) are allowed');
             input.value = '';
-            fileNameElement.textContent = '';
+            el.textContent = '';
             return;
         }
 
-        fileNameElement.textContent = '📎 ' + file.name;
-        fileNameElement.style.color = '#28a745';
-        fileNameElement.style.fontWeight = '600';
-        console.log('File validation passed');
+        el.textContent = '📎 ' + file.name;
+        el.style.color = '#28a745';
+        el.style.fontWeight = '600';
     } else {
-        fileNameElement.textContent = '';
+        el.textContent = '';
     }
 }
 
-// Add form validation before submit
 document.getElementById('createOrderForm').addEventListener('submit', function (e) {
-    console.log('Form submission started');
-
-    // Additional validation
-    const fileInputs = this.querySelectorAll('input[type="file"]');
-
-    for (let input of fileInputs) {
-        if (input.files && input.files[0]) {
-            if (input.files[0].size > 10 * 1024 * 1024) {
-                e.preventDefault();
-                alert('One or more files exceed the 10MB size limit');
-                return;
-            }
-        }
+    // Basic guard: at least one package line with valid package and quantity
+    const firstSelect = this.querySelector('.package-select');
+    const firstQty = this.querySelector('.quantity-input');
+    if (!firstSelect || !firstSelect.value || !firstQty || parseInt(firstQty.value) <= 0) {
+        e.preventDefault();
+        alert('Please select at least one package and quantity.');
+        return;
     }
-
-    console.log('Form validation passed, submitting...');
 });

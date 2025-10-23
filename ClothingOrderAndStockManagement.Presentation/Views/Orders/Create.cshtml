@@ -9,27 +9,13 @@
 
 <div class="order-container">
     <div class="order-header">
-        <h2>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
-                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <path d="M16 10a4 4 0 0 1-8 0" />
-            </svg>
-            Create Order for @customer?.CustomerName
-        </h2>
+        <h2>Create Order for @customer?.CustomerName</h2>
     </div>
 
     <div class="order-card">
         <div style="padding: 2rem;">
-            <!-- Customer Info Display -->
             <div class="customer-info-card">
-                <h6>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                        <circle cx="12" cy="7" r="4" />
-                    </svg>
-                    Customer Details
-                </h6>
+                <h6>Customer Details</h6>
                 <div class="info-row">
                     <div class="info-item">
                         <span class="info-label">Name</span>
@@ -53,18 +39,11 @@
             <form asp-action="Create" method="post" enctype="multipart/form-data" id="createOrderForm">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="CustomerId" value="@customer?.CustomerId" />
-                <input type="hidden" asp-for="UserId" value="@User.Identity.Name" />
+                <input type="hidden" asp-for="UserId" value="@User.Identity?.Name" />
 
-                <!-- Package Selection Section -->
+                <!-- Package Selection -->
                 <div class="section-card">
-                    <h6 class="section-header">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
-                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                            <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                            <line x1="12" y1="22.08" x2="12" y2="12" />
-                        </svg>
-                        Package Selection
-                    </h6>
+                    <h6 class="section-header">Package Selection</h6>
 
                     <div id="packageContainer">
                         <div class="package-item">
@@ -84,26 +63,19 @@
                                 <div class="col-md-3">
                                     <label class="form-label">Quantity</label>
                                     <input type="number" class="form-control quantity-input"
-                                           name="OrderPackages[0].Quantity"
-                                           min="1" value="1" required
+                                           name="OrderPackages[0].Quantity" min="1" value="1" required
                                            onchange="updatePrice(this, 0)" />
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Subtotal</label>
-                                    <input type="text" class="form-control subtotal-display"
-                                           id="subtotal-0" readonly value="₱0.00" />
-                                    <input type="hidden" name="OrderPackages[0].PriceAtPurchase"
-                                           id="price-0" value="0" />
+                                    <input type="text" class="form-control subtotal-display" id="subtotal-0" readonly value="₱0.00" />
+                                    <input type="hidden" name="OrderPackages[0].PriceAtPurchase" id="price-0" value="0" />
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <button type="button" class="btn btn-add-package" onclick="addPackageRow()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
-                            <line x1="12" y1="5" x2="12" y2="19" />
-                            <line x1="5" y1="12" x2="19" y2="12" />
-                        </svg>
                         Add Another Package
                     </button>
 
@@ -113,15 +85,9 @@
                     </div>
                 </div>
 
-                <!-- Payment Information (Optional) -->
+                <!-- Initial Payment -->
                 <div class="section-card">
-                    <h6 class="section-header">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
-                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                            <line x1="1" y1="10" x2="23" y2="10" />
-                        </svg>
-                        Initial Payment (Optional)
-                    </h6>
+                    <h6 class="section-header">Initial Payment (Optional)</h6>
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
@@ -135,79 +101,54 @@
                         <div class="col-md-4">
                             <label class="form-label">Payment Status</label>
                             <select class="form-select" name="InitialPayment.PaymentStatus">
-                                <option value="">No Payment Yet</option>
+                                <option value="">Select Payment Status</option>
                                 <option value="Down Payment">Down Payment</option>
                                 <option value="Full Payment">Full Payment</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Remaining Balance</label>
-                            <input type="text" class="form-control remaining-balance" id="remainingBalance" readonly value="₱0.00" />
+                            <input type="text" class="form-control" id="remainingBalance" readonly value="₱0.00" />
                         </div>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Payment Proof 1</label>
-                            <input type="file"
-                                   name="ProofImage"
-                                   class="form-control"
-                                   accept="image/*"
-                                   onchange="displayFileName(this, 1)" />
+                            <input type="file" name="ProofImage" class="form-control" accept="image/*" onchange="displayFileName(this, 1)" />
                             <small class="form-text text-muted">PNG, JPG up to 10MB</small>
                             <small class="text-muted" id="fileName1"></small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Payment Proof 2 (Optional)</label>
-                            <input type="file"
-                                   name="ProofImage2"
-                                   class="form-control"
-                                   accept="image/*"
-                                   onchange="displayFileName(this, 2)" />
+                            <input type="file" name="ProofImage2" class="form-control" accept="image/*" onchange="displayFileName(this, 2)" />
                             <small class="form-text text-muted">PNG, JPG up to 10MB</small>
                             <small class="text-muted" id="fileName2"></small>
                         </div>
                     </div>
                 </div>
 
-                <!-- Order Status -->
+                <!-- Order Status (allowed list) -->
                 <div class="section-card">
-                    <h6 class="section-header">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
-                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                        </svg>
-                        Order Status
-                    </h6>
+                    <h6 class="section-header">Order Status</h6>
                     <div class="row">
                         <div class="col-md-6">
                             <label asp-for="OrderStatus" class="form-label">Select Status</label>
                             <select asp-for="OrderStatus" class="form-select">
-                                <option value="Pending Payment">Pending Payment</option>
+                                <option value="Awaiting Payment">Awaiting Payment</option>
                                 <option value="Partially Paid">Partially Paid</option>
-                                <option value="Paid">Paid</option>
-                                <option value="Processing">Processing</option>
-                                <option value="Ready for Pickup">Ready for Pickup</option>
+                                <option value="Fully Paid">Fully Paid</option>
                                 <option value="Completed">Completed</option>
+                                <option value="Returned">Returned</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
+                <!-- Actions -->
                 <div class="action-buttons">
-                    <a asp-controller="Customers" asp-action="Index" class="btn btn-secondary">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
-                            <line x1="19" y1="12" x2="5" y2="12" />
-                            <polyline points="12 19 5 12 12 5" />
-                        </svg>
-                        Cancel
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
-                            <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                        Create Order
-                    </button>
+                    <a asp-controller="Customers" asp-action="Index" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Create Order</button>
                 </div>
             </form>
         </div>

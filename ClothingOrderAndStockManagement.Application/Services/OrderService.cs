@@ -12,19 +12,23 @@ namespace ClothingOrderAndStockManagement.Application.Services
         private readonly IOrderRepository _orderRepository;
         private readonly ICustomerRepository _customerRepository;
 
+        // Allowed values
+        private static readonly HashSet<string> AllowedOrderStatuses =
+            new(new[] { "Awaiting Payment", "Partially Paid", "Fully Paid", "Completed", "Returned" });
+
+        private static readonly HashSet<string> AllowedPaymentStatuses =
+            new(new[] { "Down Payment", "Full Payment" });
+
         public OrderService(IOrderRepository orderRepository, ICustomerRepository customerRepository)
         {
             _orderRepository = orderRepository;
             _customerRepository = customerRepository;
         }
 
-        #region Public Service Methods
-
         public async Task<IEnumerable<OrderRecordDto>> GetAllAsync()
         {
             var orders = await _orderRepository.Query()
-                .Include(o => o.OrderPackages)
-                    .ThenInclude(op => op.Packages)
+                .Include(o => o.OrderPackages).ThenInclude(op => op.Packages)
                 .Include(o => o.PaymentRecords)
                 .ToListAsync();
 
@@ -35,8 +39,7 @@ namespace ClothingOrderAndStockManagement.Application.Services
         public async Task<OrderRecordDto?> GetByIdAsync(int id)
         {
             var order = await _orderRepository.Query()
-                .Include(o => o.OrderPackages)
-                    .ThenInclude(p => p.Packages)
+                .Include(o => o.OrderPackages).ThenInclude(p => p.Packages)
                 .Include(o => o.PaymentRecords)
                 .FirstOrDefaultAsync(o => o.OrderRecordsId == id);
 
@@ -46,25 +49,42 @@ namespace ClothingOrderAndStockManagement.Application.Services
             return MapToDto(order, customers);
         }
 
-        public async Task<int> CreateAsync(OrderRecordDto orderDto)
+        // Legacy style: accepts an OrderRecordDto already composed
+        public async Task<int> CreateAsync(OrderRecordDto dto)
         {
-            var order = MapToEntity(orderDto);
-            await _orderRepository.AddAsync(order);
+            NormalizeStatuses(dto);
+            var entity = MapToEntity(dto);
+
+            // Derive order status if needed
+            entity.OrderStatus = DeriveOrderStatus(
+                entity.OrderPackages?.Sum(p => p.PriceAtPurchase * p.Quantity) ?? 0m,
+                entity.PaymentRecords?.Sum(p => p.Amount) ?? 0m,
+                entity.OrderStatus);
+
+            await _orderRepository.AddAsync(entity);
             await _orderRepository.SaveChangesAsync();
-            return order.OrderRecordsId;
+            return entity.OrderRecordsId;
         }
 
-        public async Task<bool> UpdateAsync(OrderRecordDto orderDto)
+        public async Task<bool> UpdateAsync(OrderRecordDto dto)
         {
-            var existingOrder = await _orderRepository.Query()
+            NormalizeStatuses(dto);
+
+            var existing = await _orderRepository.Query()
                 .Include(o => o.OrderPackages)
                 .Include(o => o.PaymentRecords)
-                .FirstOrDefaultAsync(o => o.OrderRecordsId == orderDto.OrderRecordsId);
+                .FirstOrDefaultAsync(o => o.OrderRecordsId == dto.OrderRecordsId);
 
-            if (existingOrder == null) return false;
+            if (existing == null) return false;
 
-            UpdateEntityFromDto(existingOrder, orderDto);
-            await _orderRepository.UpdateAsync(existingOrder);
+            UpdateEntityFromDto(existing, dto);
+
+            existing.OrderStatus = DeriveOrderStatus(
+                existing.OrderPackages?.Sum(p => p.PriceAtPurchase * p.Quantity) ?? 0m,
+                existing.PaymentRecords?.Sum(p => p.Amount) ?? 0m,
+                existing.OrderStatus);
+
+            await _orderRepository.UpdateAsync(existing);
             await _orderRepository.SaveChangesAsync();
             return true;
         }
@@ -76,42 +96,124 @@ namespace ClothingOrderAndStockManagement.Application.Services
             return true;
         }
 
+        // Primary MVC use case: accepts form DTO + files and persists aggregate.
         public async Task<int> CreateWithPaymentAsync(CreateOrderDto dto, IFormFile? proof1, IFormFile? proof2)
         {
-            // Handle file uploads if payment provided
-            string? proofUrl1 = null, proofUrl2 = null;
+            NormalizeStatuses(dto);
 
+            // Build entity
+            var order = new OrderRecord
+            {
+                CustomerId = dto.CustomerId,
+                OrderDatetime = dto.OrderDatetime,
+                UserId = dto.UserId ?? "System",
+                OrderPackages = dto.OrderPackages?.Select(p => new OrderPackage
+                {
+                    PackagesId = p.PackagesId,
+                    Quantity = p.Quantity,
+                    PriceAtPurchase = p.PriceAtPurchase
+                }).ToList() ?? new List<OrderPackage>(),
+                PaymentRecords = new List<PaymentRecord>()
+            };
+
+            // Optional initial payment
             if (dto.InitialPayment != null && dto.InitialPayment.Amount > 0)
             {
-                if (proof1 != null)
-                    proofUrl1 = await SavePaymentProofAsync(proof1);
+                string? url1 = null, url2 = null;
+                if (proof1 != null) url1 = await SavePaymentProofAsync(proof1);
+                if (proof2 != null) url2 = await SavePaymentProofAsync(proof2);
 
-                if (proof2 != null)
-                    proofUrl2 = await SavePaymentProofAsync(proof2);
+                order.PaymentRecords.Add(new PaymentRecord
+                {
+                    CustomerId = dto.CustomerId,
+                    Amount = dto.InitialPayment.Amount,
+                    ProofUrl = url1,
+                    ProofUrl2 = url2,
+                    PaymentStatus = dto.InitialPayment.PaymentStatus,
+                    PaymentDate = DateTime.Now
+                });
             }
 
-            // Create the order entity directly (bypass DTO mapping overhead)
-            var order = CreateOrderFromDto(dto, proofUrl1, proofUrl2);
+            // Derive status from totals
+            var total = order.OrderPackages.Sum(p => p.PriceAtPurchase * p.Quantity);
+            var paid = order.PaymentRecords.Sum(p => p.Amount);
+            order.OrderStatus = DeriveOrderStatus(total, paid, dto.OrderStatus);
 
             await _orderRepository.AddAsync(order);
             await _orderRepository.SaveChangesAsync();
-
             return order.OrderRecordsId;
         }
 
+        // ————— helpers —————
 
+        private static void NormalizeStatuses(CreateOrderDto dto)
+        {
+            // Normalize order status
+            if (string.IsNullOrWhiteSpace(dto.OrderStatus) || !AllowedOrderStatuses.Contains(dto.OrderStatus))
+            {
+                dto.OrderStatus = "Awaiting Payment";
+            }
 
+            // Normalize payment status if present
+            if (dto.InitialPayment != null)
+            {
+                if (string.IsNullOrWhiteSpace(dto.InitialPayment.PaymentStatus) ||
+                    !AllowedPaymentStatuses.Contains(dto.InitialPayment.PaymentStatus))
+                {
+                    // Infer payment status from amounts
+                    dto.InitialPayment.PaymentStatus =
+                        dto.InitialPayment.Amount > 0 ? "Down Payment" : "Down Payment";
+                }
+            }
+        }
 
+        private static void NormalizeStatuses(OrderRecordDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.OrderStatus) || !AllowedOrderStatuses.Contains(dto.OrderStatus))
+                dto.OrderStatus = "Awaiting Payment";
 
-        #endregion
+            if (dto.PaymentRecords != null)
+            {
+                foreach (var pr in dto.PaymentRecords)
+                {
+                    if (string.IsNullOrWhiteSpace(pr.PaymentStatus) ||
+                        !AllowedPaymentStatuses.Contains(pr.PaymentStatus))
+                    {
+                        pr.PaymentStatus = pr.Amount > 0 ? "Down Payment" : "Down Payment";
+                    }
+                }
+            }
+        }
 
-        #region Private Helper Methods
+        // Computes canonical order status given totals
+        private static string DeriveOrderStatus(decimal total, decimal paid, string? requested)
+        {
+            // If caller set a valid terminal status Completed/Returned, keep it
+            if (!string.IsNullOrWhiteSpace(requested) && AllowedOrderStatuses.Contains(requested) &&
+                (requested == "Completed" || requested == "Returned"))
+            {
+                return requested;
+            }
 
-        private OrderRecordDto MapToDto(OrderRecord order, IEnumerable<ClothingOrderAndStockManagement.Domain.Entities.Customers.CustomerInfo> customers)
+            if (total <= 0)
+                return "Awaiting Payment"; // no packages yet
+
+            if (paid <= 0)
+                return "Awaiting Payment";
+
+            if (paid < total)
+                return "Partially Paid";
+
+            return "Fully Paid";
+        }
+
+        private OrderRecordDto MapToDto(
+            OrderRecord order,
+            IEnumerable<ClothingOrderAndStockManagement.Domain.Entities.Customers.CustomerInfo> customers)
         {
             var customer = customers.FirstOrDefault(c => c.CustomerId == order.CustomerId);
 
-            var orderDto = new OrderRecordDto
+            var dto = new OrderRecordDto
             {
                 OrderRecordsId = order.OrderRecordsId,
                 CustomerId = order.CustomerId,
@@ -138,14 +240,12 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 }).ToList() ?? new List<PaymentRecordDto>()
             };
 
-            // TotalAmount is calculated automatically by the DTO's getter
-            // No need to assign it manually since it's read-only
+            // Do not assign TotalAmount if it is read-only; let the DTO compute it.
 
-            return orderDto;
+            return dto;
         }
 
-
-        private OrderRecord MapToEntity(OrderRecordDto dto)
+        private static OrderRecord MapToEntity(OrderRecordDto dto)
         {
             return new OrderRecord
             {
@@ -172,112 +272,63 @@ namespace ClothingOrderAndStockManagement.Application.Services
             };
         }
 
-        private OrderRecord CreateOrderFromDto(CreateOrderDto dto, string? proofUrl1, string? proofUrl2)
-        {
-            var order = new OrderRecord
-            {
-                CustomerId = dto.CustomerId,
-                OrderDatetime = dto.OrderDatetime,
-                OrderStatus = dto.OrderStatus,
-                UserId = dto.UserId ?? "System",
-                OrderPackages = dto.OrderPackages?.Select(p => new OrderPackage
-                {
-                    PackagesId = p.PackagesId,
-                    Quantity = p.Quantity,
-                    PriceAtPurchase = p.PriceAtPurchase
-                }).ToList() ?? new List<OrderPackage>(),
-                PaymentRecords = new List<PaymentRecord>()
-            };
-
-            // Add initial payment if provided
-            if (dto.InitialPayment != null && dto.InitialPayment.Amount > 0)
-            {
-                var paymentRecord = new PaymentRecord
-                {
-                    CustomerId = dto.CustomerId,
-                    Amount = dto.InitialPayment.Amount,
-                    ProofUrl = proofUrl1,
-                    ProofUrl2 = proofUrl2,
-                    PaymentStatus = dto.InitialPayment.PaymentStatus,
-                    PaymentDate = DateTime.Now
-                };
-
-                order.PaymentRecords.Add(paymentRecord);
-            }
-
-            return order;
-        }
-
-        private void UpdateEntityFromDto(OrderRecord entity, OrderRecordDto dto)
+        private static void UpdateEntityFromDto(OrderRecord entity, OrderRecordDto dto)
         {
             entity.OrderStatus = dto.OrderStatus;
             entity.UserId = dto.UserId;
 
-            // Update OrderPackages (clear and rebuild to handle additions/removals)
             entity.OrderPackages.Clear();
             if (dto.OrderPackages != null)
             {
-                foreach (var packageDto in dto.OrderPackages)
+                foreach (var p in dto.OrderPackages)
                 {
                     entity.OrderPackages.Add(new OrderPackage
                     {
                         OrderRecordsId = entity.OrderRecordsId,
-                        PackagesId = packageDto.PackagesId,
-                        Quantity = packageDto.Quantity,
-                        PriceAtPurchase = packageDto.PriceAtPurchase
+                        PackagesId = p.PackagesId,
+                        Quantity = p.Quantity,
+                        PriceAtPurchase = p.PriceAtPurchase
                     });
                 }
             }
 
-            // Update PaymentRecords (clear and rebuild)
             entity.PaymentRecords.Clear();
             if (dto.PaymentRecords != null)
             {
-                foreach (var paymentDto in dto.PaymentRecords)
+                foreach (var pr in dto.PaymentRecords)
                 {
                     entity.PaymentRecords.Add(new PaymentRecord
                     {
                         OrderRecordsId = entity.OrderRecordsId,
                         CustomerId = dto.CustomerId,
-                        Amount = paymentDto.Amount,
-                        ProofUrl = paymentDto.ProofUrl,
-                        ProofUrl2 = paymentDto.ProofUrl2,
-                        PaymentStatus = paymentDto.PaymentStatus,
-                        PaymentDate = paymentDto.PaymentDate
+                        Amount = pr.Amount,
+                        ProofUrl = pr.ProofUrl,
+                        ProofUrl2 = pr.ProofUrl2,
+                        PaymentStatus = pr.PaymentStatus,
+                        PaymentDate = pr.PaymentDate
                     });
                 }
             }
         }
 
-        private async Task<string> SavePaymentProofAsync(IFormFile file)
+        private static async Task<string> SavePaymentProofAsync(IFormFile file)
         {
-            // Validation
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-
-            if (!allowedExtensions.Contains(fileExtension))
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowed.Contains(ext))
                 throw new InvalidOperationException("Only image files (JPG, JPEG, PNG, GIF) are allowed.");
-
-            if (file.Length > 10 * 1024 * 1024) // 10MB
+            if (file.Length > 10 * 1024 * 1024)
                 throw new InvalidOperationException("File size must be less than 10MB.");
 
-            // Create directory
-            var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "LocalStorage", "PaymentProofs");
-            if (!Directory.Exists(uploadsPath))
-                Directory.CreateDirectory(uploadsPath);
+            var baseDir = Path.Combine(Directory.GetCurrentDirectory(), "LocalStorage", "PaymentProofs");
+            if (!Directory.Exists(baseDir)) Directory.CreateDirectory(baseDir);
 
-            // Generate unique filename
-            var uniqueFileName = $"{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}[..8]{fileExtension}";
-            var fullPath = Path.Combine(uploadsPath, uniqueFileName);
+            var name = $"{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}{ext}";
+            var full = Path.Combine(baseDir, name);
+            using (var s = new FileStream(full, FileMode.Create))
+                await file.CopyToAsync(s);
 
-            // Save file
-            using (var fileStream = new FileStream(fullPath, FileMode.Create))
-                await file.CopyToAsync(fileStream);
-
-            // Return relative path for database storage
-            return Path.Combine("LocalStorage", "PaymentProofs", uniqueFileName).Replace("\\", "/");
+            return Path.Combine("LocalStorage", "PaymentProofs", name).Replace("\\", "/");
         }
-
-        #endregion
     }
 }
