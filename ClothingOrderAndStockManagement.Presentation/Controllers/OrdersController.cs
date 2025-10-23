@@ -11,23 +11,19 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         private readonly IOrderService _orderService;
         private readonly ICustomerService _customerService;
         private readonly IPackageService _packageService;
-        private readonly IWebHostEnvironment _environment;
-        private readonly ILogger<OrdersController> _logger; // ADD THIS
+        private readonly ILogger<OrdersController> _logger;
 
         public OrdersController(
             IOrderService orderService,
             ICustomerService customerService,
             IPackageService packageService,
-            IWebHostEnvironment environment,
-            ILogger<OrdersController> logger) // ADD THIS
+            ILogger<OrdersController> logger)
         {
             _orderService = orderService;
             _customerService = customerService;
             _packageService = packageService;
-            _environment = environment;
-            _logger = logger; // ADD THIS
+            _logger = logger;
         }
-
 
         // List all orders
         public async Task<IActionResult> Index()
@@ -61,10 +57,10 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             return View(model);
         }
 
-        // Create order (POST)
+        // Create order WITHOUT payment (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreateOrderDto dto, IFormFile? ProofImage, IFormFile? ProofImage2)
+        public async Task<IActionResult> Create(CreateOrderDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -74,30 +70,21 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
 
             try
             {
-                dto.UserId = dto.UserId ?? User.Identity?.Name ?? "System";
-                var orderId = await _orderService.CreateWithPaymentAsync(dto, ProofImage, ProofImage2);
-                TempData["Success"] = "Order created successfully!";
+                dto.UserId = User.Identity?.Name ?? "System";
+                var orderId = await _orderService.CreateAsync(dto);
+                TempData["Success"] = $"Order #{orderId} created successfully! You can now add payment.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error creating order");
                 TempData["Error"] = $"Error creating order: {ex.Message}";
                 await PopulateViewDataAsync(dto.CustomerId);
                 return View(dto);
             }
         }
 
-        private async Task PopulateViewDataAsync(int customerId)
-        {
-            var customerResult = await _customerService.GetCustomerByIdAsync(customerId);
-            var packages = await _packageService.GetAllPackagesAsync();
-            ViewBag.Customer = customerResult.Value;
-            ViewBag.Packages = packages.ToList();
-        }
-
-
-
-        // Add payment to existing order
+        // Add payment to existing order (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddPayment(AddPaymentDto dto, IFormFile? ProofImage, IFormFile? ProofImage2)
@@ -110,51 +97,20 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
 
             try
             {
-                var order = await _orderService.GetByIdAsync(dto.OrderRecordsId);
-                if (order == null)
+                var success = await _orderService.AddPaymentAsync(dto, ProofImage, ProofImage2);
+
+                if (success)
+                {
+                    TempData["Success"] = "Payment added successfully!";
+                }
+                else
                 {
                     TempData["Error"] = "Order not found.";
-                    return RedirectToAction(nameof(Index));
                 }
-
-                // Handle payment proof uploads
-                if (ProofImage != null)
-                {
-                    dto.ProofUrl = await SavePaymentProof(ProofImage);
-                }
-                if (ProofImage2 != null)
-                {
-                    dto.ProofUrl2 = await SavePaymentProof(ProofImage2);
-                }
-
-                // Add new payment record
-                var newPayment = new PaymentRecordDto
-                {
-                    Amount = dto.Amount,
-                    ProofUrl = dto.ProofUrl,
-                    ProofUrl2 = dto.ProofUrl2,
-                    PaymentStatus = dto.PaymentStatus,
-                    PaymentDate = DateTime.Now
-                };
-
-                order.PaymentRecords.Add(newPayment);
-
-                // Update order status based on payment
-                var totalPaid = order.PaymentRecords.Sum(p => p.Amount);
-                if (totalPaid >= order.TotalAmount)
-                {
-                    order.OrderStatus = "Paid";
-                }
-                else if (totalPaid > 0)
-                {
-                    order.OrderStatus = "Partially Paid";
-                }
-
-                await _orderService.UpdateAsync(order);
-                TempData["Success"] = "Payment added successfully!";
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error adding payment");
                 TempData["Error"] = $"Error adding payment: {ex.Message}";
             }
 
@@ -181,6 +137,7 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error updating status");
                 TempData["Error"] = $"Error updating status: {ex.Message}";
             }
 
@@ -206,58 +163,19 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error deleting order");
                 TempData["Error"] = $"Error deleting order: {ex.Message}";
             }
 
             return RedirectToAction(nameof(Index));
         }
 
-        // Helper method to save payment proof
-        private async Task<string> SavePaymentProof(IFormFile file)
+        private async Task PopulateViewDataAsync(int customerId)
         {
-            if (file == null || file.Length == 0)
-                return string.Empty;
-
-            // Validate file type
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-
-            if (!allowedExtensions.Contains(fileExtension))
-            {
-                throw new InvalidOperationException("Only image files (JPG, JPEG, PNG, GIF) are allowed.");
-            }
-
-            // Validate file size (10MB max)
-            if (file.Length > 10 * 1024 * 1024)
-            {
-                throw new InvalidOperationException("File size must be less than 10MB.");
-            }
-
-            // Create uploads directory in a local folder (not wwwroot)
-            var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "LocalStorage", "PaymentProofs");
-            if (!Directory.Exists(uploadsPath))
-            {
-                Directory.CreateDirectory(uploadsPath);
-            }
-
-            // Generate unique filename
-            var uniqueFileName = $"{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid().ToString("N")[..8]}{fileExtension}";
-            var filePath = Path.Combine(uploadsPath, uniqueFileName);
-
-            try
-            {
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await file.CopyToAsync(fileStream);
-                }
-
-                // Return the local file path (this will be saved to database)
-                return filePath;
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Error saving file: {ex.Message}");
-            }
+            var customerResult = await _customerService.GetCustomerByIdAsync(customerId);
+            var packages = await _packageService.GetAllPackagesAsync();
+            ViewBag.Customer = customerResult.Value;
+            ViewBag.Packages = packages.ToList();
         }
     }
 }

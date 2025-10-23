@@ -10,7 +10,8 @@ public class OrderRecord
     public string OrderStatus { get; set; }
     public string UserId { get; set; }
     public int? PaymentRecordsId { get; set; }
-    public virtual ICollection<OrderPackage> OrderPackages { get; set; }
-    public virtual ICollection<PaymentRecord> PaymentRecords { get; set; }
-    public virtual ICollection<ReturnLog> ReturnLogs { get; set; }
+    // Initialize collections to prevent null reference exceptions
+    public virtual ICollection<OrderPackage> OrderPackages { get; set; } = new List<OrderPackage>();
+    public virtual ICollection<PaymentRecord> PaymentRecords { get; set; } = new List<PaymentRecord>();
+    public virtual ICollection<ReturnLog> ReturnLogs { get; set; } = new List<ReturnLog>();
 }

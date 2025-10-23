@@ -36,7 +36,7 @@
                 </div>
             </div>
 
-            <form asp-action="Create" method="post" enctype="multipart/form-data" id="createOrderForm">
+            <form asp-action="Create" method="post" id="createOrderForm">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="CustomerId" value="@customer?.CustomerId" />
                 <input type="hidden" asp-for="UserId" value="@User.Identity?.Name" />
@@ -82,66 +82,6 @@
                     <div class="total-amount">
                         <span>Total Amount:</span>
                         <span id="totalAmount">₱0.00</span>
-                    </div>
-                </div>
-
-                <!-- Initial Payment -->
-                <div class="section-card">
-                    <h6 class="section-header">Initial Payment (Optional)</h6>
-
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Amount Paid</label>
-                            <input type="number" class="form-control"
-                                   name="InitialPayment.Amount"
-                                   id="paymentAmount"
-                                   step="0.01" min="0" placeholder="0.00"
-                                   onchange="calculateRemainingBalance()" />
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Payment Status</label>
-                            <select class="form-select" name="InitialPayment.PaymentStatus">
-                                <option value="">Select Payment Status</option>
-                                <option value="Down Payment">Down Payment</option>
-                                <option value="Full Payment">Full Payment</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Remaining Balance</label>
-                            <input type="text" class="form-control" id="remainingBalance" readonly value="₱0.00" />
-                        </div>
-                    </div>
-
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Payment Proof 1</label>
-                            <input type="file" name="ProofImage" class="form-control" accept="image/*" onchange="displayFileName(this, 1)" />
-                            <small class="form-text text-muted">PNG, JPG up to 10MB</small>
-                            <small class="text-muted" id="fileName1"></small>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Payment Proof 2 (Optional)</label>
-                            <input type="file" name="ProofImage2" class="form-control" accept="image/*" onchange="displayFileName(this, 2)" />
-                            <small class="form-text text-muted">PNG, JPG up to 10MB</small>
-                            <small class="text-muted" id="fileName2"></small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Order Status (allowed list) -->
-                <div class="section-card">
-                    <h6 class="section-header">Order Status</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label asp-for="OrderStatus" class="form-label">Select Status</label>
-                            <select asp-for="OrderStatus" class="form-select">
-                                <option value="Awaiting Payment">Awaiting Payment</option>
-                                <option value="Partially Paid">Partially Paid</option>
-                                <option value="Fully Paid">Fully Paid</option>
-                                <option value="Completed">Completed</option>
-                                <option value="Returned">Returned</option>
-                            </select>
-                        </div>
                     </div>
                 </div>
 

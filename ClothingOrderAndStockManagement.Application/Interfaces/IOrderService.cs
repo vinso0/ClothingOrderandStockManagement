@@ -7,11 +7,14 @@ namespace ClothingOrderAndStockManagement.Application.Interfaces
     {
         Task<IEnumerable<OrderRecordDto>> GetAllAsync();
         Task<OrderRecordDto?> GetByIdAsync(int id);
-        Task<int> CreateAsync(OrderRecordDto orderDto);
+        Task<int> CreateAsync(CreateOrderDto dto);
         Task<bool> UpdateAsync(OrderRecordDto orderDto);
         Task<bool> DeleteAsync(int id);
 
-        // Use-case method that handles files, mapping, and status rules
+        // Payment management
+        Task<bool> AddPaymentAsync(AddPaymentDto dto, IFormFile? proof1, IFormFile? proof2);
+
+        // Legacy - kept for backward compatibility
         Task<int> CreateWithPaymentAsync(CreateOrderDto dto, IFormFile? proof1, IFormFile? proof2);
     }
 }
