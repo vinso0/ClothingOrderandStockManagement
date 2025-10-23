@@ -89,7 +89,6 @@
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <!-- Manage Payments Button ONLY -->
                                     <button class="action-btn btn-payment" 
                                             data-bs-toggle="modal" 
                                             data-bs-target="#managePaymentModal-@order.OrderRecordsId"
@@ -101,7 +100,6 @@
                                         Manage Payments
                                     </button>
                                     
-                                    <!-- Status Button -->
                                     <button class="action-btn btn-edit-status" 
                                             data-bs-toggle="modal" 
                                             data-bs-target="#editStatusModal-@order.OrderRecordsId"
@@ -113,7 +111,6 @@
                                         Status
                                     </button>
                                     
-                                    <!-- Delete Button -->
                                     <button class="action-btn btn-delete" 
                                             data-bs-toggle="modal" 
                                             data-bs-target="#deleteOrderModal-@order.OrderRecordsId"
@@ -128,7 +125,7 @@
                             </td>
                         </tr>
                         
-                        <!-- ONLY include the manage payment modal -->
+                        <!-- Modals (These stay hidden until opened) -->
                         @await Html.PartialAsync("Partials/_ManagePaymentModal", order)
                         @await Html.PartialAsync("Partials/_EditOrderStatusModal", order)
                         @await Html.PartialAsync("_DeleteModal", ("Order", "Delete", order.OrderRecordsId, $"Order #{order.OrderRecordsId} for {order.CustomerName}"))
@@ -147,7 +144,13 @@
             </svg>
             <h5>No orders found</h5>
             <p>Orders will appear here once customers place orders.</p>
-            <a href="@Url.Action("Index", "Customers")" class="btn btn-primary">Browse Customers</a>
+            <a href="@Url.Action("Index", "Customers")" class="btn btn-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Browse Customers
+            </a>
         </div>
     }
 </div>
