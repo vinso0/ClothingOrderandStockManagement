@@ -58,7 +58,6 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 CustomerId = dto.CustomerId,
                 OrderDatetime = dto.OrderDatetime,
                 OrderStatus = "Awaiting Payment",
-                UserId = dto.UserId ?? "System",
                 OrderPackages = dto.OrderPackages.Select(p => new OrderPackage
                 {
                     PackagesId = p.PackagesId,
@@ -82,7 +81,6 @@ namespace ClothingOrderAndStockManagement.Application.Services
             if (existing == null) return false;
 
             existing.OrderStatus = dto.OrderStatus;
-            existing.UserId = dto.UserId;
 
             await _orderRepository.UpdateAsync(existing);
             await _orderRepository.SaveChangesAsync();
@@ -170,7 +168,6 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 CustomerName = customer?.CustomerName ?? "(Unknown)",
                 OrderDatetime = order.OrderDatetime,
                 OrderStatus = order.OrderStatus,
-                UserId = order.UserId,
                 OrderPackages = order.OrderPackages?.Select(p => new OrderPackageDto
                 {
                     OrderPackagesId = p.OrderPackagesId,

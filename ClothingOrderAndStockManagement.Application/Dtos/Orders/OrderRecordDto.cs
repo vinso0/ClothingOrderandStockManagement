@@ -9,7 +9,6 @@ namespace ClothingOrderAndStockManagement.Application.Dtos.Orders
         public string CustomerName { get; set; } = string.Empty;
         public DateTime OrderDatetime { get; set; }
         public string OrderStatus { get; set; } = string.Empty;
-        public string UserId { get; set; } = string.Empty;
 
         public List<OrderPackageDto> OrderPackages { get; set; } = new();
         public List<PaymentRecordDto> PaymentRecords { get; set; } = new();

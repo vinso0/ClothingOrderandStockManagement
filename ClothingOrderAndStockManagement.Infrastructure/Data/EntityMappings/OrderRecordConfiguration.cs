@@ -12,7 +12,6 @@ namespace ClothingOrderAndStockManagement.Infrastructure.Data.EntityMappings
 
             entity.Property(e => e.OrderDatetime).HasColumnType("datetime");
             entity.Property(e => e.OrderStatus).HasMaxLength(50);
-            entity.Property(e => e.UserId).HasMaxLength(450);
         }
     }
 }

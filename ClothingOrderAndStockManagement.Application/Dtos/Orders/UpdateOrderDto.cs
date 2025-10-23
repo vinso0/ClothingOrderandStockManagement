@@ -10,8 +10,6 @@
 
         public string OrderStatus { get; set; } = string.Empty;
 
-        public string? UserId { get; set; }
-
         // Optional: Allow updating order packages if needed
         //public List<OrderPackageDto>? OrderPackages { get; set; }
     }

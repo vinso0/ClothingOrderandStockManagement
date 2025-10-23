@@ -1,6 +1,7 @@
 ﻿using ClothingOrderAndStockManagement.Application.Dtos.Orders;
 using ClothingOrderAndStockManagement.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClothingOrderAndStockManagement.Web.Controllers
@@ -51,13 +52,12 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             var model = new CreateOrderDto
             {
                 CustomerId = customerId,
-                UserId = User.Identity?.Name
             };
 
             return View(model);
         }
 
-        // Create order WITHOUT payment (POST)
+        // Create order (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateOrderDto dto)
@@ -70,7 +70,6 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
 
             try
             {
-                dto.UserId = User.Identity?.Name ?? "System";
                 var orderId = await _orderService.CreateAsync(dto);
                 TempData["Success"] = $"Order #{orderId} created successfully! You can now add payment.";
                 return RedirectToAction(nameof(Index));
