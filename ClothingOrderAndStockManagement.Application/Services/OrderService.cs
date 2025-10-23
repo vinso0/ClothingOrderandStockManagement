@@ -44,24 +44,60 @@ namespace ClothingOrderAndStockManagement.Application.Services
 
         public async Task<int> CreateAsync(CreateOrderDto dto)
         {
+            if (dto.OrderPackages == null || dto.OrderPackages.Count == 0)
+                throw new InvalidOperationException("Add at least one package.");
+
+            foreach (var p in dto.OrderPackages)
+            {
+                if (p.PackagesId <= 0 || p.Quantity <= 0)
+                    throw new InvalidOperationException("Package and positive quantity are required.");
+            }
+
             var order = new OrderRecord
             {
                 CustomerId = dto.CustomerId,
                 OrderDatetime = dto.OrderDatetime,
-                OrderStatus = "Awaiting Payment", // Changed from "Pending Payment"
+                OrderStatus = "Awaiting Payment",
                 UserId = dto.UserId ?? "System",
-                OrderPackages = dto.OrderPackages?.Select(p => new OrderPackage
+                OrderPackages = dto.OrderPackages.Select(p => new OrderPackage
                 {
                     PackagesId = p.PackagesId,
                     Quantity = p.Quantity,
                     PriceAtPurchase = p.PriceAtPurchase
-                }).ToList() ?? new List<OrderPackage>()
+                }).ToList()
             };
 
             await _orderRepository.AddAsync(order);
             await _orderRepository.SaveChangesAsync();
             return order.OrderRecordsId;
         }
+
+        public async Task<bool> UpdateAsync(OrderRecordDto dto)
+        {
+            var existing = await _orderRepository.Query()
+                .Include(o => o.OrderPackages)
+                .Include(o => o.PaymentRecords)
+                .FirstOrDefaultAsync(o => o.OrderRecordsId == dto.OrderRecordsId);
+
+            if (existing == null) return false;
+
+            existing.OrderStatus = dto.OrderStatus;
+            existing.UserId = dto.UserId;
+
+            await _orderRepository.UpdateAsync(existing);
+            await _orderRepository.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            await _orderRepository.DeleteAsync(id);
+            await _orderRepository.SaveChangesAsync();
+            return true;
+        }
+
+
+
 
         // Add payment to existing order
         public async Task<bool> AddPaymentAsync(AddPaymentDto dto, IFormFile? proof1, IFormFile? proof2)
@@ -115,34 +151,8 @@ namespace ClothingOrderAndStockManagement.Application.Services
             return true;
         }
 
-        public async Task<bool> UpdateAsync(OrderRecordDto dto)
-        {
-            var existing = await _orderRepository.Query()
-                .Include(o => o.OrderPackages)
-                .Include(o => o.PaymentRecords)
-                .FirstOrDefaultAsync(o => o.OrderRecordsId == dto.OrderRecordsId);
-
-            if (existing == null) return false;
-
-            existing.OrderStatus = dto.OrderStatus;
-            existing.UserId = dto.UserId;
-
-            await _orderRepository.UpdateAsync(existing);
-            await _orderRepository.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<bool> DeleteAsync(int id)
-        {
-            await _orderRepository.DeleteAsync(id);
-            await _orderRepository.SaveChangesAsync();
-            return true;
-        }
-
-        // Legacy method - kept for backward compatibility but simplified
         public async Task<int> CreateWithPaymentAsync(CreateOrderDto dto, IFormFile? proof1, IFormFile? proof2)
         {
-            // Just create order without payment - payment should be added separately
             return await CreateAsync(dto);
         }
 

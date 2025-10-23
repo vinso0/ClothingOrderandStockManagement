@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ClothingOrderAndStockManagement.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+70a957ce00f26691c4b22ed15f4160ed3b46a517")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d515b3394f30b2d037ff6b34fd1d82c80727a9aa")]
 [assembly: System.Reflection.AssemblyProductAttribute("ClothingOrderAndStockManagement.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ClothingOrderAndStockManagement.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

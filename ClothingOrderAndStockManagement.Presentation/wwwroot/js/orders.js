@@ -1,108 +1,116 @@
 ﻿let packageCount = 1;
-let packagesData = []; // This will be populated from the view
+let packagesData = [];
 
-// Initialize packages data from the view
-function initializePackagesData(packages) {
-    packagesData = packages;
+function initializePackagesData(pkgs) {
+    packagesData = pkgs || [];
+}
+
+function buildOptions() {
+    let html = '<option value="">Select Package</option>';
+    packagesData.forEach(p => {
+        const price = Number(p.Price || 0);
+        html += `<option value="${p.PackagesId}" data-price="${price}">${p.PackageName} - ₱${price.toFixed(2)}</option>`;
+    });
+    return html;
 }
 
 function addPackageRow() {
     const container = document.getElementById('packageContainer');
-    const idx = packageCount;
-    const row = document.createElement('div');
-    row.className = 'package-item';
+    const idx = packageCount++;
+    const div = document.createElement('div');
+    div.className = 'package-item';
+    div.innerHTML = `
+    <div class="row g-3">
+      <div class="col-md-5">
+        <label class="form-label">Package</label>
+        <select class="form-select package-select" name="OrderPackages[${idx}].PackagesId" required>
+          ${buildOptions()}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Quantity</label>
+        <input type="number" class="form-control quantity-input" name="OrderPackages[${idx}].Quantity" min="1" value="1" required />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Subtotal</label>
+        <input type="text" class="form-control subtotal-display" id="subtotal-${idx}" readonly value="₱0.00" />
+        <input type="hidden" name="OrderPackages[${idx}].PriceAtPurchase" id="price-${idx}" value="0" />
+      </div>
+      <div class="col-md-1 d-flex align-items-end">
+        <button type="button" class="btn btn-remove" title="Remove package">×</button>
+      </div>
+    </div>
+  `;
+    container.appendChild(div);
 
-    // Build options HTML from packages data
-    let optionsHtml = '<option value="">Select Package</option>';
-    packagesData.forEach(pkg => {
-        optionsHtml += `<option value="${pkg.PackagesId}" data-price="${pkg.Price}">${pkg.PackageName} - ₱${pkg.Price.toFixed(2)}</option>`;
-    });
+    const select = div.querySelector('.package-select');
+    const qty = div.querySelector('.quantity-input');
+    const removeBtn = div.querySelector('.btn-remove');
 
-    row.innerHTML = `
-        <div class="row g-3">
-            <div class="col-md-5">
-                <label class="form-label">Package</label>
-                <select class="form-select package-select" name="OrderPackages[${idx}].PackagesId" required onchange="updatePrice(this, ${idx})">
-                    ${optionsHtml}
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Quantity</label>
-                <input type="number" class="form-control quantity-input"
-                       name="OrderPackages[${idx}].Quantity" min="1" value="1" required
-                       onchange="updatePrice(this, ${idx})" />
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Subtotal</label>
-                <input type="text" class="form-control subtotal-display" id="subtotal-${idx}" readonly value="₱0.00" />
-                <input type="hidden" name="OrderPackages[${idx}].PriceAtPurchase" id="price-${idx}" value="0" />
-            </div>
-            <div class="col-md-1 d-flex align-items-end">
-                <button type="button" class="btn btn-remove" onclick="removePackageRow(this)" title="Remove package">×</button>
-            </div>
-        </div>`;
-    container.appendChild(row);
-    packageCount++;
+    select.addEventListener('change', () => updatePrice(div, idx));
+    qty.addEventListener('change', () => updatePrice(div, idx));
+    removeBtn.addEventListener('click', () => { div.remove(); calculateTotal(); });
+
+    // initialize calculation for the new row
+    updatePrice(div, idx);
 }
 
-function removePackageRow(button) {
-    button.closest('.package-item').remove();
-    calculateTotal();
-}
-
-function updatePrice(element, index) {
-    const row = element.closest('.package-item');
+function updatePrice(row, index) {
     const select = row.querySelector('.package-select');
-    const qty = parseInt(row.querySelector('.quantity-input').value) || 1;
-    const selectedOption = select.options[select.selectedIndex];
-    const price = parseFloat(selectedOption?.getAttribute('data-price') || 0);
+    const qtyInput = row.querySelector('.quantity-input');
+    const priceHidden = row.querySelector(`#price-${index}`);
+    const subtotalDisplay = row.querySelector(`#subtotal-${index}`);
+
+    const qty = Math.max(1, parseInt(qtyInput.value || '1', 10));
+    const price = Number(select.options[select.selectedIndex]?.getAttribute('data-price') || 0);
     const subtotal = price * qty;
 
-    document.getElementById(`subtotal-${index}`).value = '₱' + subtotal.toFixed(2);
-    document.getElementById(`price-${index}`).value = price.toFixed(2);
-
+    priceHidden.value = price.toFixed(2);
+    subtotalDisplay.value = `₱${subtotal.toFixed(2)}`;
     calculateTotal();
 }
 
 function calculateTotal() {
     let total = 0;
-    document.querySelectorAll('.subtotal-display').forEach(input => {
-        const value = parseFloat(input.value.replace('₱', '').replace(/,/g, '')) || 0;
-        total += value;
+    document.querySelectorAll('.subtotal-display').forEach(i => {
+        total += Number((i.value || '₱0').replace(/[₱,]/g, '')) || 0;
     });
-    document.getElementById('totalAmount').textContent = '₱' + total.toFixed(2);
+    const totalEl = document.getElementById('totalAmount');
+    if (totalEl) totalEl.textContent = `₱${total.toFixed(2)}`;
 }
 
-// Fixed: Add null check to prevent error on pages without the form
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('createOrderForm');
-    if (form) {
-        form.addEventListener('submit', function (e) {
-            const firstSelect = this.querySelector('.package-select');
-            const firstQty = this.querySelector('.quantity-input');
-            if (!firstSelect || !firstSelect.value || !firstQty || parseInt(firstQty.value) <= 0) {
+    if (!form) return;
+
+    // wire first existing row
+    const firstRow = form.querySelector('.package-item');
+    if (firstRow) {
+        const select = firstRow.querySelector('.package-select');
+        const qty = firstRow.querySelector('.quantity-input');
+        const removeBtn = firstRow.querySelector('.btn-remove');
+        if (select) select.addEventListener('change', () => updatePrice(firstRow, 0));
+        if (qty) qty.addEventListener('change', () => updatePrice(firstRow, 0));
+        if (removeBtn) removeBtn.addEventListener('click', () => { firstRow.remove(); calculateTotal(); });
+        updatePrice(firstRow, 0);
+    }
+
+    // validate on submit
+    form.addEventListener('submit', (e) => {
+        const selects = form.querySelectorAll('.package-select');
+        if (selects.length === 0) {
+            e.preventDefault();
+            alert('Please add at least one package.');
+            return;
+        }
+        for (const s of selects) {
+            if (!s.value) {
                 e.preventDefault();
-                alert('Please select at least one package and quantity.');
+                alert('Please select a package for each row.');
                 return;
             }
-        });
-    }
-
-    // Initialize the first row price calculation
-    const firstSelect = document.querySelector('.package-select');
-    if (firstSelect) {
-        firstSelect.addEventListener('change', function () {
-            updatePrice(this, 0);
-        });
-    }
-
-    const firstQty = document.querySelector('.quantity-input');
-    if (firstQty) {
-        firstQty.addEventListener('change', function () {
-            const select = document.querySelector('.package-select');
-            if (select) {
-                updatePrice(select, 0);
-            }
-        });
-    }
+        }
+    });
 });
+
+window.addPackageRow = addPackageRow; // expose to onclick
