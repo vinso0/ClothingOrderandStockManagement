@@ -147,6 +147,8 @@ input[type="file"].form-control {
 .orders-table {
     background-color: white;
     margin-bottom: 0;
+    width: 100%;
+    margin-bottom: 1rem;
 }
 
     .orders-table thead {
@@ -660,4 +662,54 @@ input[type="file"].form-control {
         font-size: 0.75rem;
         padding: 0.35rem 0.5rem;
     }
+}
+
+/* Payment Modal Styles */
+.payment-modal {
+    display: none;
+}
+
+.payment-modal.show {
+    display: block;
+}
+
+.modal-backdrop {
+    z-index: 1040;
+}
+
+.payment-modal {
+    z-index: 1050;
+}
+
+/* Main orders table styling */
+.orders-table {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+/* Modal specific styling */
+.payment-modal {
+    display: none; /* Hidden by default */
+}
+
+.payment-modal.show {
+    display: block;
+}
+
+/* Ensure payment history table only shows in modal */
+.payment-history-table {
+    display: none; /* Hidden by default */
+}
+
+.modal.show .payment-history-table {
+    display: table; /* Only show when modal is active */
+}
+
+/* Fix z-index stacking */
+.modal-backdrop {
+    z-index: 1040;
+}
+
+.payment-modal {
+    z-index: 1050;
 }

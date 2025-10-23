@@ -1,6 +1,7 @@
 ﻿@model ClothingOrderAndStockManagement.Application.Dtos.Orders.OrderRecordDto
 
-<div class="modal fade payment-modal" id="managePaymentModal-@Model.OrderRecordsId" tabindex="-1" aria-hidden="true">
+<!-- Change the modal div class -->
+<div class="modal fade" id="managePaymentModal-@Model.OrderRecordsId" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
@@ -213,47 +214,40 @@
                         </form>
                     </div>
                 }
-                else
-                {
-                    <div class="alert alert-success">
-                        <h5>✅ Order Fully Paid</h5>
-                        <p>This order has been completely paid. No additional payments needed.</p>
-                    </div>
-                }
             </div>
         </div>
     </div>
 </div>
 
 <script>
-        function displayFileName(input, number, orderId) {
-        const el = document.getElementById('fileName' + number + '-' + orderId);
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
+    function displayFileName(input, number, orderId) {
+    const el = document.getElementById('fileName' + number + '-' + orderId);
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
 
-            // Validate size and type
-            if (file.size > 10 * 1024 * 1024) {
-                alert('File size must be less than 10MB');
-                input.value = '';
-                el.textContent = '';
-                return;
-            }
-
-            const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-            if (!allowed.includes(file.type)) {
-                alert('Only image files (JPG, PNG, GIF) are allowed');
-                input.value = '';
-                el.textContent = '';
-                return;
-            }
-
-            el.textContent = '📎 ' + file.name;
-        } else {
+        // Validate size and type
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File size must be less than 10MB');
+            input.value = '';
             el.textContent = '';
+            return;
         }
-    }
 
-    function editPayment(paymentId) {
-        alert('Edit payment #' + paymentId + ' functionality');
+        const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        if (!allowed.includes(file.type)) {
+            alert('Only image files (JPG, PNG, GIF) are allowed');
+            input.value = '';
+            el.textContent = '';
+            return;
+        }
+
+        el.textContent = '📎 ' + file.name;
+    } else {
+        el.textContent = '';
     }
+}
+
+function editPayment(paymentId) {
+    alert('Edit payment #' + paymentId + ' functionality');
+}
 </script>

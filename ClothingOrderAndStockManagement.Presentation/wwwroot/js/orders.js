@@ -79,4 +79,15 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    var modals = document.querySelectorAll('.payment-modal');
+    modals.forEach(function(modal) {
+        new bootstrap.Modal(modal);
+    });
+
+    // Initialize Bootstrap modals
+    const paymentModals = document.querySelectorAll('[id^="managePaymentModal-"]');
+    paymentModals.forEach(modal => {
+        new bootstrap.Modal(modal);
+    });
 });
