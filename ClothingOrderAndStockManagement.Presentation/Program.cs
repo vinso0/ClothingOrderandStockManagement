@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddApplicationDI();
 builder.Services.AddInfrastructureDI(builder.Configuration);
+builder.Services.AddApplicationDI();
 
 builder.Services.Configure<FormOptions>(options =>
 {

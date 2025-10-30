@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ClothingOrderAndStockManagement.Application.Interfaces;
 
 namespace ClothingOrderAndStockManagement.Infrastructure
 {
@@ -24,26 +25,23 @@ namespace ClothingOrderAndStockManagement.Infrastructure
                         sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     }));
 
+            // Explicitly cast ApplicationDbContext to IApplicationDbContext to resolve CS0266 and CS1662
+            services.AddScoped<IApplicationDbContext>(provider => (IApplicationDbContext)provider.GetRequiredService<ApplicationDbContext>());
+
             // Identity
             services.AddIdentity<Users, IdentityRole>(options =>
             {
-				options.Password.RequireDigit = false;
-				options.Password.RequireLowercase = false;
-				options.Password.RequireUppercase = false;
-				options.Password.RequireNonAlphanumeric = false;
-				options.Password.RequiredLength = 6;
-				options.User.RequireUniqueEmail = true;
-				options.SignIn.RequireConfirmedAccount = false;
-			})
+                options.Password.RequireDigit = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequiredLength = 6;
+                options.User.RequireUniqueEmail = true;
+                options.SignIn.RequireConfirmedAccount = false;
+            })
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
-            // Repositories
-            services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<ICustomerRepository, CustomerRepository>();
-            services.AddScoped<IOrderRepository, OrderRepository>();
-
-            services.AddScoped<IPackageRepository, PackageRepository>();
             return services;
         }
     }

@@ -2,12 +2,14 @@
 using ClothingOrderAndStockManagement.Domain.Entities.Products;
 using ClothingOrderAndStockManagement.Domain.Entities.Orders;
 using ClothingOrderAndStockManagement.Domain.Entities.Account;
+using ClothingOrderAndStockManagement.Domain.EntityMappings; // Add this
+using ClothingOrderAndStockManagement.Application.Interfaces;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClothingOrderAndStockManagement.Infrastructure.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<Users>
+    public class ApplicationDbContext : IdentityDbContext<Users>, IApplicationDbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -27,10 +29,9 @@ namespace ClothingOrderAndStockManagement.Infrastructure.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
-
             base.OnModelCreating(modelBuilder);
-        }
 
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(CustomerConfiguration).Assembly);
+        }
     }
 }

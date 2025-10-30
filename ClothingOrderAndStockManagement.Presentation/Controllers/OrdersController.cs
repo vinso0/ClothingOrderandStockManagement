@@ -32,7 +32,6 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             // Get all orders first
             var orders = await _orderService.GetAllAsync();
 
-            // Apply status filter
             var allowed = new[] { "Awaiting Payment", "Partially Paid", "Fully Paid", "Completed", "Returned", "Cancelled" };
             if (!string.IsNullOrWhiteSpace(status) && allowed.Contains(status))
             {
@@ -46,7 +45,7 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
 
             var sortedOrders = orders.OrderByDescending(o => o.OrderDatetime).ToList();
 
-            const int pageSize = 5;
+            const int pageSize = 3;
             var totalCount = sortedOrders.Count;
             var pagedOrders = sortedOrders
                 .Skip((pageIndex - 1) * pageSize)
