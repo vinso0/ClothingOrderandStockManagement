@@ -14,10 +14,4 @@ namespace ClothingOrderAndStockManagement.Application.Dtos.Packages
         public decimal Price { get; set; }
         public List<UpdatePackageItemDto> PackageItems { get; set; } = new();
     }
-
-    public class UpdatePackageItemDto
-    {
-        public int ItemId { get; set; }
-        public int ItemQuantity { get; set; }
-    }
 }

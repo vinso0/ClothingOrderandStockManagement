@@ -10,10 +10,12 @@ namespace ClothingOrderAndStockManagement.Application.Services
     public class PackageService : IPackageService
     {
         private readonly IPackageRepository _packageRepository;
+        private readonly IItemRepository _itemRepository;
 
-        public PackageService(IPackageRepository packageRepository)
+        public PackageService(IPackageRepository packageRepository, IItemRepository itemRepository)
         {
             _packageRepository = packageRepository;
+            _itemRepository = itemRepository;
         }
 
         public async Task<Result<PaginatedList<PackageDto>>> GetPackagesAsync(string searchString, int pageIndex, int pageSize)
@@ -126,6 +128,18 @@ namespace ClothingOrderAndStockManagement.Application.Services
         {
             try
             {
+                // Check item quantities before creating package
+                foreach (var packageItem in packageDto.PackageItems)
+                {
+                    var item = await _itemRepository.GetByIdAsync(packageItem.ItemId);
+                    if (item == null)
+                        return Result.Fail($"Item with ID {packageItem.ItemId} not found.");
+
+                    if (item.Quantity < packageItem.ItemQuantity)
+                        return Result.Fail($"Insufficient quantity for item {item.ItemCategory.ItemCategoryType}. Available: {item.Quantity}, Required: {packageItem.ItemQuantity}");
+                }
+
+                // Create package
                 var newPackage = new Package
                 {
                     PackageName = packageDto.PackageName,
@@ -139,8 +153,19 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 };
 
                 await _packageRepository.AddAsync(newPackage);
-                await _packageRepository.SaveChangesAsync();
 
+                // Deduct item quantities
+                foreach (var packageItem in packageDto.PackageItems)
+                {
+                    var item = await _itemRepository.GetByIdAsync(packageItem.ItemId);
+                    if (item != null) // Ensure item is not null before accessing its properties
+                    {
+                        item.Quantity -= packageItem.ItemQuantity;
+                        await _itemRepository.UpdateAsync(item);
+                    }
+                }
+
+                await _packageRepository.SaveChangesAsync();
                 return Result.Ok();
             }
             catch (Exception ex)
@@ -153,24 +178,58 @@ namespace ClothingOrderAndStockManagement.Application.Services
         {
             try
             {
-                var package = await _packageRepository.GetByIdAsync(packageDto.PackagesId);
-                if (package == null)
+                var existingPackage = await _packageRepository.GetByIdAsync(packageDto.PackagesId);
+                if (existingPackage == null)
                     return Result.Fail("Package not found.");
 
-                package.PackageName = packageDto.PackageName;
-                package.Description = packageDto.Description;
-                package.Price = packageDto.Price;
-
-                // Update package items
-                package.PackageItems.Clear();
-                package.PackageItems = packageDto.PackageItems.Select(pi => new PackageItem
+                // First, restore quantities from the old package
+                foreach (var oldItem in existingPackage.PackageItems)
                 {
-                    PackagesId = package.PackagesId,
+                    var item = await _itemRepository.GetByIdAsync(oldItem.ItemId);
+                    if (item != null)
+                    {
+                        item.Quantity += oldItem.ItemQuantity;
+                        await _itemRepository.UpdateAsync(item);
+                    }
+                }
+
+                // Check quantities for new package items
+                foreach (var packageItem in packageDto.PackageItems)
+                {
+                    var item = await _itemRepository.GetByIdAsync(packageItem.ItemId);
+                    if (item == null)
+                        return Result.Fail($"Item with ID {packageItem.ItemId} not found.");
+
+                    if (item.Quantity < packageItem.ItemQuantity)
+                        return Result.Fail($"Insufficient quantity for item {item.ItemCategory.ItemCategoryType}. Available: {item.Quantity}, Required: {packageItem.ItemQuantity}");
+                }
+
+                // Update package details
+                existingPackage.PackageName = packageDto.PackageName;
+                existingPackage.Description = packageDto.Description;
+                existingPackage.Price = packageDto.Price;
+
+                // Clear and add new package items
+                existingPackage.PackageItems.Clear();
+                existingPackage.PackageItems = packageDto.PackageItems.Select(pi => new PackageItem
+                {
+                    PackagesId = existingPackage.PackagesId,
                     ItemId = pi.ItemId,
                     ItemQuantity = pi.ItemQuantity
                 }).ToList();
 
-                await _packageRepository.UpdateAsync(package);
+                // Deduct quantities for new package items
+                foreach (var packageItem in packageDto.PackageItems)
+                {
+                    var item = await _itemRepository.GetByIdAsync(packageItem.ItemId);
+                    if (item != null)
+                    {
+                        item.Quantity -= packageItem.ItemQuantity;
+                        await _itemRepository.UpdateAsync(item);
+                    }
+                }
+
+                await _packageRepository.UpdateAsync(existingPackage);
                 await _packageRepository.SaveChangesAsync();
 
                 return Result.Ok();
@@ -188,6 +247,17 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 var package = await _packageRepository.GetByIdAsync(id);
                 if (package == null)
                     return Result.Fail("Package not found.");
+
+                // Restore item quantities when deleting package
+                foreach (var packageItem in package.PackageItems)
+                {
+                    var item = await _itemRepository.GetByIdAsync(packageItem.ItemId);
+                    if (item != null) // Ensure item is not null before accessing its properties
+                    {
+                        item.Quantity += packageItem.ItemQuantity;
+                        await _itemRepository.UpdateAsync(item);
+                    }
+                }
 
                 await _packageRepository.DeleteAsync(id);
                 await _packageRepository.SaveChangesAsync();
