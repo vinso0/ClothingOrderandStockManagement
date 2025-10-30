@@ -1028,6 +1028,7 @@
       },
       "ClothingOrderAndStockManagement.Domain/1.0.0": {
         "dependencies": {
+          "FluentResults": "4.0.0",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "8.0.19"
         },
         "runtime": {

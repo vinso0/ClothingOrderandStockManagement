@@ -16,7 +16,7 @@ namespace ClothingOrderAndStockManagement.Application.Repositories
 
         public async Task<IEnumerable<OrderRecord>> GetAllAsync()
         {
-            return await _context.OrderRecords
+            return await _context.Set<OrderRecord>()
                 .Include(o => o.OrderPackages)
                 .Include(o => o.PaymentRecords)
                 .AsNoTracking()
@@ -25,7 +25,7 @@ namespace ClothingOrderAndStockManagement.Application.Repositories
 
         public async Task<OrderRecord?> GetByIdAsync(int id)
         {
-            return await _context.OrderRecords
+            return await _context.Set<OrderRecord>()
                 .Include(o => o.OrderPackages)
                 .Include(o => o.PaymentRecords)
                 .FirstOrDefaultAsync(o => o.OrderRecordsId == id);
@@ -33,38 +33,35 @@ namespace ClothingOrderAndStockManagement.Application.Repositories
 
         public async Task AddAsync(OrderRecord order)
         {
-            await _context.OrderRecords.AddAsync(order);
+            await _context.Set<OrderRecord>().AddAsync(order);
         }
 
         public async Task UpdateAsync(OrderRecord order)
         {
-            _context.OrderRecords.Update(order);
+            _context.Set<OrderRecord>().Update(order);
             await Task.CompletedTask;
         }
 
         public async Task DeleteAsync(int id)
         {
-            var order = await _context.OrderRecords
+            var order = await _context.Set<OrderRecord>()
                 .Include(o => o.OrderPackages)
                 .Include(o => o.PaymentRecords)
                 .FirstOrDefaultAsync(o => o.OrderRecordsId == id);
 
             if (order != null)
             {
-                _context.OrderPackages.RemoveRange(order.OrderPackages);
-                _context.PaymentRecords.RemoveRange(order.PaymentRecords);
-                _context.OrderRecords.Remove(order);
+                _context.Set<OrderPackage>().RemoveRange(order.OrderPackages);
+                _context.Set<PaymentRecord>().RemoveRange(order.PaymentRecords);
+                _context.Set<OrderRecord>().Remove(order);
             }
         }
 
         public IQueryable<OrderRecord> Query()
         {
-            return _context.OrderRecords.AsQueryable();
+            return _context.Set<OrderRecord>().AsQueryable();
         }
 
-        public async Task SaveChangesAsync()
-        {
-            await _context.SaveChangesAsync();
-        }
+        public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
     }
 }
