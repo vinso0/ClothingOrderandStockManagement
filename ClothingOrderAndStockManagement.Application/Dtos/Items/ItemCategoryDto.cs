@@ -1,12 +1,8 @@
 ﻿namespace ClothingOrderAndStockManagement.Application.Dtos.Items
 {
-    public class ItemDto
+    public class ItemCategoryDto
     {
-        public int ItemId { get; set; }
         public int ItemCategoryId { get; set; }
-        public string? Size { get; set; }
-        public string? Color { get; set; }
-        public int Quantity { get; set; }
         public string ItemCategoryType { get; set; } = string.Empty;
     }
 }

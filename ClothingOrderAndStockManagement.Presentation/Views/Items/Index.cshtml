@@ -1,7 +1,139 @@
-﻿﻿@{
-ViewData["Title"] = "Inventory Admin Page";
+﻿@model ClothingOrderAndStockManagement.Application.Helpers.PaginatedList<ItemDto>
+@using ClothingOrderAndStockManagement.Application.Dtos.Items
+@{
+    ViewData["Title"] = "Items";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Items Page</h1>
+<div class="customer-header">
+    <h2>Items</h2>
+</div>
+
+<div class="customer-search-add-section">
+    <!-- Search Button -->
+    <form asp-controller="Items" asp-action="Index" method="get" class="customer-search-form" autocomplete="off">
+        <div class="input-group">
+            <input type="text" name="searchString" class="form-control" placeholder="Search items..." value="@Context.Request.Query["searchString"]" />
+            <button type="submit" class="btn btn-primary d-flex align-items-center">
+                <img src="~/images/icons/Search.png" alt="Search" class="search-icon-img" />
+            </button>
+        </div>
+    </form>
+
+    <!-- Add Item Button -->
+    <button class="btn btn-outline-primary customer-add-btn"
+            data-bs-toggle="modal" data-bs-target="#addItemModal">
+        <img src="~/images/icons/Add.png" alt="Add" class="add-icon-img" />
+        Add Item
+    </button>
+
+    <!-- Add Item Modal -->
+    @await Html.PartialAsync("Partials/_AddItemModal", new CreateItemDto())
+</div>
+
+<div class="reports-section">
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover customer-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Category</th>
+                        <th>Size</th>
+                        <th>Color</th>
+                        <th>Quantity</th>
+                        <th class="customer-actions">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><span class="customer-id">@item.ItemId</span></td>
+                            <td><span class="customer-name">@item.ItemCategoryType</span></td>
+                            <td class="customer-details">@(item.Size ?? "—")</td>
+                            <td class="customer-details">@(item.Color ?? "—")</td>
+                            <td class="customer-details">
+                                <span class="badge quantity-badge @(item.Quantity > 0 ? "badge-success" : "badge-danger")">
+                                    @item.Quantity
+                                </span>
+                            </td>
+
+                            <td class="customer-actions">
+                                <div class="btn-group" role="group">
+                                    <!-- Details Button -->
+                                    <button class="btn btn-sm btn-outline-info customer-order-btn"
+                                            data-bs-toggle="modal" data-bs-target="#detailsItemModal-@item.ItemId">
+                                        <img src="~/images/icons/Search.png" alt="Details" style="width: 14px; height: 14px; margin-right: 4px;" />
+                                        Details
+                                    </button>
+                                    @await Html.PartialAsync("Partials/_DetailsItemModal", item)
+
+                                    <a class="btn btn-sm btn-outline-success customer-edit-btn"
+                                       data-bs-toggle="modal" data-bs-target="#editItemModal-@item.ItemId">
+                                        Edit
+                                    </a>
+                                    @await Html.PartialAsync("Partials/_EditItemModal", new UpdateItemDto
+                                    {
+                                        ItemId = item.ItemId,
+                                                        ItemCategoryId = item.ItemCategoryId,
+                                                        Size = item.Size,
+                                                        Color = item.Color,
+                                                        Quantity = item.Quantity
+                                                        })
+
+                            <button class="btn btn-sm btn-outline-danger customer-delete-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal-@item.ItemId">
+                                Delete
+                            </button>
+                            @await Html.PartialAsync("_DeleteModal",
+                                                        ("Item", "Delete", item.ItemId, $"{item.ItemCategoryType} - {item.Size} - {item.Color}"))
+                        </div>
+                    </td>
+                </tr>
+                                }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="no-customers-section">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+            <h5>No items found</h5>
+            <p>Start by adding your first item using the "Add Item" button above.</p>
+        </div>
+    }
+
+    <!-- Pagination -->
+    <div class="pagination-section">
+        <div>
+            Page @Model!.PageIndex of @Model!.TotalPages
+        </div>
+
+        <div>
+            @if (Model.HasPreviousPage)
+            {
+                <a asp-action="Index"
+                   asp-route-pageIndex="@(Model.PageIndex - 1)"
+                   asp-route-searchString="@ViewData["CurrentFilter"]"
+                   class="btn btn-outline-secondary">Previous</a>
+            }
+
+            @if (Model.HasNextPage)
+            {
+                <a asp-action="Index"
+                   asp-route-pageIndex="@(Model.PageIndex + 1)"
+                   asp-route-searchString="@ViewData["CurrentFilter"]"
+                   class="btn btn-outline-primary">Next</a>
+            }
+        </div>
+    </div>
 </div>

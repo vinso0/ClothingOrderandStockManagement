@@ -290,3 +290,7 @@
         border-color: #333;
         color: #fafafa;
     }
+
+.quantity-badge {
+    color: black !important;
+}

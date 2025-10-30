@@ -1,0 +1,46 @@
+﻿@using ClothingOrderAndStockManagement.Application.Dtos.Items
+@model ItemDto
+
+<!-- Details Item Modal -->
+<div class="modal fade customer-modal" id="detailsItemModal-@Model.ItemId" tabindex="-1" aria-labelledby="detailsItemModalLabel-@Model.ItemId" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsItemModalLabel-@Model.ItemId">Item Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-sm-4"><strong>Item ID:</strong></div>
+                    <div class="col-sm-8">@Model.ItemId</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4"><strong>Category:</strong></div>
+                    <div class="col-sm-8">@Model.ItemCategoryType</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4"><strong>Size:</strong></div>
+                    <div class="col-sm-8">@(Model.Size ?? "—")</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4"><strong>Color:</strong></div>
+                    <div class="col-sm-8">@(Model.Color ?? "—")</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Quantity:</strong></div>
+                        <div class="col-sm-8">
+                            <span class="badge quantity-badge @(Model.Quantity > 0 ? "badge-success" : "badge-danger")">
+                                @Model.Quantity
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group-actions">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

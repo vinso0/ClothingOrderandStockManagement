@@ -17,14 +17,15 @@ namespace ClothingOrderAndStockManagement.Application
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IPackageService, PackageService>();
-            services.AddScoped<IAccountService, AccountService>(); // Move AccountService to Application if needed
+            services.AddScoped<IItemService, ItemService>();
+            services.AddScoped<IAccountService, AccountService>();
 
             // Application repositories
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<ICustomerRepository, CustomerRepository>();
             services.AddScoped<IPackageRepository, PackageRepository>();
+            services.AddScoped<IItemRepository, ItemRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
-            // Add other repositories as needed
 
             return services;
         }

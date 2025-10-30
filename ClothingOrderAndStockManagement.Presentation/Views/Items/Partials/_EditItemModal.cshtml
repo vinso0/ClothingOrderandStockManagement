@@ -1,5 +1,60 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@using ClothingOrderAndStockManagement.Application.Dtos.Items
+@model UpdateItemDto
+
+<!-- Edit Item Modal -->
+<div class="modal fade customer-modal" id="editItemModal-@Model.ItemId" tabindex="-1" aria-labelledby="editItemModalLabel-@Model.ItemId" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editItemModalLabel-@Model.ItemId">Editing Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-action="Edit" method="post" autocomplete="off" id="editItemForm-@Model.ItemId">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="ItemId" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="ItemCategoryId" class="form-label">Category</label>
+                        <select asp-for="ItemCategoryId" class="form-control" id="editItemCategorySelect-@Model.ItemId">
+                            <option value="">Select Category</option>
+                            @if (ViewBag.Categories is IEnumerable<ItemCategoryDto> categories)
+                            {
+                                foreach (var category in categories)
+                                {
+                                    <option value="@category.ItemCategoryId" selected="@(category.ItemCategoryId == Model.ItemCategoryId)">@category.ItemCategoryType</option>
+                                }
+                            }
+                        </select>
+                        <span asp-validation-for="ItemCategoryId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="Size" class="form-label">Size</label>
+                            <input asp-for="Size" class="form-control" placeholder="Size" id="editSizeInput-@Model.ItemId" />
+                            <span asp-validation-for="Size" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Color" class="form-label">Color</label>
+                            <input asp-for="Color" class="form-control" placeholder="Color" id="editColorInput-@Model.ItemId" />
+                            <span asp-validation-for="Color" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Quantity" class="form-label">Quantity</label>
+                        <input asp-for="Quantity" type="number" min="0" class="form-control" placeholder="Quantity" id="editQuantityInput-@Model.ItemId" />
+                        <span asp-validation-for="Quantity" class="text-danger"></span>
+                    </div>
+
+                    <div class="btn-group-actions">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Back</button>
+                        <button type="submit" class="btn btn-primary">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
