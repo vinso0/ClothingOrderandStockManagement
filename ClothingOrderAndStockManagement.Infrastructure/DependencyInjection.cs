@@ -1,8 +1,8 @@
-﻿using ClothingOrderAndStockManagement.Application.Interfaces;
-using ClothingOrderAndStockManagement.Application.Interfaces.Repositories;
+﻿using ClothingOrderAndStockManagement.Domain.Interfaces;
+using ClothingOrderAndStockManagement.Domain.Interfaces.Repositories;
 using ClothingOrderAndStockManagement.Domain.Entities.Account;
 using ClothingOrderAndStockManagement.Infrastructure.Data;
-using ClothingOrderAndStockManagement.Infrastructure.Repositories;
+using ClothingOrderAndStockManagement.Application.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

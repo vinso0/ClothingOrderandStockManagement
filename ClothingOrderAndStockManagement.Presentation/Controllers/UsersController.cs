@@ -1,6 +1,6 @@
 ﻿using ClothingOrderAndStockManagement.Application.Dtos.Users;
 using ClothingOrderAndStockManagement.Application.Helpers;
-using ClothingOrderAndStockManagement.Application.Interfaces;
+using ClothingOrderAndStockManagement.Domain.Interfaces;
 using ClothingOrderAndStockManagement.Domain.Entities.Account;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;

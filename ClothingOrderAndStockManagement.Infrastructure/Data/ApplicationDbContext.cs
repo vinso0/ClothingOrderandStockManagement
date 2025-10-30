@@ -14,16 +14,16 @@ namespace ClothingOrderAndStockManagement.Infrastructure.Data
         {
         }
 
-        public DbSet<CustomerInfo> Customers { get; set; }
-        public DbSet<InventoryLog> InventoryLogs { get; set; }
-        public DbSet<Item> Items { get; set; }
-        public DbSet<ItemCategory> ItemCategories { get; set; }
-        public DbSet<OrderPackage> OrderPackages { get; set; }
-        public DbSet<OrderRecord> OrderRecords { get; set; }
-        public DbSet<Package> Packages { get; set; }
-        public DbSet<PackageItem> PackageItems { get; set; }
-        public DbSet<PaymentRecord> PaymentRecords { get; set; }
-        public DbSet<ReturnLog> ReturnLogs { get; set; }
+        public DbSet<OrderRecord> OrderRecords => Set<OrderRecord>();
+        public DbSet<OrderPackage> OrderPackages => Set<OrderPackage>();
+        public DbSet<PaymentRecord> PaymentRecords => Set<PaymentRecord>();
+        public DbSet<CustomerInfo> CustomerInfos => Set<CustomerInfo>();
+        public DbSet<Package> Packages => Set<Package>();
+        public DbSet<PackageItem> PackageItems => Set<PackageItem>();
+        public DbSet<Item> Items => Set<Item>();
+        public DbSet<ItemCategory> ItemCategories => Set<ItemCategory>();
+        public DbSet<InventoryLog> InventoryLogs => Set<InventoryLog>();
+        public DbSet<ReturnLog> ReturnLogs => Set<ReturnLog>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

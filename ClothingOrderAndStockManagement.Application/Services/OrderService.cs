@@ -1,6 +1,6 @@
 ﻿using ClothingOrderAndStockManagement.Application.Dtos.Orders;
-using ClothingOrderAndStockManagement.Application.Interfaces;
-using ClothingOrderAndStockManagement.Application.Interfaces.Repositories;
+using ClothingOrderAndStockManagement.Domain.Interfaces;
+using ClothingOrderAndStockManagement.Domain.Interfaces.Repositories;
 using ClothingOrderAndStockManagement.Domain.Entities.Orders;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;

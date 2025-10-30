@@ -1,4 +1,4 @@
-﻿using ClothingOrderAndStockManagement.Application.Interfaces;
+﻿using ClothingOrderAndStockManagement.Domain.Interfaces;
 using Microsoft.AspNetCore.Identity; // Ensure this is included
 using ClothingOrderAndStockManagement.Domain.Entities.Account;
 using ClothingOrderAndStockManagement.Application.Services;

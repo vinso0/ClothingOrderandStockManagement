@@ -1,4 +1,4 @@
-﻿using ClothingOrderAndStockManagement.Application.Interfaces;
+﻿using ClothingOrderAndStockManagement.Domain.Interfaces;
 using ClothingOrderAndStockManagement.Web.ViewModels.Account;
 using Microsoft.AspNetCore.Mvc;
 

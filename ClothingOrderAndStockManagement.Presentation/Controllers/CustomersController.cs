@@ -1,6 +1,6 @@
 ﻿using ClothingOrderAndStockManagement.Application.Dtos.Customers;
 using ClothingOrderAndStockManagement.Application.Helpers;
-using ClothingOrderAndStockManagement.Application.Interfaces;
+using ClothingOrderAndStockManagement.Domain.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClothingOrderAndStockManagement.Web.Controllers

@@ -1,4 +1,4 @@
-﻿using ClothingOrderAndStockManagement.Application.Interfaces;
+﻿using ClothingOrderAndStockManagement.Domain.Interfaces;
 using ClothingOrderAndStockManagement.Application.Services;
 using ClothingOrderAndStockManagement.Infrastructure.Services;
 using Microsoft.Extensions.DependencyInjection;
