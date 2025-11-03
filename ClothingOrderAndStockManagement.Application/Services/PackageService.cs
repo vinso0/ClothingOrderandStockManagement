@@ -28,7 +28,11 @@ namespace ClothingOrderAndStockManagement.Application.Services
         {
             try
             {
-                var query = _packageRepository.Query();
+                var query = _packageRepository.Query()
+                    .Include(p => p.PackageItems)
+                    .ThenInclude(pi => pi.Item)
+                    .ThenInclude(i => i.ItemCategory)
+                    .AsQueryable();
 
                 if (!string.IsNullOrWhiteSpace(searchString))
                 {
@@ -43,7 +47,16 @@ namespace ClothingOrderAndStockManagement.Application.Services
                     PackageName = p.PackageName,
                     Description = p.Description,
                     Price = p.Price,
-                    QuantityAvailable = p.QuantityAvailable
+                    QuantityAvailable = p.QuantityAvailable,
+                    PackageItems = p.PackageItems.Select(pi => new PackageItemDto
+                    {
+                        PackageItemId = pi.PackageItemId,
+                        ItemId = pi.ItemId,
+                        ItemQuantity = pi.ItemQuantity,
+                        ItemName = pi.Item.ItemCategory.ItemCategoryType,
+                        Size = pi.Item.Size,
+                        Color = pi.Item.Color
+                    }).ToList()
                 });
 
                 var paginatedList = await PaginatedList<PackageDto>.CreateAsync(dtoQuery, pageIndex, pageSize);
@@ -54,6 +67,9 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 return Result.Fail<PaginatedList<PackageDto>>(ex.Message);
             }
         }
+
+
+
 
         public async Task<IEnumerable<PackageDto>> GetAllPackagesAsync()
         {
@@ -79,7 +95,12 @@ namespace ClothingOrderAndStockManagement.Application.Services
         {
             try
             {
-                var package = await _packageRepository.GetByIdAsync(id);
+                var package = await _packageRepository.Query()
+                    .Include(p => p.PackageItems)
+                    .ThenInclude(pi => pi.Item)
+                    .ThenInclude(i => i.ItemCategory)
+                    .FirstOrDefaultAsync(p => p.PackagesId == id);
+
                 if (package == null)
                     return Result.Fail<PackageDto>("Package not found.");
 
@@ -89,7 +110,16 @@ namespace ClothingOrderAndStockManagement.Application.Services
                     PackageName = package.PackageName,
                     Description = package.Description,
                     Price = package.Price,
-                    QuantityAvailable = package.QuantityAvailable
+                    QuantityAvailable = package.QuantityAvailable,
+                    PackageItems = package.PackageItems.Select(pi => new PackageItemDto
+                    {
+                        PackageItemId = pi.PackageItemId,
+                        ItemId = pi.ItemId,
+                        ItemQuantity = pi.ItemQuantity,
+                        ItemName = pi.Item.ItemCategory.ItemCategoryType,
+                        Size = pi.Item.Size,
+                        Color = pi.Item.Color
+                    }).ToList()
                 };
 
                 return Result.Ok(dto);
@@ -99,6 +129,7 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 return Result.Fail<PackageDto>(ex.Message);
             }
         }
+
 
         public async Task<Result<PackageDetailDto>> GetPackageDetailsAsync(int id)
         {
@@ -158,7 +189,7 @@ namespace ClothingOrderAndStockManagement.Application.Services
                     PackageName = packageDto.PackageName,
                     Description = packageDto.Description,
                     Price = packageDto.Price,
-                    QuantityAvailable = 0, // computed next
+                    QuantityAvailable = packageDto.QuantityAvailable,
                     PackageItems = packageDto.PackageItems.Select(pi => new PackageItem
                     {
                         ItemId = pi.ItemId,
@@ -204,6 +235,7 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 existing.PackageName = packageDto.PackageName;
                 existing.Description = packageDto.Description;
                 existing.Price = packageDto.Price;
+                existing.QuantityAvailable = packageDto.QuantityAvailable;
 
                 // Replace composition
                 existing.PackageItems.Clear();

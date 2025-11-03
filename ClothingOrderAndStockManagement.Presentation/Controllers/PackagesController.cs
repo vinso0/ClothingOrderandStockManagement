@@ -65,7 +65,7 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
 
         public async Task<IActionResult> Edit(int id)
         {
-            var result = await _packageService.GetPackageDetailsAsync(id);
+            var result = await _packageService.GetPackageByIdAsync(id); // Changed this line
             if (!result.IsSuccess)
                 return NotFound();
 
@@ -76,6 +76,7 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
                 PackageName = package.PackageName,
                 Description = package.Description,
                 Price = package.Price,
+                QuantityAvailable = package.QuantityAvailable, // Added this line
                 PackageItems = package.PackageItems.Select(pi => new UpdatePackageItemDto
                 {
                     ItemId = pi.ItemId,
@@ -89,6 +90,7 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
 
             return View(updatePackageDto);
         }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
