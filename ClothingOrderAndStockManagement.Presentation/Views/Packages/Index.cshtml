@@ -27,10 +27,10 @@
         <i class="fas fa-plus"></i>
         Add Package
     </button>
-
-    <!-- Add Package Modal -->
-    @await Html.PartialAsync("Partials/_AddPackageModal", ViewData["AddPackageModel"] as CreatePackageDto ?? new CreatePackageDto())
 </div>
+
+<!-- Add Package Modal -->
+@await Html.PartialAsync("Partials/_AddPackageModal", ViewData["AddPackageModel"] as CreatePackageDto ?? new CreatePackageDto())
 
 <div class="reports-section">
     @if (Model != null && Model.Any())
@@ -48,7 +48,6 @@
                         <th class="package-actions">Actions</th>
                     </tr>
                 </thead>
-
                 <tbody>
                     @foreach (var package in Model)
                     {
@@ -83,42 +82,44 @@
                                             data-bs-target="#packageDetailsModal-@package.PackagesId">
                                         <i class="fas fa-eye"></i> Details
                                     </button>
-                                    @await Html.PartialAsync("Partials/_PackageDetailsModal", package)
 
                                     <button class="btn btn-sm btn-outline-success package-edit-btn"
                                             data-bs-toggle="modal"
                                             data-bs-target="#editPackageModal-@package.PackagesId">
                                         <i class="fas fa-edit"></i> Edit
                                     </button>
-                                    @{
-                                        var updateModel = new UpdatePackageDto
-                                        {
-                                            PackagesId = package.PackagesId,
-                                            PackageName = package.PackageName,
-                                            Description = package.Description,
-                                            Price = package.Price,
-                                            QuantityAvailable = package.QuantityAvailable,
-                                            PackageItems = (package.PackageItems ?? new List<PackageItemDto>())
-                                        .Select(pi => new UpdatePackageItemDto
-                                        {
-                                            ItemId = pi.ItemId,
-                                            ItemQuantity = pi.ItemQuantity
-                                        }).ToList()
-                                        };
-                                    }
-                                    @await Html.PartialAsync("Partials/_EditPackageModal", ViewData["EditPackageModel"] as UpdatePackageDto ?? updateModel)
 
                                     <button class="btn btn-sm btn-outline-danger package-delete-btn"
                                             data-bs-toggle="modal"
                                             data-bs-target="#deleteModal-@package.PackagesId">
                                         <i class="fas fa-trash"></i> Delete
                                     </button>
-                                    @await Html.PartialAsync("_DeleteModal",
-                                    ("Package", "Delete", package.PackagesId, package.PackageName))
-                        </div>
-                    </td>
-                </tr>
-                                }
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Package Details Modal -->
+                        @await Html.PartialAsync("Partials/_PackageDetailsModal", package)
+
+                        <!-- Edit Package Modal -->
+                        @await Html.PartialAsync("Partials/_EditPackageModal", new UpdatePackageDto
+                        {
+                            PackagesId = package.PackagesId,
+                            PackageName = package.PackageName,
+                            Description = package.Description,
+                            Price = package.Price,
+                            QuantityAvailable = package.QuantityAvailable,
+                            PackageItems = (package.PackageItems ?? new List<PackageItemDto>())
+                                .Select(pi => new UpdatePackageItemDto
+                                {
+                                    ItemId = pi.ItemId,
+                                    ItemQuantity = pi.ItemQuantity
+                                }).ToList()
+                        })
+
+                        <!-- Delete Modal -->
+                        @await Html.PartialAsync("_DeleteModal", ("Package", "Delete", package.PackagesId, package.PackageName))
+                    }
                 </tbody>
             </table>
         </div>
@@ -141,7 +142,6 @@
         <div>
             Page @Model!.PageIndex of @Model!.TotalPages
         </div>
-
         <div>
             @if (Model.HasPreviousPage)
             {
@@ -162,72 +162,11 @@
     </div>
 </div>
 
-@section Scripts {
-    <script src="~/js/packages.js"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-          document.querySelectorAll('form[id^="editPackageForm-"]').forEach(function(form){
-            form.addEventListener('submit', function(){
-              const rows = form.querySelectorAll('.package-item-row');
-              rows.forEach((row, idx) => {
-                row.querySelectorAll('select, input').forEach(el => {
-                  el.name = el.name.replace(/\[.*?\]/g, `[${idx}]`);
-                });
-              });
-            });
-          });
-        });
-    </script>
-}
-
-<!-- Modal Show Scripts -->
-@if (ViewData["ShowAddPackageModal"] != null)
-{
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var addPackageModal = new bootstrap.Modal(document.getElementById('addPackageModal'));
-            addPackageModal.show();
-        });
-    </script>
-}
-
-@if (ViewData["ShowEditPackageModalId"] != null)
-{
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var editModalId = 'editPackageModal-@ViewData["ShowEditPackageModalId"]';
-            var editPackageModal = new bootstrap.Modal(document.getElementById(editModalId));
-            editPackageModal.show();
-        });
-    </script>
-}
+<!-- Hidden data for JavaScript -->
+<input type="hidden" id="showAddModal" value="@(ViewData["ShowAddPackageModal"] != null ? "true" : "false")" />
+<input type="hidden" id="showEditModalId" value="@(ViewData["ShowEditPackageModalId"]?.ToString() ?? "")" />
 
 <style>
-    .package-details-btn, .package-edit-btn, .package-delete-btn {
-        border-radius: 4px;
-        font-size: 12px;
-        padding: 4px 12px;
-        margin-right: 0.25rem;
-        display: flex;
-        align-items: center;
-    }
-
-        .package-details-btn:hover {
-            background-color: #17a2b8;
-            color: white;
-        }
-
-        .package-edit-btn:hover {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .package-delete-btn:hover {
-            background-color: #dc3545;
-            color: white;
-        }
-
     .package-header h2 {
         color: #333;
         margin-bottom: 1.5rem;
@@ -247,7 +186,10 @@
         max-width: 400px;
     }
 
-    /* Enhanced Styles for Available Quantity */
+    .package-add-btn {
+        white-space: nowrap;
+    }
+
     .package-quantity {
         text-align: center;
         font-weight: 600;
@@ -260,26 +202,26 @@
         color: white;
     }
 
-        .quantity-badge.normal-stock {
-            background-color: #28a745;
-        }
+    .quantity-badge.normal-stock {
+        background-color: #28a745;
+    }
 
-        .quantity-badge.low-stock {
-            background-color: #ffc107;
-            color: #212529;
-        }
+    .quantity-badge.low-stock {
+        background-color: #ffc107;
+        color: #212529;
+    }
 
     .stock-status {
         text-align: center;
     }
 
-        .stock-status .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.5rem 0.75rem;
-            font-size: 0.875rem;
-        }
+    .stock-status .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
 
     .package-table th {
         background-color: #f8f9fa;
@@ -290,4 +232,63 @@
     .package-table tr:hover {
         background-color: #f8f9fa;
     }
+
+    .package-details-btn, .package-edit-btn, .package-delete-btn {
+        border-radius: 4px;
+        font-size: 12px;
+        padding: 4px 12px;
+        margin-right: 0.25rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .package-details-btn:hover {
+        background-color: #17a2b8;
+        color: white;
+    }
+
+    .package-edit-btn:hover {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .package-delete-btn:hover {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .no-packages-section {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #6c757d;
+    }
+
+    .no-packages-section svg {
+        margin-bottom: 1rem;
+        opacity: 0.6;
+    }
+
+    .pagination-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .package-item-row {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6 !important;
+        border-radius: 0.375rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .package-item-row:last-child {
+        margin-bottom: 0;
+    }
 </style>
+
+@section Scripts {
+    <script src="~/js/packages.js"></script>
+}

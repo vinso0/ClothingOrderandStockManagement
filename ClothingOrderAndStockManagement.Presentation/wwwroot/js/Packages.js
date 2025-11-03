@@ -1,118 +1,130 @@
 ﻿document.addEventListener('DOMContentLoaded', function () {
-    let itemIndex = 0;
-    const packageItemsContainer = document.getElementById('packageItems');
-    const addItemButton = document.getElementById('addPackageItem');
+    // Initialize modal handling
+    initializeModalHandling();
 
-    // Initialize item index based on existing items
-    const existingItems = packageItemsContainer.querySelectorAll('.package-item-row');
-    itemIndex = existingItems.length;
+    // Initialize package items management
+    initializePackageItemsManagement();
 
-    // Add item functionality
-    if (addItemButton) {
-        addItemButton.addEventListener('click', function () {
-            const itemsSelect = document.querySelector('select[name$=".ItemId"]');
-            if (!itemsSelect) return;
+    // Initialize form handlers
+    initializeFormHandlers();
+});
 
-            const optionsHtml = Array.from(itemsSelect.options)
-                .map(option => `<option value="${option.value}">${option.text}</option>`)
-                .join('');
-
-            const newItemHtml = `
-                <div class="package-item-row row mb-2">
-                    <div class="col-md-6">
-                        <select name="PackageItems[${itemIndex}].ItemId" class="form-select" required>
-                            ${optionsHtml}
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <input type="number" name="PackageItems[${itemIndex}].ItemQuantity" placeholder="Quantity" class="form-control" min="1" required />
-                    </div>
-                    <div class="col-md-2">
-                        <button type="button" class="btn btn-danger btn-sm remove-item">Remove</button>
-                    </div>
-                </div>
-            `;
-
-            packageItemsContainer.insertAdjacentHTML('beforeend', newItemHtml);
-            itemIndex++;
-
-            // Reattach remove event listeners
-            attachRemoveEventListeners();
-        });
+function initializeModalHandling() {
+    // Auto-open Add Package Modal on validation errors
+    var showAddModal = document.getElementById('showAddModal');
+    if (showAddModal && showAddModal.value === 'true') {
+        var addPackageModal = new bootstrap.Modal(document.getElementById('addPackageModal'));
+        addPackageModal.show();
     }
 
-    // Remove item functionality
-    function attachRemoveEventListeners() {
-        const removeButtons = document.querySelectorAll('.remove-item');
-        removeButtons.forEach(button => {
-            button.removeEventListener('click', handleRemoveClick);
-            button.addEventListener('click', handleRemoveClick);
-        });
-    }
-
-    function handleRemoveClick(event) {
-        const itemRow = event.target.closest('.package-item-row');
-        const remainingRows = document.querySelectorAll('.package-item-row');
-
-        if (remainingRows.length > 1) {
-            itemRow.remove();
-            reindexItems();
-        } else {
-            alert('At least one item is required for a package.');
+    // Auto-open Edit Package Modal on validation errors
+    var showEditModalId = document.getElementById('showEditModalId');
+    if (showEditModalId && showEditModalId.value) {
+        var editModalId = 'editPackageModal-' + showEditModalId.value;
+        var editModal = document.getElementById(editModalId);
+        if (editModal) {
+            var editPackageModal = new bootstrap.Modal(editModal);
+            editPackageModal.show();
         }
     }
+}
 
-    // Reindex items after removal
-    function reindexItems() {
-        const itemRows = document.querySelectorAll('.package-item-row');
-        itemRows.forEach((row, index) => {
-            const select = row.querySelector('select');
-            const input = row.querySelector('input');
+function initializePackageItemsManagement() {
+    // Add Package Item functionality
+    document.addEventListener('click', function (e) {
+        var addButton = e.target.closest('.add-package-item');
+        if (addButton) {
+            e.preventDefault();
+            var container = addButton.closest('.card-body').querySelector('[id^="packageItems"], [id^="editPackageItems-"]');
+            addPackageItemRow(container);
+        }
+    });
 
-            if (select) {
-                select.name = `PackageItems[${index}].ItemId`;
+    // Remove Package Item functionality
+    document.addEventListener('click', function (e) {
+        var removeButton = e.target.closest('.remove-item');
+        if (removeButton) {
+            e.preventDefault();
+            var row = removeButton.closest('.package-item-row');
+            var container = row.parentElement;
+
+            if (container.querySelectorAll('.package-item-row').length > 1) {
+                row.remove();
+            } else {
+                alert('At least one item is required for the package.');
             }
-            if (input) {
-                input.name = `PackageItems[${index}].ItemQuantity`;
-            }
-        });
-        itemIndex = itemRows.length;
+        }
+    });
+
+    // Item selection change handler
+    document.addEventListener('change', function (e) {
+        if (e.target.matches('select[name*="ItemId"]')) {
+            updateItemStock(e.target);
+        }
+    });
+}
+
+function initializeFormHandlers() {
+    // Form submission handler for reindexing PackageItems
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (form.id && (form.id.startsWith('editPackageForm-') || form.id === 'addPackageForm')) {
+            reindexPackageItems(form);
+        }
+    });
+}
+
+function addPackageItemRow(container) {
+    var existingRows = container.querySelectorAll('.package-item-row');
+    var newIndex = existingRows.length;
+    var templateRow = existingRows[0].cloneNode(true);
+
+    // Clear values and update names
+    templateRow.querySelectorAll('select, input').forEach(function (element) {
+        if (element.name.includes('ItemId')) {
+            element.name = element.name.replace(/\[\d+\]/, '[' + newIndex + ']');
+            element.value = '';
+        } else if (element.name.includes('ItemQuantity')) {
+            element.name = element.name.replace(/\[\d+\]/, '[' + newIndex + ']');
+            element.value = '';
+        }
+    });
+
+    // Clear stock info
+    var stockInfo = templateRow.querySelector('.available-stock');
+    if (stockInfo) {
+        stockInfo.textContent = '';
     }
 
-    // Initialize remove event listeners
-    attachRemoveEventListeners();
+    container.appendChild(templateRow);
+}
 
-    // Form validation
-    const form = document.querySelector('form');
-    if (form) {
-        form.addEventListener('submit', function (event) {
-            const itemSelects = form.querySelectorAll('select[name$=".ItemId"]');
-            const itemQuantities = form.querySelectorAll('input[name$=".ItemQuantity"]');
+function updateItemStock(selectElement) {
+    var selectedOption = selectElement.options[selectElement.selectedIndex];
+    var stock = selectedOption.getAttribute('data-stock') || '0';
+    var row = selectElement.closest('.package-item-row');
+    var stockInfo = row.querySelector('.available-stock');
+    var quantityInput = row.querySelector('.item-quantity');
 
-            let hasValidItems = false;
+    if (stockInfo) {
+        stockInfo.textContent = 'Available: ' + stock;
+    }
 
-            for (let i = 0; i < itemSelects.length; i++) {
-                if (itemSelects[i].value && itemQuantities[i].value && parseInt(itemQuantities[i].value) > 0) {
-                    hasValidItems = true;
-                    break;
-                }
-            }
+    if (quantityInput) {
+        quantityInput.max = stock;
+        if (parseInt(quantityInput.value) > parseInt(stock)) {
+            quantityInput.value = stock;
+        }
+    }
+}
 
-            if (!hasValidItems) {
-                event.preventDefault();
-                alert('Please add at least one valid item to the package.');
-                return false;
-            }
-
-            // Check for duplicate items
-            const selectedItems = Array.from(itemSelects).map(select => select.value).filter(value => value);
-            const uniqueItems = new Set(selectedItems);
-
-            if (selectedItems.length !== uniqueItems.size) {
-                event.preventDefault();
-                alert('Duplicate items are not allowed in a package.');
-                return false;
+function reindexPackageItems(form) {
+    var rows = form.querySelectorAll('.package-item-row');
+    rows.forEach(function (row, index) {
+        row.querySelectorAll('select, input').forEach(function (element) {
+            if (element.name.includes('PackageItems')) {
+                element.name = element.name.replace(/\[\d+\]/, '[' + index + ']');
             }
         });
-    }
-});
+    });
+}
