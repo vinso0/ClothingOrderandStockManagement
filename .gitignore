@@ -227,10 +227,12 @@ PublishScripts/
 *.nupkg
 # NuGet Symbol Packages
 *.snupkg
-# Ignore only the root packages folder (for NuGet)
-[Pp]ackages/
-!Views/Packages/
-!Dtos/Packages/
+# Ignore all Packages folders by default
+**/[Pp]ackages/*
+
+# But not these:
+!**/Dtos/Packages/
+!**/Views/Packages/
 # except build/, which is used as an MSBuild target.
 !**/[Pp]ackages/build/
 # Uncomment if necessary however generally it will be regenerated when needed
