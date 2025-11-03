@@ -43,6 +43,8 @@
                         <th>Package Name</th>
                         <th>Description</th>
                         <th>Price</th>
+                        <th>Available Quantity</th>
+                        <th>Stock Status</th>
                         <th class="package-actions">Actions</th>
                     </tr>
                 </thead>
@@ -55,6 +57,25 @@
                             <td><span class="package-name">@package.PackageName</span></td>
                             <td class="package-details">@(package.Description ?? "No description")</td>
                             <td class="package-details">₱@package.Price.ToString("N2")</td>
+                            <td class="package-quantity">
+                                <span class="quantity-badge @(package.QuantityAvailable <= 5 ? "low-stock" : "normal-stock")">
+                                    @package.QuantityAvailable
+                                </span>
+                            </td>
+                            <td class="stock-status">
+                                @if (package.QuantityAvailable > 0)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle"></i> In Stock
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times-circle"></i> Out of Stock
+                                    </span>
+                                }
+                            </td>
                             <td class="package-actions">
                                 <div class="btn-group" role="group">
                                     <button class="btn btn-sm btn-outline-info package-details-btn"
@@ -76,7 +97,7 @@
                                             PackageName = package.PackageName,
                                             Description = package.Description,
                                             Price = package.Price,
-                                            // Ensure both sides are PackageItemDto
+                                            QuantityAvailable = package.QuantityAvailable,
                                             PackageItems = (package.PackageItems ?? new List<PackageItemDto>())
                                         .Select(pi => new UpdatePackageItemDto
                                         {
@@ -180,7 +201,6 @@
             color: white;
         }
 
-    /* Copy your customer styles and adapt for packages */
     .package-header h2 {
         color: #333;
         margin-bottom: 1.5rem;
@@ -198,5 +218,49 @@
     .package-search-form {
         flex: 1;
         max-width: 400px;
+    }
+
+    /* New Styles for Available Quantity */
+    .package-quantity {
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .quantity-badge {
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.375rem;
+        font-weight: 600;
+        color: white;
+    }
+
+        .quantity-badge.normal-stock {
+            background-color: #28a745;
+        }
+
+        .quantity-badge.low-stock {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+    .stock-status {
+        text-align: center;
+    }
+
+        .stock-status .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+    .package-table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .package-table tr:hover {
+        background-color: #f8f9fa;
     }
 </style>

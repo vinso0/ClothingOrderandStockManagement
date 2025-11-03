@@ -12,6 +12,7 @@ namespace ClothingOrderAndStockManagement.Application.Dtos.Packages
         public string PackageName { get; set; } = string.Empty;
         public string? Description { get; set; }
         public decimal Price { get; set; }
+        public int QuantityAvailable { get; set; }
         public List<UpdatePackageItemDto> PackageItems { get; set; } = new();
     }
 }
