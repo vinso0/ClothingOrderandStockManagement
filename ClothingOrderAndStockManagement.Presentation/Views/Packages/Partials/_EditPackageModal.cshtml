@@ -37,18 +37,28 @@
                 {
                   <div class="package-item-row row mb-2">
                     <div class="col-md-6">
-                      <select name="PackageItems[@i].ItemId" class="form-select" required>
-                        <option value="">Select Item</option>
-                        @if (ViewBag.Items != null)
-                        {
-                          foreach (var item in (IEnumerable<ItemDto>)ViewBag.Items)
-                          {
-                            <option value="@item.ItemId" selected="@(item.ItemId == Model.PackageItems[i].ItemId)">
-                              @item.ItemCategoryType - @item.Size (@item.Color) - Qty: @item.Quantity
-                            </option>
-                          }
+                        @{
+                            var items = (IEnumerable<ItemDto>)ViewBag.Items ?? Enumerable.Empty<ItemDto>();
                         }
-                      </select>
+                        <select name="PackageItems[@i].ItemId" class="form-select" required>
+                            <option value="">Select Item</option>
+                            @foreach (var item in items)
+                            {
+                                var isSelected = item.ItemId == Model.PackageItems[i].ItemId;
+                                if (isSelected)
+                                {
+                                    <option value="@item.ItemId" selected>
+                                        @item.ItemCategoryType - @item.Size (@item.Color) - Qty: @item.Quantity
+                                    </option>
+                                }
+                                else
+                                {
+                                    <option value="@item.ItemId">
+                                        @item.ItemCategoryType - @item.Size (@item.Color) - Qty: @item.Quantity
+                                    </option>
+                                }
+                            }
+                        </select>
                     </div>
                     <div class="col-md-4">
                       <input type="number" name="PackageItems[@i].ItemQuantity"

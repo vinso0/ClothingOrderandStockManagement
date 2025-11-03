@@ -40,7 +40,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var item in Model.PackageItems.Cast<PackageItemDto>())
+                                    @foreach (PackageItemDto item in (Model.PackageItems ?? new List<PackageItemDto>()))
                                     {
                                         <tr>
                                             <td>@item.ItemName</td>

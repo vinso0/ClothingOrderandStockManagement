@@ -69,7 +69,23 @@
                                             data-bs-target="#editPackageModal-@package.PackagesId">
                                         <i class="fas fa-edit"></i> Edit
                                     </button>
-                                    @await Html.PartialAsync("Partials/_EditPackageModal", package)
+                                    @{
+                                        var updateModel = new UpdatePackageDto
+                                        {
+                                            PackagesId = package.PackagesId,
+                                            PackageName = package.PackageName,
+                                            Description = package.Description,
+                                            Price = package.Price,
+                                            // Ensure both sides are PackageItemDto
+                                            PackageItems = (package.PackageItems ?? new List<PackageItemDto>())
+                                        .Select(pi => new UpdatePackageItemDto
+                                        {
+                                            ItemId = pi.ItemId,
+                                            ItemQuantity = pi.ItemQuantity
+                                        }).ToList()
+                                        };
+                                    }
+                                    @await Html.PartialAsync("Partials/_EditPackageModal", updateModel)
 
                                     <button class="btn btn-sm btn-outline-danger package-delete-btn"
                                             data-bs-toggle="modal"
