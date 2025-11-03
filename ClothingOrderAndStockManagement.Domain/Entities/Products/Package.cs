@@ -12,6 +12,8 @@ public partial class Package
 
     public decimal Price { get; set; }
 
+    public int QuantityAvailable { get; set; }
+
     public virtual ICollection<OrderPackage> OrderPackages { get; set; } = new List<OrderPackage>();
 
     public virtual ICollection<PackageItem> PackageItems { get; set; } = new List<PackageItem>();

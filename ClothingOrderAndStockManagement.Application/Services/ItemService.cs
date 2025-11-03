@@ -1,17 +1,26 @@
 ﻿using ClothingOrderAndStockManagement.Application.Dtos.Items;
 using ClothingOrderAndStockManagement.Application.Helpers;
+using ClothingOrderAndStockManagement.Application.Interfaces;
 using ClothingOrderAndStockManagement.Domain.Entities.Products;
 using ClothingOrderAndStockManagement.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClothingOrderAndStockManagement.Application.Services
 {
     public class ItemService : IItemService
     {
         private readonly IItemRepository _itemRepository;
+        private readonly IPackageRepository _packageRepository;
+        private readonly IInventoryService _inventoryService;
 
-        public ItemService(IItemRepository itemRepository)
+        public ItemService(
+            IItemRepository itemRepository,
+            IPackageRepository packageRepository,
+            IInventoryService inventoryService)
         {
             _itemRepository = itemRepository;
+            _packageRepository = packageRepository;
+            _inventoryService = inventoryService;
         }
 
         public async Task<PaginatedList<ItemDto>> GetItemsAsync(int pageNumber, int pageSize, string? searchTerm = null)
@@ -28,7 +37,6 @@ namespace ClothingOrderAndStockManagement.Application.Services
 
             query = query.OrderBy(i => i.ItemId);
 
-            // Create paginated list using the query
             var paginatedItems = await PaginatedList<Item>.CreateAsync(query, pageNumber, pageSize);
 
             var itemDtos = paginatedItems.Select(item => new ItemDto
@@ -74,6 +82,8 @@ namespace ClothingOrderAndStockManagement.Application.Services
             await _itemRepository.AddAsync(item);
             var createdItem = await _itemRepository.GetByIdAsync(item.ItemId);
 
+            await UpdateAffectedPackageQuantitiesAsync(item.ItemId);
+
             return new ItemDto
             {
                 ItemId = createdItem!.ItemId,
@@ -99,6 +109,9 @@ namespace ClothingOrderAndStockManagement.Application.Services
             existingItem.Quantity = updateItemDto.Quantity;
 
             await _itemRepository.UpdateAsync(existingItem);
+
+            await UpdateAffectedPackageQuantitiesAsync(updateItemDto.ItemId);
+
             var updatedItem = await _itemRepository.GetByIdAsync(existingItem.ItemId);
 
             return new ItemDto
@@ -117,6 +130,9 @@ namespace ClothingOrderAndStockManagement.Application.Services
             var exists = await _itemRepository.ItemExistsAsync(itemId);
             if (!exists) return false;
 
+            // Update affected package quantities before deletion
+            await UpdateAffectedPackageQuantitiesAsync(itemId);
+
             await _itemRepository.DeleteAsync(itemId);
             return true;
         }
@@ -130,6 +146,28 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 ItemCategoryId = c.ItemCategoryId,
                 ItemCategoryType = c.ItemCategoryType
             });
+        }
+
+        // *** HELPER METHOD ***
+        private async Task UpdateAffectedPackageQuantitiesAsync(int itemId)
+        {
+            try
+            {
+                var affectedPackageIds = await _packageRepository.Query()
+                    .Where(p => p.PackageItems.Any(pi => pi.ItemId == itemId))
+                    .Select(p => p.PackagesId)
+                    .ToListAsync();
+
+                foreach (var packageId in affectedPackageIds)
+                {
+                    await _inventoryService.UpdatePackageQuantityAsync(packageId);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the error but don't break the main operation
+                Console.WriteLine($"Error updating package quantities: {ex.Message}");
+            }
         }
     }
 }

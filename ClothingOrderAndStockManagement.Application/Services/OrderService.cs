@@ -1,7 +1,8 @@
 ﻿using ClothingOrderAndStockManagement.Application.Dtos.Orders;
+using ClothingOrderAndStockManagement.Application.Interfaces;
+using ClothingOrderAndStockManagement.Domain.Entities.Orders;
 using ClothingOrderAndStockManagement.Domain.Interfaces;
 using ClothingOrderAndStockManagement.Domain.Interfaces.Repositories;
-using ClothingOrderAndStockManagement.Domain.Entities.Orders;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,11 +12,16 @@ namespace ClothingOrderAndStockManagement.Application.Services
     {
         private readonly IOrderRepository _orderRepository;
         private readonly ICustomerRepository _customerRepository;
+        private readonly IInventoryService _inventoryService;
 
-        public OrderService(IOrderRepository orderRepository, ICustomerRepository customerRepository)
+        public OrderService(
+            IOrderRepository orderRepository,
+            ICustomerRepository customerRepository,
+            IInventoryService inventoryService)
         {
             _orderRepository = orderRepository;
             _customerRepository = customerRepository;
+            _inventoryService = inventoryService;
         }
 
         public async Task<IEnumerable<OrderRecordDto>> GetAllAsync()
@@ -53,22 +59,48 @@ namespace ClothingOrderAndStockManagement.Application.Services
                     throw new InvalidOperationException("Package and positive quantity are required.");
             }
 
-            var order = new OrderRecord
+            // Validate availability
+            foreach (var p in dto.OrderPackages)
             {
-                CustomerId = dto.CustomerId,
-                OrderDatetime = dto.OrderDatetime,
-                OrderStatus = "Awaiting Payment",
-                OrderPackages = dto.OrderPackages.Select(p => new OrderPackage
-                {
-                    PackagesId = p.PackagesId,
-                    Quantity = p.Quantity,
-                    PriceAtPurchase = p.PriceAtPurchase
-                }).ToList()
-            };
+                var ok = await _inventoryService.ValidatePackageAvailabilityAsync(p.PackagesId, p.Quantity);
+                if (!ok) throw new InvalidOperationException("Insufficient package availability.");
+            }
 
-            await _orderRepository.AddAsync(order);
-            await _orderRepository.SaveChangesAsync();
-            return order.OrderRecordsId;
+            // Reserve
+            var reserved = new List<(int packageId, int qty)>();
+            try
+            {
+                foreach (var p in dto.OrderPackages)
+                {
+                    var res = await _inventoryService.ReservePackageQuantityAsync(p.PackagesId, p.Quantity);
+                    if (res.IsFailed) throw new InvalidOperationException(res.Errors[0].Message);
+                    reserved.Add((p.PackagesId, p.Quantity));
+                }
+
+                var order = new OrderRecord
+                {
+                    CustomerId = dto.CustomerId,
+                    OrderDatetime = dto.OrderDatetime,
+                    OrderStatus = "Awaiting Payment",
+                    OrderPackages = dto.OrderPackages.Select(p => new OrderPackage
+                    {
+                        PackagesId = p.PackagesId,
+                        Quantity = p.Quantity,
+                        PriceAtPurchase = p.PriceAtPurchase
+                    }).ToList()
+                };
+
+                await _orderRepository.AddAsync(order);
+                await _orderRepository.SaveChangesAsync();
+                return order.OrderRecordsId;
+            }
+            catch
+            {
+                // rollback reservations if failed
+                foreach (var (pid, q) in reserved)
+                    await _inventoryService.ReleasePackageQuantityAsync(pid, q);
+                throw;
+            }
         }
 
         public async Task<bool> UpdateAsync(OrderRecordDto dto)
@@ -80,6 +112,16 @@ namespace ClothingOrderAndStockManagement.Application.Services
 
             if (existing == null) return false;
 
+            // Example: if updating to Cancelled, release reservations
+            var wasCancelled = existing.OrderStatus == "Cancelled";
+            var willBeCancelled = dto.OrderStatus == "Cancelled";
+
+            if (!wasCancelled && willBeCancelled)
+            {
+                foreach (var p in existing.OrderPackages)
+                    await _inventoryService.ReleasePackageQuantityAsync(p.PackagesId, p.Quantity);
+            }
+
             existing.OrderStatus = dto.OrderStatus;
 
             await _orderRepository.UpdateAsync(existing);
@@ -89,15 +131,22 @@ namespace ClothingOrderAndStockManagement.Application.Services
 
         public async Task<bool> DeleteAsync(int id)
         {
+            var existing = await _orderRepository.Query()
+                .Include(o => o.OrderPackages)
+                .FirstOrDefaultAsync(o => o.OrderRecordsId == id);
+
+            if (existing != null)
+            {
+                // Release reservations on delete
+                foreach (var p in existing.OrderPackages)
+                    await _inventoryService.ReleasePackageQuantityAsync(p.PackagesId, p.Quantity);
+            }
+
             await _orderRepository.DeleteAsync(id);
             await _orderRepository.SaveChangesAsync();
             return true;
         }
 
-
-
-
-        // Add payment to existing order
         public async Task<bool> AddPaymentAsync(AddPaymentDto dto, IFormFile? proof1, IFormFile? proof2)
         {
             var order = await _orderRepository.Query()
@@ -107,26 +156,17 @@ namespace ClothingOrderAndStockManagement.Application.Services
 
             if (order == null) return false;
 
-            // Save payment proof
             string? url1 = null;
             if (proof1 != null) url1 = await SavePaymentProofAsync(proof1);
 
-            // Calculate totals
             var totalAmount = order.OrderPackages.Sum(p => p.PriceAtPurchase * p.Quantity);
             var currentTotalPaid = order.PaymentRecords.Sum(p => p.Amount);
             var newTotalPaid = currentTotalPaid + dto.Amount;
 
-            // Determine payment status based on logic
             string paymentStatus = dto.PaymentStatus;
+            if (newTotalPaid >= totalAmount) paymentStatus = "Full Payment";
 
-            // If this payment completes the order, force it to be "Full Payment"
-            if (newTotalPaid >= totalAmount)
-            {
-                paymentStatus = "Full Payment";
-            }
-
-            // Add payment record
-            var payment = new PaymentRecord
+            order.PaymentRecords.Add(new Domain.Entities.Orders.PaymentRecord
             {
                 OrderRecordsId = dto.OrderRecordsId,
                 CustomerId = order.CustomerId,
@@ -134,23 +174,11 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 ProofUrl = url1,
                 PaymentStatus = paymentStatus,
                 PaymentDate = DateTime.Now
-            };
+            });
 
-            order.PaymentRecords.Add(payment);
-
-            // Update order status based on total payments
-            if (newTotalPaid >= totalAmount)
-            {
-                order.OrderStatus = "Fully Paid";
-            }
-            else if (newTotalPaid > 0)
-            {
-                order.OrderStatus = "Partially Paid";
-            }
-            else
-            {
-                order.OrderStatus = "Awaiting Payment";
-            }
+            if (newTotalPaid >= totalAmount) order.OrderStatus = "Fully Paid";
+            else if (newTotalPaid > 0) order.OrderStatus = "Partially Paid";
+            else order.OrderStatus = "Awaiting Payment";
 
             await _orderRepository.UpdateAsync(order);
             await _orderRepository.SaveChangesAsync();
@@ -159,10 +187,10 @@ namespace ClothingOrderAndStockManagement.Application.Services
 
         public async Task<int> CreateWithPaymentAsync(CreateOrderDto dto, IFormFile? proof1, IFormFile? proof2)
         {
+            // Same as CreateAsync; attach payment later if needed
             return await CreateAsync(dto);
         }
 
-        // Helper methods
         private OrderRecordDto MapToDto(
             OrderRecord order,
             IEnumerable<ClothingOrderAndStockManagement.Domain.Entities.Customers.CustomerInfo> customers)
