@@ -1,7 +1,7 @@
 ﻿@using ClothingOrderAndStockManagement.Application.Dtos.Packages
 @model PackageDto
 
-<div class="modal fade package-modal package-details-modal" id="packageDetailsModal-@Model.PackagesId" tabindex="-1" aria-labelledby="packageDetailsModalLabel" aria-hidden="true">
+<div class="modal fade package-modal package-details-modal" id="packageDetailsModal-@Model.PackagesId" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -40,7 +40,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var item in Model.PackageItems)
+                                    @foreach (var item in Model.PackageItems.Cast<PackageItemDto>())
                                     {
                                         <tr>
                                             <td>@item.ItemName</td>

@@ -1,74 +1,75 @@
-﻿@using ClothingOrderAndStockManagement.Application.Dtos.Packages
-@model PackageDto
+﻿@using ClothingOrderAndStockManagement.Application.Dtos.Items
+@using ClothingOrderAndStockManagement.Application.Dtos.Packages
+@model UpdatePackageDto
 
-<div class="modal fade package-modal edit-package-modal" id="editPackageModal-@Model.PackagesId" tabindex="-1" aria-labelledby="editPackageModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Package - @Model.PackageName</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade package-modal edit-package-modal" id="editPackageModal-@Model.PackagesId" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Package - @Model.PackageName</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form asp-action="Edit" asp-controller="Packages" method="post" autocomplete="off">
+          <input type="hidden" name="PackagesId" value="@Model.PackagesId" />
+
+          <div class="mb-3">
+            <label class="form-label">Package Name</label>
+            <input type="text" name="PackageName" value="@Model.PackageName" class="form-control" required />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea name="Description" class="form-control" rows="3">@Model.Description</textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Price</label>
+            <input type="number" name="Price" value="@Model.Price" class="form-control" step="0.01" min="0" required />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Package Items</label>
+            <div id="editPackageItems-@Model.PackagesId">
+              @if (Model.PackageItems?.Any() == true)
+              {
+                @for (int i = 0; i < Model.PackageItems.Count; i++)
+                {
+                  <div class="package-item-row row mb-2">
+                    <div class="col-md-6">
+                      <select name="PackageItems[@i].ItemId" class="form-select" required>
+                        <option value="">Select Item</option>
+                        @if (ViewBag.Items != null)
+                        {
+                          foreach (var item in (IEnumerable<ItemDto>)ViewBag.Items)
+                          {
+                            <option value="@item.ItemId" selected="@(item.ItemId == Model.PackageItems[i].ItemId)">
+                              @item.ItemCategoryType - @item.Size (@item.Color) - Qty: @item.Quantity
+                            </option>
+                          }
+                        }
+                      </select>
+                    </div>
+                    <div class="col-md-4">
+                      <input type="number" name="PackageItems[@i].ItemQuantity"
+                             value="@Model.PackageItems[i].ItemQuantity" min="1" class="form-control" required />
+                    </div>
+                    <div class="col-md-2">
+                      <button type="button" class="btn btn-danger btn-sm remove-item">Remove</button>
+                    </div>
+                  </div>
+                }
+              }
             </div>
-            <div class="modal-body">
-                <form asp-action="EditModal" asp-controller="Packages" method="post" autocomplete="off">
-                    <input type="hidden" name="PackagesId" value="@Model.PackagesId" />
+            <button type="button" class="btn btn-secondary btn-sm add-package-item">Add Item</button>
+          </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Package Name</label>
-                        <input type="text" name="PackageName" value="@Model.PackageName" class="form-control" required />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea name="Description" class="form-control" rows="3">@Model.Description</textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Price</label>
-                        <input type="number" name="Price" value="@Model.Price" class="form-control" step="0.01" min="0" required />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Package Items</label>
-                        <div id="editPackageItems-@Model.PackagesId">
-                            @if (Model.PackageItems?.Any() == true)
-                            {
-                                @for (int i = 0; i < Model.PackageItems.Count; i++)
-                                {
-                                    <div class="package-item-row row mb-2">
-                                        <div class="col-md-6">
-                                            <select name="PackageItems[@i].ItemId" class="form-select" required>
-                                                <option value="">Select Item</option>
-                                                @if (ViewBag.Items != null)
-                                                {
-                                                    @foreach (var item in (IEnumerable<ItemDto>)ViewBag.Items)
-                                                    {
-                                                        <option value="@item.ItemId" selected="@(item.ItemId == Model.PackageItems[i].ItemId)">
-                                                            @item.ItemCategoryType - @item.Size (@item.Color) - Qty: @item.Quantity
-                                                        </option>
-                                                    }
-                                                }
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <input type="number" name="PackageItems[@i].ItemQuantity" value="@Model.PackageItems[i].ItemQuantity"
-                                                   placeholder="Quantity" class="form-control" min="1" required />
-                                        </div>
-                                        <div class="col-md-2">
-                                            <button type="button" class="btn btn-danger btn-sm remove-item">Remove</button>
-                                        </div>
-                                    </div>
-                                }
-                            }
-                        </div>
-                        <button type="button" class="btn btn-secondary btn-sm add-package-item">Add Item</button>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </div>

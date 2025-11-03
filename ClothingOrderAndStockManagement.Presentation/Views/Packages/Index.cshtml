@@ -1,174 +1,126 @@
-﻿@model PaginatedList<PackageDto>
+﻿@model ClothingOrderAndStockManagement.Application.Helpers.PaginatedList<PackageDto>
 @using ClothingOrderAndStockManagement.Application.Dtos.Items
 @using ClothingOrderAndStockManagement.Application.Dtos.Packages
-@using ClothingOrderAndStockManagement.Application.Helpers
 @{
     ViewData["Title"] = "Packages";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="card-title mb-0">Packages Management</h4>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPackageModal">
-                    <i class="fas fa-plus"></i> Add Package
-                </button>
-            </div>
-            <div class="card-body">
-                <!-- Search Form -->
-                <form method="get">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <div class="input-group">
-                                <input type="text" class="form-control" name="searchString" value="@ViewData["CurrentFilter"]" placeholder="Search packages..." />
-                                <button class="btn btn-outline-secondary" type="submit">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <a class="btn btn-outline-primary" asp-action="Index">Show All</a>
-                        </div>
-                    </div>
-                </form>
-
-                <!-- Packages Table -->
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Package Name</th>
-                                <th>Description</th>
-                                <th>Price</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (Model != null && Model.Any())
-                            {
-                                @foreach (var package in Model)
-                                {
-                                    <tr>
-                                        <td>@package.PackageName</td>
-                                        <td>@package.Description</td>
-                                        <td>₱@package.Price.ToString("N2")</td>
-                                        <td>
-                                            <!-- View Details Button -->
-                                            <button class="btn btn-sm btn-info"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#packageDetailsModal-@package.PackagesId">
-                                                <i class="fas fa-eye"></i> Details
-                                            </button>
-                                            @await Html.PartialAsync("Partials/_PackageDetailsModal", package)
-
-                                            <!-- Edit Button -->
-                                            <button class="btn btn-sm btn-warning"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#editPackageModal-@package.PackagesId">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </button>
-                                            @await Html.PartialAsync("Partials/_EditPackageModal", package)
-
-                                            <!-- Delete Button -->
-                                            <a asp-action="Delete" asp-route-id="@package.PackagesId" class="btn btn-sm btn-danger"
-                                               onclick="return confirm('Are you sure you want to delete this package?')">
-                                                <i class="fas fa-trash"></i> Delete
-                                            </a>
-                                        </td>
-
-                                    </tr>
-                                }
-                            }
-                            else
-                            {
-                                <tr>
-                                    <td colspan="4" class="text-center">No packages found.</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                @if (Model != null && Model.TotalPages > 1)
-                {
-                    <nav aria-label="Packages pagination">
-                        <ul class="pagination justify-content-center">
-                            <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                                <a class="page-link" asp-action="Index" asp-route-pageIndex="@(Model.PageIndex - 1)" asp-route-searchString="@ViewData["CurrentFilter"]">Previous</a>
-                            </li>
-                            @for (int i = 1; i <= Model.TotalPages; i++)
-                            {
-                                <li class="page-item @(i == Model.PageIndex ? "active" : "")">
-                                    <a class="page-link" asp-action="Index" asp-route-pageIndex="@i" asp-route-searchString="@ViewData["CurrentFilter"]">@i</a>
-                                </li>
-                            }
-                            <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                                <a class="page-link" asp-action="Index" asp-route-pageIndex="@(Model.PageIndex + 1)" asp-route-searchString="@ViewData["CurrentFilter"]">Next</a>
-                            </li>
-                        </ul>
-                    </nav>
-                }
-            </div>
-        </div>
-    </div>
+<div class="package-header">
+    <h2>Packages</h2>
 </div>
 
-<!-- Add Package Modal -->
-<div class="modal fade" id="addPackageModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form asp-action="Create" method="post">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add New Package</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Package Name</label>
-                        <input type="text" name="PackageName" class="form-control" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea name="Description" class="form-control" rows="3"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Price</label>
-                        <input type="number" name="Price" class="form-control" step="0.01" min="0" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Package Items</label>
-                        <div id="packageItems">
-                            <div class="package-item-row row mb-2">
-                                <div class="col-md-6">
-                                    <select name="PackageItems[0].ItemId" class="form-select" required>
-                                        <option value="">Select Item</option>
-                                        @if (ViewBag.Items != null)
-                                        {
-                                            @foreach (var item in (IEnumerable<ItemDto>)ViewBag.Items)
-                                            {
-                                                <option value="@item.ItemId">@item.ItemCategoryType - @item.Size (@item.Color) - Qty: @item.Quantity</option>
-                                            }
-                                        }
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <input type="number" name="PackageItems[0].ItemQuantity" placeholder="Quantity" class="form-control" min="1" required />
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="button" class="btn btn-danger btn-sm remove-item">Remove</button>
-                                </div>
-                            </div>
+<div class="package-search-add-section">
+    <!-- Search Form -->
+    <form asp-controller="Packages" asp-action="Index" method="get" class="package-search-form" autocomplete="off">
+        <div class="input-group">
+            <input type="text" name="searchString" class="form-control" placeholder="Search packages..." value="@Context.Request.Query["searchString"]" />
+            <button type="submit" class="btn btn-primary d-flex align-items-center">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </form>
+
+    <!-- Add Package Button -->
+    <button class="btn btn-outline-primary package-add-btn"
+            data-bs-toggle="modal" data-bs-target="#addPackageModal">
+        <i class="fas fa-plus"></i>
+        Add Package
+    </button>
+
+    <!-- Add Package Modal -->
+    @await Html.PartialAsync("Partials/_AddPackageModal", new CreatePackageDto())
+</div>
+
+<div class="reports-section">
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover package-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Package Name</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                        <th class="package-actions">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var package in Model)
+                    {
+                        <tr>
+                            <td><span class="package-id">@package.PackagesId</span></td>
+                            <td><span class="package-name">@package.PackageName</span></td>
+                            <td class="package-details">@(package.Description ?? "No description")</td>
+                            <td class="package-details">₱@package.Price.ToString("N2")</td>
+                            <td class="package-actions">
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm btn-outline-info package-details-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#packageDetailsModal-@package.PackagesId">
+                                        <i class="fas fa-eye"></i> Details
+                                    </button>
+                                    @await Html.PartialAsync("Partials/_PackageDetailsModal", package)
+
+                                    <button class="btn btn-sm btn-outline-success package-edit-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editPackageModal-@package.PackagesId">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    @await Html.PartialAsync("Partials/_EditPackageModal", package)
+
+                                    <button class="btn btn-sm btn-outline-danger package-delete-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteModal-@package.PackagesId">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                    @await Html.PartialAsync("_DeleteModal",
+                                    ("Package", "Delete", package.PackagesId, package.PackageName))
                         </div>
-                        <button type="button" id="addPackageItem" class="btn btn-secondary btn-sm">Add Item</button>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Package</button>
-                </div>
-            </form>
+                    </td>
+                </tr>
+                                }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="no-packages-section">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="9" cy="9" r="2" />
+                <path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+            </svg>
+            <h5>No packages found</h5>
+            <p>Start by creating your first package using the "Add Package" button above.</p>
+        </div>
+    }
+
+    <!-- Pagination -->
+    <div class="pagination-section">
+        <div>
+            Page @Model!.PageIndex of @Model!.TotalPages
+        </div>
+
+        <div>
+            @if (Model.HasPreviousPage)
+            {
+                <a asp-action="Index"
+                   asp-route-pageIndex="@(Model.PageIndex - 1)"
+                   asp-route-searchString="@ViewData["CurrentFilter"]"
+                   class="btn btn-outline-secondary">Previous</a>
+            }
+
+            @if (Model.HasNextPage)
+            {
+                <a asp-action="Index"
+                   asp-route-pageIndex="@(Model.PageIndex + 1)"
+                   asp-route-searchString="@ViewData["CurrentFilter"]"
+                   class="btn btn-outline-primary">Next</a>
+            }
         </div>
     </div>
 </div>
@@ -186,3 +138,49 @@
         });
     </script>
 }
+
+<style>
+    .package-details-btn, .package-edit-btn, .package-delete-btn {
+        border-radius: 4px;
+        font-size: 12px;
+        padding: 4px 12px;
+        margin-right: 0.25rem;
+        display: flex;
+        align-items: center;
+    }
+
+        .package-details-btn:hover {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .package-edit-btn:hover {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .package-delete-btn:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+
+    /* Copy your customer styles and adapt for packages */
+    .package-header h2 {
+        color: #333;
+        margin-bottom: 1.5rem;
+    }
+
+    .package-search-add-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .package-search-form {
+        flex: 1;
+        max-width: 400px;
+    }
+</style>
