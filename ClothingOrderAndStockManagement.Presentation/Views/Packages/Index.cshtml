@@ -164,6 +164,21 @@
 
 @section Scripts {
     <script src="~/js/packages.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          document.querySelectorAll('form[id^="editPackageForm-"]').forEach(function(form){
+            form.addEventListener('submit', function(){
+              const rows = form.querySelectorAll('.package-item-row');
+              rows.forEach((row, idx) => {
+                row.querySelectorAll('select, input').forEach(el => {
+                  el.name = el.name.replace(/\[.*?\]/g, `[${idx}]`);
+                });
+              });
+            });
+          });
+        });
+    </script>
 }
 
 <!-- Modal Show Scripts -->

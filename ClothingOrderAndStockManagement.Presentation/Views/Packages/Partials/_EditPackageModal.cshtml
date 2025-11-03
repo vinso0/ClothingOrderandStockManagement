@@ -12,7 +12,9 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                 <form asp-action="Edit" asp-controller="Packages" method="post" autocomplete="off" id="editPackageForm-@Model.PackagesId">
+                    @Html.AntiForgeryToken()
                     <input type="hidden" name="PackagesId" value="@Model.PackagesId" />
 
                     <div class="row">
