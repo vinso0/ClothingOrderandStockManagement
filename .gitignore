@@ -230,9 +230,12 @@ PublishScripts/
 # Ignore all Packages folders by default
 **/[Pp]ackages/*
 
-# But not these:
+# But do not ignore these specific project folders and their files:
 !**/Dtos/Packages/
+!**/Dtos/Packages/**
 !**/Views/Packages/
+!**/Views/Packages/**
+
 # except build/, which is used as an MSBuild target.
 !**/[Pp]ackages/build/
 # Uncomment if necessary however generally it will be regenerated when needed

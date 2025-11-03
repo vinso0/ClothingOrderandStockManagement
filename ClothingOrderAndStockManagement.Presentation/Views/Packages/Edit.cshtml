@@ -1,0 +1,81 @@
+﻿@model UpdatePackageDto
+@using ClothingOrderAndStockManagement.Application.Dtos.Items
+@using ClothingOrderAndStockManagement.Application.Dtos.Packages
+@{
+    ViewData["Title"] = "Edit Package";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Edit Package</h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post">
+                    <input type="hidden" asp-for="PackagesId" />
+
+                    <div class="mb-3">
+                        <label asp-for="PackageName" class="form-label">Package Name</label>
+                        <input asp-for="PackageName" class="form-control" />
+                        <span asp-validation-for="PackageName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Price" class="form-label">Price</label>
+                        <input asp-for="Price" class="form-control" type="number" step="0.01" min="0" />
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Package Items</label>
+                        <div id="packageItems">
+                            @for (int i = 0; i < Model.PackageItems.Count; i++)
+                            {
+                                <div class="package-item-row row mb-2">
+                                    <div class="col-md-6">
+                                        <select asp-for="PackageItems[i].ItemId" class="form-select" required>
+                                            <option value="">Select Item</option>
+                                            @if (ViewBag.Items != null)
+                                            {
+                                                @foreach (var item in (IEnumerable<ItemDto>)ViewBag.Items)
+                                                {
+                                                    <option value="@item.ItemId" selected="@(item.ItemId == Model.PackageItems[i].ItemId)">
+                                                        @item.ItemCategoryType - @item.Size (@item.Color) - Qty: @item.Quantity
+                                                    </option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input asp-for="PackageItems[i].ItemQuantity" placeholder="Quantity" class="form-control" min="1" required />
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-danger btn-sm remove-item">Remove</button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <button type="button" id="addPackageItem" class="btn btn-secondary btn-sm">Add Item</button>
+                    </div>
+
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">Update Package</button>
+                        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/packages.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+}
