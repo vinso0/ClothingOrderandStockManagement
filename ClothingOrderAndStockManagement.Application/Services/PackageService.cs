@@ -28,19 +28,23 @@ namespace ClothingOrderAndStockManagement.Application.Services
         {
             try
             {
-                var query = _packageRepository.Query()
-                    .Include(p => p.PackageItems)
-                    .ThenInclude(pi => pi.Item)
-                    .ThenInclude(i => i.ItemCategory)
-                    .AsQueryable();
+                // Step 1: Start with base query and apply filter FIRST
+                var baseQuery = _packageRepository.Query();
 
                 if (!string.IsNullOrWhiteSpace(searchString))
                 {
-                    query = query.Where(p =>
+                    baseQuery = baseQuery.Where(p =>
                         p.PackageName.Contains(searchString) ||
                         (p.Description != null && p.Description.Contains(searchString)));
                 }
 
+                // Step 2: Apply includes AFTER filtering
+                var query = baseQuery
+                    .Include(p => p.PackageItems)
+                    .ThenInclude(pi => pi.Item)
+                    .ThenInclude(i => i.ItemCategory);
+
+                // Step 3: Project with null-safe navigation
                 var dtoQuery = query.Select(p => new PackageDto
                 {
                     PackagesId = p.PackagesId,
@@ -53,9 +57,11 @@ namespace ClothingOrderAndStockManagement.Application.Services
                         PackageItemId = pi.PackageItemId,
                         ItemId = pi.ItemId,
                         ItemQuantity = pi.ItemQuantity,
-                        ItemName = pi.Item.ItemCategory.ItemCategoryType,
-                        Size = pi.Item.Size,
-                        Color = pi.Item.Color
+                        ItemName = pi.Item != null && pi.Item.ItemCategory != null
+                            ? pi.Item.ItemCategory.ItemCategoryType
+                            : null,
+                        Size = pi.Item != null ? pi.Item.Size : null,
+                        Color = pi.Item != null ? pi.Item.Color : null
                     }).ToList()
                 });
 
@@ -67,9 +73,6 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 return Result.Fail<PaginatedList<PackageDto>>(ex.Message);
             }
         }
-
-
-
 
         public async Task<IEnumerable<PackageDto>> GetAllPackagesAsync()
         {
