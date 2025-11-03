@@ -6,58 +6,205 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add New Package</h5>
+                <h5 class="modal-title" id="addPackageModalLabel">
+                    <i class="fas fa-plus-circle me-2"></i>Add New Package
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form asp-action="Create" asp-controller="Packages" method="post" autocomplete="off">
-                    <div class="mb-3">
-                        <label class="form-label">Package Name</label>
-                        <input type="text" name="PackageName" class="form-control" required />
-                        <span class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea name="Description" class="form-control" rows="3"></textarea>
-                        <span class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Price</label>
-                        <input type="number" name="Price" class="form-control" step="0.01" min="0" required />
-                        <span class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Package Items</label>
-                        <div id="packageItems">
-                            <div class="package-item-row row mb-2">
-                                <div class="col-md-6">
-                                    <select name="PackageItems[0].ItemId" class="form-select" required>
-                                        <option value="">Select Item</option>
-                                        @if (ViewBag.Items != null)
-                                        {
-                                            @foreach (var item in (IEnumerable<ItemDto>)ViewBag.Items)
-                                            {
-                                                <option value="@item.ItemId">@item.ItemCategoryType - @item.Size (@item.Color) - Qty: @item.Quantity</option>
-                                            }
-                                        }
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <input type="number" name="PackageItems[0].ItemQuantity" placeholder="Quantity" class="form-control" min="1" required />
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="button" class="btn btn-danger btn-sm remove-item">Remove</button>
-                                </div>
+                <form asp-action="Create" asp-controller="Packages" method="post" autocomplete="off" id="addPackageForm">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-tag me-1"></i>Package Name *
+                                </label>
+                                <input type="text" name="PackageName" class="form-control" required
+                                       placeholder="Enter package name" maxlength="100" />
+                                <span class="text-danger"></span>
                             </div>
                         </div>
-                        <button type="button" id="addPackageItem" class="btn btn-secondary btn-sm">Add Item</button>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-dollar-sign me-1"></i>Price *
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₱</span>
+                                    <input type="number" name="Price" class="form-control" step="0.01" min="0" required
+                                           placeholder="0.00" />
+                                </div>
+                                <span class="text-danger"></span>
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-boxes me-1"></i>Initial Available Quantity *
+                                </label>
+                                <input type="number" name="QuantityAvailable" class="form-control" min="0" required
+                                       placeholder="Enter initial stock quantity" value="0" />
+                                <small class="form-text text-muted">
+                                    This represents how many complete packages you have in stock
+                                </small>
+                                <span class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-align-left me-1"></i>Description
+                                </label>
+                                <textarea name="Description" class="form-control" rows="3"
+                                          placeholder="Optional package description" maxlength="500"></textarea>
+                                <span class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-list me-1"></i>Package Items *
+                        </label>
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Add items that will be included in this package
+                                </small>
+                            </div>
+                            <div class="card-body">
+                                <div id="packageItems">
+                                    <div class="package-item-row row mb-3 p-2 border rounded">
+                                        <div class="col-md-6">
+                                            <label class="form-label small">Item</label>
+                                            <select name="PackageItems[0].ItemId" class="form-select" required>
+                                                <option value="">Select Item</option>
+                                                @if (ViewBag.Items != null)
+                                                {
+                                                    @foreach (var item in (IEnumerable<ItemDto>)ViewBag.Items)
+                                                    {
+                                                        <option value="@item.ItemId" data-stock="@item.Quantity">
+                                                            @item.ItemCategoryType - @item.Size (@item.Color) - Stock: @item.Quantity
+                                                        </option>
+                                                    }
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small">Quantity per Package</label>
+                                            <input type="number" name="PackageItems[0].ItemQuantity"
+                                                   class="form-control item-quantity" min="1" required
+                                                   placeholder="Qty" />
+                                            <small class="form-text text-muted available-stock"></small>
+                                        </div>
+                                        <div class="col-md-2 d-flex align-items-end">
+                                            <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" id="addPackageItem" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-plus me-1"></i>Add Another Item
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info d-none" id="stockWarning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Stock Warning:</strong> Some items may not have sufficient stock for the specified package quantity.
+                    </div>
+
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add Package</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Create Package
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let itemIndex = 1;
+
+        // Add new package item
+        document.getElementById('addPackageItem').addEventListener('click', function() {
+            const packageItems = document.getElementById('packageItems');
+            const newRow = document.querySelector('.package-item-row').cloneNode(true);
+
+            // Update indices
+            newRow.querySelectorAll('select, input').forEach(element => {
+                const name = element.name.replace(/\[\d+\]/, `[${itemIndex}]`);
+                element.name = name;
+                element.value = '';
+            });
+
+            packageItems.appendChild(newRow);
+            itemIndex++;
+
+            // Bind events to new row
+            bindItemEvents(newRow);
+        });
+
+        // Remove package item
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-item') || e.target.parentElement.classList.contains('remove-item')) {
+                if (document.querySelectorAll('.package-item-row').length > 1) {
+                    e.target.closest('.package-item-row').remove();
+                    updateIndices();
+                }
+            }
+        });
+
+        // Bind events to existing rows
+        document.querySelectorAll('.package-item-row').forEach(bindItemEvents);
+
+        function bindItemEvents(row) {
+            const select = row.querySelector('select');
+            const quantityInput = row.querySelector('.item-quantity');
+            const stockInfo = row.querySelector('.available-stock');
+
+            select.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const stock = selectedOption.getAttribute('data-stock') || 0;
+                stockInfo.textContent = `Available: ${stock}`;
+
+                // Set max quantity
+                quantityInput.max = stock;
+                quantityInput.value = Math.min(quantityInput.value || 1, stock);
+            });
+
+            quantityInput.addEventListener('input', function() {
+                const max = parseInt(this.max) || 0;
+                if (parseInt(this.value) > max) {
+                    this.value = max;
+                    showStockWarning();
+                }
+            });
+        }
+
+        function updateIndices() {
+            document.querySelectorAll('.package-item-row').forEach((row, index) => {
+                row.querySelectorAll('select, input').forEach(element => {
+                    element.name = element.name.replace(/\[\d+\]/, `[${index}]`);
+                });
+            });
+            itemIndex = document.querySelectorAll('.package-item-row').length;
+        }
+
+        function showStockWarning() {
+            document.getElementById('stockWarning').classList.remove('d-none');
+        }
+    });
+</script>
