@@ -63,35 +63,6 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
                 : new PaginatedList<PackageDto>(new List<PackageDto>(), 0, pageIndex, pageSize));
         }
 
-        public async Task<IActionResult> Edit(int id)
-        {
-            var result = await _packageService.GetPackageByIdAsync(id); // Changed this line
-            if (!result.IsSuccess)
-                return NotFound();
-
-            var package = result.Value;
-            var updatePackageDto = new UpdatePackageDto
-            {
-                PackagesId = package.PackagesId,
-                PackageName = package.PackageName,
-                Description = package.Description,
-                Price = package.Price,
-                QuantityAvailable = package.QuantityAvailable, // Added this line
-                PackageItems = package.PackageItems.Select(pi => new UpdatePackageItemDto
-                {
-                    ItemId = pi.ItemId,
-                    ItemQuantity = pi.ItemQuantity
-                }).ToList()
-            };
-
-            // Get items for dropdown
-            var itemsResult = await _itemService.GetItemsAsync(1, 100, "");
-            ViewBag.Items = itemsResult.Where(i => i.Quantity > 0);
-
-            return View(updatePackageDto);
-        }
-
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(UpdatePackageDto updatePackageDto)
@@ -105,11 +76,21 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
                 ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
             }
 
-            // Get items for dropdown on validation failure
+            // On validation failure, reload Index with the edit modal open
+            int pageIndex = 1;
+            int pageSize = 5;
+            var packagesResult = await _packageService.GetPackagesAsync("", pageIndex, pageSize);
+
+            ViewData["ShowEditPackageModalId"] = updatePackageDto.PackagesId;
+            ViewData["EditPackageModel"] = updatePackageDto;
+
+            // Get items for modal dropdowns
             var itemsResult = await _itemService.GetItemsAsync(1, 100, "");
             ViewBag.Items = itemsResult.Where(i => i.Quantity > 0);
 
-            return View(updatePackageDto);
+            return View("Index", packagesResult.IsSuccess
+                ? packagesResult.Value
+                : new PaginatedList<PackageDto>(new List<PackageDto>(), 0, pageIndex, pageSize));
         }
 
         public async Task<IActionResult> Delete(int id)

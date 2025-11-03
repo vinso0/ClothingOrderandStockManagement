@@ -28,7 +28,7 @@ namespace ClothingOrderAndStockManagement.Application.Services
         {
             try
             {
-                // Step 1: Start with base query and apply filter FIRST
+                // 1) Filter first on the base query (fast and type-stable)
                 var baseQuery = _packageRepository.Query();
 
                 if (!string.IsNullOrWhiteSpace(searchString))
@@ -38,35 +38,42 @@ namespace ClothingOrderAndStockManagement.Application.Services
                         (p.Description != null && p.Description.Contains(searchString)));
                 }
 
-                // Step 2: Apply includes AFTER filtering
-                var query = baseQuery
+                // 2) Total count BEFORE includes/projection
+                var totalCount = await baseQuery.CountAsync();
+
+                // 3) Build the include + projection query for the current page only
+                var pageQuery = baseQuery
                     .Include(p => p.PackageItems)
-                    .ThenInclude(pi => pi.Item)
-                    .ThenInclude(i => i.ItemCategory);
-
-                // Step 3: Project with null-safe navigation
-                var dtoQuery = query.Select(p => new PackageDto
-                {
-                    PackagesId = p.PackagesId,
-                    PackageName = p.PackageName,
-                    Description = p.Description,
-                    Price = p.Price,
-                    QuantityAvailable = p.QuantityAvailable,
-                    PackageItems = p.PackageItems.Select(pi => new PackageItemDto
+                        .ThenInclude(pi => pi.Item)
+                            .ThenInclude(i => i.ItemCategory)
+                    .OrderBy(p => p.PackagesId) // deterministic ordering for pagination
+                    .Skip((pageIndex - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(p => new PackageDto
                     {
-                        PackageItemId = pi.PackageItemId,
-                        ItemId = pi.ItemId,
-                        ItemQuantity = pi.ItemQuantity,
-                        ItemName = pi.Item != null && pi.Item.ItemCategory != null
-                            ? pi.Item.ItemCategory.ItemCategoryType
-                            : null,
-                        Size = pi.Item != null ? pi.Item.Size : null,
-                        Color = pi.Item != null ? pi.Item.Color : null
-                    }).ToList()
-                });
+                        PackagesId = p.PackagesId,
+                        PackageName = p.PackageName,
+                        Description = p.Description,
+                        Price = p.Price,
+                        QuantityAvailable = p.QuantityAvailable,
+                        PackageItems = p.PackageItems.Select(pi => new PackageItemDto
+                        {
+                            PackageItemId = pi.PackageItemId,
+                            ItemId = pi.ItemId,
+                            ItemQuantity = pi.ItemQuantity,
+                            ItemName = pi.Item != null && pi.Item.ItemCategory != null
+                                ? pi.Item.ItemCategory.ItemCategoryType
+                                : null,
+                            Size = pi.Item != null ? pi.Item.Size : null,
+                            Color = pi.Item != null ? pi.Item.Color : null
+                        }).ToList()
+                    });
 
-                var paginatedList = await PaginatedList<PackageDto>.CreateAsync(dtoQuery, pageIndex, pageSize);
-                return Result.Ok(paginatedList);
+                var items = await pageQuery.ToListAsync();
+
+                // 4) Construct PaginatedList manually (bypasses CreateAsync translation pitfalls)
+                var paginated = new PaginatedList<PackageDto>(items, totalCount, pageIndex, pageSize);
+                return Result.Ok(paginated);
             }
             catch (Exception ex)
             {
@@ -78,15 +85,32 @@ namespace ClothingOrderAndStockManagement.Application.Services
         {
             try
             {
-                var packages = await _packageRepository.GetAllAsync();
-                return packages.Select(p => new PackageDto
-                {
-                    PackagesId = p.PackagesId,
-                    PackageName = p.PackageName,
-                    Description = p.Description,
-                    Price = p.Price,
-                    QuantityAvailable = p.QuantityAvailable
-                }).ToList();
+                var packages = await _packageRepository.Query()
+                    .Include(p => p.PackageItems)
+                        .ThenInclude(pi => pi.Item)
+                            .ThenInclude(i => i.ItemCategory)
+                    .Select(p => new PackageDto
+                    {
+                        PackagesId = p.PackagesId,
+                        PackageName = p.PackageName,
+                        Description = p.Description,
+                        Price = p.Price,
+                        QuantityAvailable = p.QuantityAvailable,
+                        PackageItems = p.PackageItems.Select(pi => new PackageItemDto
+                        {
+                            PackageItemId = pi.PackageItemId,
+                            ItemId = pi.ItemId,
+                            ItemQuantity = pi.ItemQuantity,
+                            ItemName = pi.Item != null && pi.Item.ItemCategory != null
+                                ? pi.Item.ItemCategory.ItemCategoryType
+                                : null,
+                            Size = pi.Item != null ? pi.Item.Size : null,
+                            Color = pi.Item != null ? pi.Item.Color : null
+                        }).ToList()
+                    })
+                    .ToListAsync();
+
+                return packages;
             }
             catch
             {
@@ -100,8 +124,8 @@ namespace ClothingOrderAndStockManagement.Application.Services
             {
                 var package = await _packageRepository.Query()
                     .Include(p => p.PackageItems)
-                    .ThenInclude(pi => pi.Item)
-                    .ThenInclude(i => i.ItemCategory)
+                        .ThenInclude(pi => pi.Item)
+                            .ThenInclude(i => i.ItemCategory)
                     .FirstOrDefaultAsync(p => p.PackagesId == id);
 
                 if (package == null)
@@ -119,9 +143,11 @@ namespace ClothingOrderAndStockManagement.Application.Services
                         PackageItemId = pi.PackageItemId,
                         ItemId = pi.ItemId,
                         ItemQuantity = pi.ItemQuantity,
-                        ItemName = pi.Item.ItemCategory.ItemCategoryType,
-                        Size = pi.Item.Size,
-                        Color = pi.Item.Color
+                        ItemName = pi.Item != null && pi.Item.ItemCategory != null
+                            ? pi.Item.ItemCategory.ItemCategoryType
+                            : null,
+                        Size = pi.Item != null ? pi.Item.Size : null,
+                        Color = pi.Item != null ? pi.Item.Color : null
                     }).ToList()
                 };
 
@@ -133,20 +159,15 @@ namespace ClothingOrderAndStockManagement.Application.Services
             }
         }
 
-
         public async Task<Result<PackageDetailDto>> GetPackageDetailsAsync(int id)
         {
             try
             {
-                var package = await _packageRepository.Query()
-                    .Include(p => p.PackageItems)
-                    .ThenInclude(pi => pi.Item)
-                    .ThenInclude(i => i.ItemCategory)
-                    .FirstOrDefaultAsync(p => p.PackagesId == id);
+                var packageResult = await GetPackageByIdAsync(id);
+                if (!packageResult.IsSuccess)
+                    return Result.Fail<PackageDetailDto>(packageResult.Errors.First().Message);
 
-                if (package == null)
-                    return Result.Fail<PackageDetailDto>("Package not found.");
-
+                var package = packageResult.Value;
                 var dto = new PackageDetailDto
                 {
                     PackagesId = package.PackagesId,
@@ -154,15 +175,7 @@ namespace ClothingOrderAndStockManagement.Application.Services
                     Description = package.Description,
                     Price = package.Price,
                     QuantityAvailable = package.QuantityAvailable,
-                    PackageItems = package.PackageItems.Select(pi => new PackageItemDto
-                    {
-                        PackageItemId = pi.PackageItemId,
-                        ItemId = pi.ItemId,
-                        ItemQuantity = pi.ItemQuantity,
-                        ItemName = pi.Item.ItemCategory.ItemCategoryType,
-                        Size = pi.Item.Size,
-                        Color = pi.Item.Color
-                    }).ToList()
+                    PackageItems = package.PackageItems
                 };
 
                 return Result.Ok(dto);
@@ -203,8 +216,8 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 await _packageRepository.AddAsync(newPackage);
                 await _packageRepository.SaveChangesAsync();
 
-                // compute QuantityAvailable from items
-                await _inventoryService.UpdatePackageQuantityAsync(newPackage.PackagesId);
+                // Optionally recompute QuantityAvailable from items if using inventory service
+                // await _inventoryService.UpdatePackageQuantityAsync(newPackage.PackagesId);
 
                 return Result.Ok();
             }
@@ -252,8 +265,8 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 await _packageRepository.UpdateAsync(existing);
                 await _packageRepository.SaveChangesAsync();
 
-                // Recompute availability
-                await _inventoryService.UpdatePackageQuantityAsync(existing.PackagesId);
+                // Optionally recompute availability
+                // await _inventoryService.UpdatePackageQuantityAsync(existing.PackagesId);
 
                 return Result.Ok();
             }
@@ -274,7 +287,6 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 await _packageRepository.DeleteAsync(id);
                 await _packageRepository.SaveChangesAsync();
 
-                // No item restoration needed because items were never deducted
                 return Result.Ok();
             }
             catch (Exception ex)
@@ -289,16 +301,31 @@ namespace ClothingOrderAndStockManagement.Application.Services
             {
                 var packages = await _packageRepository.Query()
                     .Where(p => p.QuantityAvailable > 0)
+                    .Include(p => p.PackageItems)
+                        .ThenInclude(pi => pi.Item)
+                            .ThenInclude(i => i.ItemCategory)
+                    .Select(p => new PackageDto
+                    {
+                        PackagesId = p.PackagesId,
+                        PackageName = p.PackageName,
+                        Description = p.Description,
+                        Price = p.Price,
+                        QuantityAvailable = p.QuantityAvailable,
+                        PackageItems = p.PackageItems.Select(pi => new PackageItemDto
+                        {
+                            PackageItemId = pi.PackageItemId,
+                            ItemId = pi.ItemId,
+                            ItemQuantity = pi.ItemQuantity,
+                            ItemName = pi.Item != null && pi.Item.ItemCategory != null
+                                ? pi.Item.ItemCategory.ItemCategoryType
+                                : null,
+                            Size = pi.Item != null ? pi.Item.Size : null,
+                            Color = pi.Item != null ? pi.Item.Color : null
+                        }).ToList()
+                    })
                     .ToListAsync();
 
-                return packages.Select(p => new PackageDto
-                {
-                    PackagesId = p.PackagesId,
-                    PackageName = p.PackageName,
-                    Description = p.Description,
-                    Price = p.Price,
-                    QuantityAvailable = p.QuantityAvailable
-                }).ToList();
+                return packages;
             }
             catch
             {

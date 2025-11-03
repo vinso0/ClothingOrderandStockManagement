@@ -29,7 +29,7 @@
     </button>
 
     <!-- Add Package Modal -->
-    @await Html.PartialAsync("Partials/_AddPackageModal", new CreatePackageDto())
+    @await Html.PartialAsync("Partials/_AddPackageModal", ViewData["AddPackageModel"] as CreatePackageDto ?? new CreatePackageDto())
 </div>
 
 <div class="reports-section">
@@ -106,7 +106,7 @@
                                         }).ToList()
                                         };
                                     }
-                                    @await Html.PartialAsync("Partials/_EditPackageModal", updateModel)
+                                    @await Html.PartialAsync("Partials/_EditPackageModal", ViewData["EditPackageModel"] as UpdatePackageDto ?? updateModel)
 
                                     <button class="btn btn-sm btn-outline-danger package-delete-btn"
                                             data-bs-toggle="modal"
@@ -166,12 +166,24 @@
     <script src="~/js/packages.js"></script>
 }
 
+<!-- Modal Show Scripts -->
 @if (ViewData["ShowAddPackageModal"] != null)
 {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var addPackageModal = new bootstrap.Modal(document.getElementById('addPackageModal'));
             addPackageModal.show();
+        });
+    </script>
+}
+
+@if (ViewData["ShowEditPackageModalId"] != null)
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var editModalId = 'editPackageModal-@ViewData["ShowEditPackageModalId"]';
+            var editPackageModal = new bootstrap.Modal(document.getElementById(editModalId));
+            editPackageModal.show();
         });
     </script>
 }
@@ -220,7 +232,7 @@
         max-width: 400px;
     }
 
-    /* New Styles for Available Quantity */
+    /* Enhanced Styles for Available Quantity */
     .package-quantity {
         text-align: center;
         font-weight: 600;
