@@ -1,4 +1,5 @@
 ﻿using ClothingOrderAndStockManagement.Application.Dtos.Packages;
+using ClothingOrderAndStockManagement.Application.Helpers;
 using ClothingOrderAndStockManagement.Domain.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,21 +19,19 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         public async Task<IActionResult> Index(string searchString, int pageIndex = 1)
         {
             int pageSize = 5;
-            var packagesResult = await _packageService.GetPackagesAsync(searchString, pageIndex, pageSize);
-
-            if (packagesResult.IsFailed)
-            {
-                ModelState.AddModelError(string.Empty, "Error loading packages: " + packagesResult.Errors.FirstOrDefault()?.Message);
-                return View();
-            }
+            var result = await _packageService.GetPackagesAsync(searchString, pageIndex, pageSize);
 
             ViewData["CurrentFilter"] = searchString;
 
-            // Get items from ItemService - corrected approach
-            var itemsResult = await _itemService.GetItemsAsync(1, 100, ""); // Get all items for selection
-            ViewBag.Items = itemsResult.Where(i => i.Quantity > 0); // Filter available items
+            // Get items for modal dropdowns
+            var itemsResult = await _itemService.GetItemsAsync(1, 100, "");
+            ViewBag.Items = itemsResult.Where(i => i.Quantity > 0);
 
-            return View(packagesResult.Value);
+            if (result.IsSuccess)
+                return View(result.Value);
+
+            ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
+            return View(new PaginatedList<PackageDto>(new List<PackageDto>(), 0, pageIndex, pageSize));
         }
 
         [HttpPost]
@@ -41,22 +40,11 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                try
-                {
-                    var result = await _packageService.AddPackageAsync(createPackageDto);
-                    if (result.IsSuccess)
-                    {
-                        return RedirectToAction(nameof(Index));
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(string.Empty, result.Errors.FirstOrDefault()?.Message ?? "An error occurred while creating the package.");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError(string.Empty, "An error occurred while creating the package: " + ex.Message);
-                }
+                var result = await _packageService.AddPackageAsync(createPackageDto);
+                if (result.IsSuccess)
+                    return RedirectToAction(nameof(Index));
+
+                ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
             }
 
             int pageIndex = 1;
@@ -66,20 +54,22 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             ViewData["ShowAddPackageModal"] = true;
             ViewData["AddPackageModel"] = createPackageDto;
 
-            // Get items from ItemService - corrected
+            // Get items for modal dropdowns
             var itemsResult = await _itemService.GetItemsAsync(1, 100, "");
             ViewBag.Items = itemsResult.Where(i => i.Quantity > 0);
 
-            return View("Index", packagesResult.IsSuccess ? packagesResult.Value : null);
+            return View("Index", packagesResult.IsSuccess
+                ? packagesResult.Value
+                : new PaginatedList<PackageDto>(new List<PackageDto>(), 0, pageIndex, pageSize));
         }
 
         public async Task<IActionResult> Edit(int id)
         {
-            var packageResult = await _packageService.GetPackageDetailsAsync(id);
-            if (packageResult.IsFailed)
+            var result = await _packageService.GetPackageDetailsAsync(id);
+            if (!result.IsSuccess)
                 return NotFound();
 
-            var package = packageResult.Value;
+            var package = result.Value;
             var updatePackageDto = new UpdatePackageDto
             {
                 PackagesId = package.PackagesId,
@@ -93,7 +83,7 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
                 }).ToList()
             };
 
-            // Get items from ItemService - corrected
+            // Get items for dropdown
             var itemsResult = await _itemService.GetItemsAsync(1, 100, "");
             ViewBag.Items = itemsResult.Where(i => i.Quantity > 0);
 
@@ -106,25 +96,14 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                try
-                {
-                    var result = await _packageService.UpdatePackageAsync(updatePackageDto);
-                    if (result.IsSuccess)
-                    {
-                        return RedirectToAction(nameof(Index));
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(string.Empty, result.Errors.FirstOrDefault()?.Message ?? "An error occurred while updating the package.");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError(string.Empty, "An error occurred while updating the package: " + ex.Message);
-                }
+                var result = await _packageService.UpdatePackageAsync(updatePackageDto);
+                if (result.IsSuccess)
+                    return RedirectToAction(nameof(Index));
+
+                ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
             }
 
-            // Get items from ItemService - corrected
+            // Get items for dropdown on validation failure
             var itemsResult = await _itemService.GetItemsAsync(1, 100, "");
             ViewBag.Items = itemsResult.Where(i => i.Quantity > 0);
 
@@ -134,20 +113,7 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _packageService.DeletePackageAsync(id);
-            if (result.IsFailed)
-            {
-                TempData["Error"] = result.Errors.FirstOrDefault()?.Message ?? "An error occurred while deleting the package.";
-            }
             return RedirectToAction(nameof(Index));
-        }
-
-        public async Task<IActionResult> Details(int id)
-        {
-            var result = await _packageService.GetPackageDetailsAsync(id);
-            if (result.IsFailed)
-                return NotFound();
-
-            return View(result.Value);
         }
     }
 }

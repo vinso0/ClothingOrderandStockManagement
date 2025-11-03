@@ -1,5 +1,71 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@using ClothingOrderAndStockManagement.Application.Dtos.Packages
+@model PackageDto
+
+<div class="modal fade package-modal package-details-modal" id="packageDetailsModal-@Model.PackagesId" tabindex="-1" aria-labelledby="packageDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Package Details - @Model.PackageName</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Package Name:</strong>
+                        <p class="mb-2">@Model.PackageName</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Price:</strong>
+                        <p class="mb-2">₱@Model.Price.ToString("N2")</p>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <strong>Description:</strong>
+                    <p class="mb-2">@(Model.Description ?? "No description provided")</p>
+                </div>
+
+                <div class="mb-3">
+                    <strong>Package Items:</strong>
+                    @if (Model.PackageItems?.Any() == true)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Size</th>
+                                        <th>Color</th>
+                                        <th>Quantity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.PackageItems)
+                                    {
+                                        <tr>
+                                            <td>@item.ItemName</td>
+                                            <td>@item.Size</td>
+                                            <td>@item.Color</td>
+                                            <td>@item.ItemQuantity</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No items in this package</p>
+                    }
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning" data-bs-dismiss="modal"
+                        data-bs-toggle="modal" data-bs-target="#editPackageModal-@Model.PackagesId">
+                    <i class="fas fa-edit"></i> Edit Package
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
