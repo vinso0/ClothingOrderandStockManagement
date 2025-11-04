@@ -10,8 +10,6 @@ public class OrderRecord
     public string OrderStatus { get; set; }
     public int? PaymentRecordsId { get; set; }
     // Initialize collections to prevent null reference exceptions
-
-    public virtual CustomerInfo CustomerInfo { get; set; } = null!;
     public virtual ICollection<OrderPackage> OrderPackages { get; set; } = new List<OrderPackage>();
     public virtual ICollection<PaymentRecord> PaymentRecords { get; set; } = new List<PaymentRecord>();
     public virtual ICollection<ReturnLog> ReturnLogs { get; set; } = new List<ReturnLog>();

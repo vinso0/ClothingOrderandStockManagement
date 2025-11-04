@@ -37,7 +37,7 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             ViewData["FromDate"] = fromDate;
             ViewData["ToDate"] = toDate;
 
-            var vm = new ReturnsIndexDto
+            var vm = new ReturnsIndexViewModel
             {
                 Completed = completed.IsSuccess
                     ? completed.Value

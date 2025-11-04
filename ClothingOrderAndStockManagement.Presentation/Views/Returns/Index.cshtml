@@ -1,10 +1,11 @@
 ﻿@using ClothingOrderAndStockManagement.Application.Dtos.Orders
 @using ClothingOrderAndStockManagement.Application.Helpers
-@model ReturnsIndexDto
+@model ReturnsIndexViewModel
 @{
     ViewData["Title"] = "Returns Management";
     string GetStatusBadgeClass(string status) =>
-        status switch {
+        status switch
+        {
             "Awaiting Payment" => "bg-danger",
             "Partially Paid" => "bg-warning",
             "Fully Paid" => "bg-info",
@@ -15,184 +16,209 @@
         };
 }
 
-<div class="orders-header">
-    <h2>Returns Management</h2>
-</div>
-
-<!-- Filter Section -->
-<div class="orders-filter-section d-flex justify-content-between align-items-center mb-3">
-    <form asp-action="Index" method="get" class="d-flex gap-2">
-        <input type="text" name="searchString" class="form-control" placeholder="Search customers..."
-               value="@ViewData["CurrentFilter"]" style="max-width: 300px;">
-        <input type="date" name="fromDate" class="form-control" value="@ViewData["FromDate"]" style="max-width: 160px;">
-        <input type="date" name="toDate" class="form-control" value="@ViewData["ToDate"]" style="max-width: 160px;">
-        <button type="submit" class="btn btn-primary">Filter</button>
-        <a asp-action="Index" class="btn btn-secondary">Clear</a>
-    </form>
-</div>
-
-<!-- Completed Orders Section -->
-<div class="reports-section mb-4">
-    <h4 class="mb-3">Completed Orders</h4>
-    @if (Model.Completed != null && Model.Completed.Any())
-    {
-        <div class="table-responsive">
-            <table class="table table-hover customer-table">
-                <thead>
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Customer</th>
-                        <th>Date & Time</th>
-                        <th>Status</th>
-                        <th class="customer-actions">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var order in Model.Completed)
-                    {
-                        <tr>
-                            <td><span class="customer-id">#@order.OrderRecordsId</span></td>
-                            <td><span class="customer-name">@order.CustomerName</span></td>
-                            <td class="customer-details">
-                                @order.OrderDate.ToString("MMM dd, yyyy")
-                                <br />
-                                <small>@order.OrderDate.ToDateTime(TimeOnly.MinValue).ToString("hh:mm tt")</small>
-                            </td>
-                            <td>
-                                <span class="badge @GetStatusBadgeClass(order.Status)">@order.Status</span>
-                            </td>
-                            <td class="customer-actions">
-                                <div class="btn-group" role="group">
-                                    <button class="btn btn-sm btn-cancel"
-                                            onclick="showReturnModal(@order.OrderRecordsId, @order.OrderPackagesId, '@Html.Raw(Html.Encode(order.CustomerName))')">
-                                        Return
-                                    </button>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">Returns Management</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Search and Filter Form -->
+                    <form asp-action="Index" method="get" class="mb-4">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="searchString" class="form-label">Search</label>
+                                <input type="text" class="form-control" id="searchString" name="searchString"
+                                       value="@ViewData["CurrentFilter"]" placeholder="Search by customer ID, name, or reason">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="fromDate" class="form-label">From Date</label>
+                                <input type="date" class="form-control" id="fromDate" name="fromDate"
+                                       value="@ViewData["FromDate"]">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="toDate" class="form-label">To Date</label>
+                                <input type="date" class="form-control" id="toDate" name="toDate"
+                                       value="@ViewData["ToDate"]">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">Filter</button>
+                                    <a asp-action="Index" class="btn btn-secondary">Clear</a>
                                 </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                            </div>
+                        </div>
+                    </form>
 
-        <!-- Pagination -->
-        <div class="pagination-section">
-            <div>
-                Page @Model.Completed.PageIndex of @Model.Completed.TotalPages
-            </div>
-            <div>
-                @if (Model.Completed.HasPreviousPage)
-                {
-                    <a asp-action="Index"
-                       asp-route-pageIndex="@(Model.Completed.PageIndex - 1)"
-                       asp-route-searchString="@ViewData["CurrentFilter"]"
-                       asp-route-fromDate="@ViewData["FromDate"]"
-                       asp-route-toDate="@ViewData["ToDate"]"
-                       class="btn btn-outline-secondary">Previous</a>
-                }
-                @if (Model.Completed.HasNextPage)
-                {
-                    <a asp-action="Index"
-                       asp-route-pageIndex="@(Model.Completed.PageIndex + 1)"
-                       asp-route-searchString="@ViewData["CurrentFilter"]"
-                       asp-route-fromDate="@ViewData["FromDate"]"
-                       asp-route-toDate="@ViewData["ToDate"]"
-                       class="btn btn-outline-primary">Next</a>
-                }
-            </div>
-        </div>
-    }
-    else
-    {
-        <div class="no-customers-section">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-                <line x1="3" y1="6" x2="21" y2="6"/>
-                <path d="M16 10a4 4 0 0 1-8 0"/>
-            </svg>
-            <h5>No completed orders found</h5>
-            <p>Completed orders will appear here for processing returns.</p>
-        </div>
-    }
-</div>
+                    <!-- Completed Orders (like Orders page summary) -->
+                    <h5 class="mb-3">Completed Orders</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover customer-table">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Date &amp; Time</th>
+                                    <th>Status</th>
+                                    <th class="customer-actions">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Completed != null && Model.Completed.Any())
+                                {
+                                    @foreach (var o in Model.Completed)
+                                    {
+                                        <tr>
+                                            <td><span class="customer-id">#@o.OrderRecordsId</span></td>
+                                            <td><span class="customer-name">@o.CustomerName</span></td>
+                                            <td class="customer-details">
+                                                @o.OrderDate.ToString("MMM dd, yyyy")
+                                                <br />
+                                                <small>@o.OrderDate.ToDateTime(TimeOnly.MinValue).ToString("hh:mm tt")</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge @GetStatusBadgeClass(o.Status)">@o.Status</span>
+                                            </td>
+                                            <td class="customer-actions">
+                                                <button class="btn btn-sm btn-danger"
+                                                        onclick="showReturnModal(@o.OrderRecordsId, @o.OrderPackagesId, '@o.CustomerName')">
+                                                    Return
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">No completed orders found.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
 
-<!-- Return History Section -->
-<div class="reports-section">
-    <h4 class="mb-3">Return History</h4>
-    @if (Model.History != null && Model.History.Any())
-    {
-        <div class="table-responsive">
-            <table class="table table-hover customer-table">
-                <thead>
-                    <tr>
-                        <th>Return ID</th>
-                        <th>Order ID</th>
-                        <th>Customer</th>
-                        <th>Return Date</th>
-                        <th>Status</th>
-                        <th>Reason</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var returnLog in Model.History)
+                    <!-- Pagination for Completed list -->
+                    @if (Model.Completed != null && (Model.Completed.HasPreviousPage || Model.Completed.HasNextPage))
                     {
-                        <tr>
-                            <td><span class="customer-id">#@returnLog.ReturnLogsId</span></td>
-                            <td><span class="customer-id">#@returnLog.OrderRecordsId</span></td>
-                            <td><span class="customer-name">@returnLog.CustomerName</span></td>
-                            <td class="customer-details">
-                                @returnLog.ReturnDate.ToString("MMM dd, yyyy")
-                            </td>
-                            <td>
-                                <span class="badge @GetStatusBadgeClass(returnLog.OrderStatus)">@returnLog.OrderStatus</span>
-                            </td>
-                            <td class="customer-details">@returnLog.Reason</td>
-                        </tr>
+                        <nav aria-label="Completed pagination">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item @(Model.Completed.HasPreviousPage ? "" : "disabled")">
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-route-pageIndex="@(Model.Completed.PageIndex - 1)"
+                                       asp-route-searchString="@ViewData["CurrentFilter"]"
+                                       asp-route-fromDate="@ViewData["FromDate"]"
+                                       asp-route-toDate="@ViewData["ToDate"]">Previous</a>
+                                </li>
+                                <li class="page-item disabled">
+                                    <span class="page-link">
+                                        Page @Model.Completed.PageIndex of @Model.Completed.TotalPages
+                                    </span>
+                                </li>
+                                <li class="page-item @(Model.Completed.HasNextPage ? "" : "disabled")">
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-route-pageIndex="@(Model.Completed.PageIndex + 1)"
+                                       asp-route-searchString="@ViewData["CurrentFilter"]"
+                                       asp-route-fromDate="@ViewData["FromDate"]"
+                                       asp-route-toDate="@ViewData["ToDate"]">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
                     }
-                </tbody>
-            </table>
-        </div>
 
-        <!-- Pagination for History -->
-        <div class="pagination-section">
-            <div>
-                Page @Model.History.PageIndex of @Model.History.TotalPages
-            </div>
-            <div>
-                @if (Model.History.HasPreviousPage)
-                {
-                    <a asp-action="Index"
-                       asp-route-pageIndex="@(Model.History.PageIndex - 1)"
-                       asp-route-searchString="@ViewData["CurrentFilter"]"
-                       asp-route-fromDate="@ViewData["FromDate"]"
-                       asp-route-toDate="@ViewData["ToDate"]"
-                       class="btn btn-outline-secondary">Previous</a>
-                }
-                @if (Model.History.HasNextPage)
-                {
-                    <a asp-action="Index"
-                       asp-route-pageIndex="@(Model.History.PageIndex + 1)"
-                       asp-route-searchString="@ViewData["CurrentFilter"]"
-                       asp-route-fromDate="@ViewData["FromDate"]"
-                       asp-route-toDate="@ViewData["ToDate"]"
-                       class="btn btn-outline-primary">Next</a>
-                }
+                    <hr class="my-4" />
+
+                    <!-- Return History -->
+                    <h5 class="mb-3">Return History</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Return ID</th>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Date &amp; Time</th>
+                                    <th>Status</th>
+                                    <th>Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.History != null && Model.History.Any())
+                                {
+                                    @foreach (var r in Model.History)
+                                    {
+                                        <tr>
+                                            <td>#@r.ReturnLogsId</td>
+                                            <td>#@r.OrderRecordsId</td>
+                                            <td>
+                                                <div>
+                                                    <strong>@r.CustomerName</strong><br />
+                                                    <small class="text-muted">@r.CustomerEmail</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @r.ReturnDate.ToString("MMM dd, yyyy")
+                                                <br />
+                                                <small>@r.ReturnDate.ToDateTime(TimeOnly.MinValue).ToString("hh:mm tt")</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge @GetStatusBadgeClass(r.OrderStatus)">@r.OrderStatus</span>
+                                            </td>
+                                            <td>@r.Reason</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">No return history found.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination for History list -->
+                    @if (Model.History != null && (Model.History.HasPreviousPage || Model.History.HasNextPage))
+                    {
+                        <nav aria-label="History pagination">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item @(Model.History.HasPreviousPage ? "" : "disabled")">
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-route-pageIndex="@(Model.History.PageIndex - 1)"
+                                       asp-route-searchString="@ViewData["CurrentFilter"]"
+                                       asp-route-fromDate="@ViewData["FromDate"]"
+                                       asp-route-toDate="@ViewData["ToDate"]">Previous</a>
+                                </li>
+                                <li class="page-item disabled">
+                                    <span class="page-link">
+                                        Page @Model.History.PageIndex of @Model.History.TotalPages
+                                    </span>
+                                </li>
+                                <li class="page-item @(Model.History.HasNextPage ? "" : "disabled")">
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-route-pageIndex="@(Model.History.PageIndex + 1)"
+                                       asp-route-searchString="@ViewData["CurrentFilter"]"
+                                       asp-route-fromDate="@ViewData["FromDate"]"
+                                       asp-route-toDate="@ViewData["ToDate"]">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    }
+
+                </div>
             </div>
         </div>
-    }
-    else
-    {
-        <div class="no-customers-section">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 3h18v18H3zM9 9l6 6M15 9l-6 6"/>
-            </svg>
-            <h5>No return history found</h5>
-            <p>Return history will appear here once orders are returned.</p>
-        </div>
-    }
+    </div>
 </div>
 
-<!-- Return Modal -->
+<!-- Return Modal (unchanged) -->
 <div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
