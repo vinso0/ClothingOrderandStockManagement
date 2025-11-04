@@ -1,33 +1,7 @@
 ﻿document.addEventListener('DOMContentLoaded', function () {
-    // Initialize modal handling
-    initializeModalHandling();
-
-    // Initialize package items management
     initializePackageItemsManagement();
-
-    // Initialize form handlers
     initializeFormHandlers();
 });
-
-function initializeModalHandling() {
-    // Auto-open Add Package Modal on validation errors
-    var showAddModal = document.getElementById('showAddModal');
-    if (showAddModal && showAddModal.value === 'true') {
-        var addPackageModal = new bootstrap.Modal(document.getElementById('addPackageModal'));
-        addPackageModal.show();
-    }
-
-    // Auto-open Edit Package Modal on validation errors
-    var showEditModalId = document.getElementById('showEditModalId');
-    if (showEditModalId && showEditModalId.value) {
-        var editModalId = 'editPackageModal-' + showEditModalId.value;
-        var editModal = document.getElementById(editModalId);
-        if (editModal) {
-            var editPackageModal = new bootstrap.Modal(editModal);
-            editPackageModal.show();
-        }
-    }
-}
 
 function initializePackageItemsManagement() {
     // Add Package Item functionality
@@ -36,7 +10,9 @@ function initializePackageItemsManagement() {
         if (addButton) {
             e.preventDefault();
             var container = addButton.closest('.card-body').querySelector('[id^="packageItems"], [id^="editPackageItems-"]');
-            addPackageItemRow(container);
+            if (container) {
+                addPackageItemRow(container);
+            }
         }
     });
 
@@ -50,13 +26,15 @@ function initializePackageItemsManagement() {
 
             if (container.querySelectorAll('.package-item-row').length > 1) {
                 row.remove();
+                // Reindex after removal
+                reindexPackageItems(container.closest('form'));
             } else {
                 alert('At least one item is required for the package.');
             }
         }
     });
 
-    // Item selection change handler
+    // Item selection change handler for stock info
     document.addEventListener('change', function (e) {
         if (e.target.matches('select[name*="ItemId"]')) {
             updateItemStock(e.target);
@@ -76,6 +54,8 @@ function initializeFormHandlers() {
 
 function addPackageItemRow(container) {
     var existingRows = container.querySelectorAll('.package-item-row');
+    if (existingRows.length === 0) return;
+
     var newIndex = existingRows.length;
     var templateRow = existingRows[0].cloneNode(true);
 
@@ -84,6 +64,7 @@ function addPackageItemRow(container) {
         if (element.name.includes('ItemId')) {
             element.name = element.name.replace(/\[\d+\]/, '[' + newIndex + ']');
             element.value = '';
+            element.selectedIndex = 0;
         } else if (element.name.includes('ItemQuantity')) {
             element.name = element.name.replace(/\[\d+\]/, '[' + newIndex + ']');
             element.value = '';
@@ -104,21 +85,24 @@ function updateItemStock(selectElement) {
     var stock = selectedOption.getAttribute('data-stock') || '0';
     var row = selectElement.closest('.package-item-row');
     var stockInfo = row.querySelector('.available-stock');
-    var quantityInput = row.querySelector('.item-quantity');
+    var quantityInput = row.querySelector('.item-quantity, input[name*="ItemQuantity"]');
 
     if (stockInfo) {
-        stockInfo.textContent = 'Available: ' + stock;
+        stockInfo.textContent = stock > 0 ? 'Available: ' + stock : 'Out of stock';
+        stockInfo.className = stock > 0 ? 'form-text text-muted' : 'form-text text-danger';
     }
 
     if (quantityInput) {
         quantityInput.max = stock;
         if (parseInt(quantityInput.value) > parseInt(stock)) {
-            quantityInput.value = stock;
+            quantityInput.value = Math.max(1, parseInt(stock));
         }
     }
 }
 
 function reindexPackageItems(form) {
+    if (!form) return;
+
     var rows = form.querySelectorAll('.package-item-row');
     rows.forEach(function (row, index) {
         row.querySelectorAll('select, input').forEach(function (element) {
@@ -128,3 +112,12 @@ function reindexPackageItems(form) {
         });
     });
 }
+
+// Initialize any existing package item selects on page load
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('select[name*="ItemId"]').forEach(function (select) {
+        if (select.value) {
+            updateItemStock(select);
+        }
+    });
+});

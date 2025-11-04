@@ -235,7 +235,8 @@ namespace ClothingOrderAndStockManagement.Application.Services
                     .Include(p => p.PackageItems)
                     .FirstOrDefaultAsync(p => p.PackagesId == packageDto.PackagesId);
 
-                if (existing == null) return Result.Fail("Package not found.");
+                if (existing == null)
+                    return Result.Fail("Package not found.");
 
                 // Validate new composition
                 foreach (var packageItem in packageDto.PackageItems)
@@ -253,20 +254,42 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 existing.Price = packageDto.Price;
                 existing.QuantityAvailable = packageDto.QuantityAvailable;
 
-                // Replace composition
-                existing.PackageItems.Clear();
-                existing.PackageItems = packageDto.PackageItems.Select(pi => new PackageItem
+                // Handle PackageItems relationship properly
+                // Remove existing items that are not in the new list
+                var existingItems = existing.PackageItems.ToList();
+                foreach (var existingItem in existingItems)
                 {
-                    PackagesId = existing.PackagesId,
-                    ItemId = pi.ItemId,
-                    ItemQuantity = pi.ItemQuantity
-                }).ToList();
+                    if (!packageDto.PackageItems.Any(pi => pi.ItemId == existingItem.ItemId))
+                    {
+                        existing.PackageItems.Remove(existingItem);
+                    }
+                }
+
+                // Update or add items
+                foreach (var newItem in packageDto.PackageItems)
+                {
+                    var existingItem = existing.PackageItems
+                        .FirstOrDefault(pi => pi.ItemId == newItem.ItemId);
+
+                    if (existingItem != null)
+                    {
+                        // Update quantity for existing item
+                        existingItem.ItemQuantity = newItem.ItemQuantity;
+                    }
+                    else
+                    {
+                        // Add new item
+                        existing.PackageItems.Add(new PackageItem
+                        {
+                            PackagesId = existing.PackagesId,
+                            ItemId = newItem.ItemId,
+                            ItemQuantity = newItem.ItemQuantity
+                        });
+                    }
+                }
 
                 await _packageRepository.UpdateAsync(existing);
                 await _packageRepository.SaveChangesAsync();
-
-                // Optionally recompute availability
-                // await _inventoryService.UpdatePackageQuantityAsync(existing.PackagesId);
 
                 return Result.Ok();
             }
@@ -275,6 +298,7 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 return Result.Fail(ex.Message);
             }
         }
+
 
         public async Task<Result> DeletePackageAsync(int id)
         {
