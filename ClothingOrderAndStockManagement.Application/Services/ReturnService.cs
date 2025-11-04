@@ -30,7 +30,8 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 if (!string.IsNullOrWhiteSpace(searchString))
                 {
                     query = query.Where(o =>
-                        o.CustomerId.ToString().Contains(searchString)); // Search by CustomerId since no navigation yet
+                        o.CustomerInfo.CustomerName.Contains(searchString) ||
+                        o.CustomerInfo.ContactNumber.Contains(searchString));
                 }
 
                 if (fromDate.HasValue)
@@ -43,14 +44,14 @@ namespace ClothingOrderAndStockManagement.Application.Services
                     query = query.Where(o => DateOnly.FromDateTime(o.OrderDatetime) <= toDate.Value);
                 }
 
-                // Project to DTO
+                // Project to DTO with real customer names
                 var dtoQuery = query.Select(o => new CompletedOrderDto
                 {
                     OrderRecordsId = o.OrderRecordsId,
                     OrderPackagesId = o.OrderPackages.Select(x => x.OrderPackagesId).FirstOrDefault(),
                     CustomerId = o.CustomerId,
-                    CustomerName = $"Customer {o.CustomerId}", // Placeholder until you add CustomerInfo navigation
-                    CustomerEmail = "", // Placeholder
+                    CustomerName = o.CustomerInfo.CustomerName, // Real customer name
+                    CustomerEmail = o.CustomerInfo.ContactNumber, // Using contact as placeholder
                     OrderDate = DateOnly.FromDateTime(o.OrderDatetime),
                     TotalAmount = o.OrderPackages.Sum(op => op.PriceAtPurchase * op.Quantity),
                     Status = o.OrderStatus,

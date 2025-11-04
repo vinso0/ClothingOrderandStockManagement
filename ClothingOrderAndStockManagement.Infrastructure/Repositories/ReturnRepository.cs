@@ -20,6 +20,7 @@ namespace ClothingOrderAndStockManagement.Infrastructure.Data
             return _context.Set<OrderRecord>()
                 .AsNoTracking()
                 .Where(o => o.OrderStatus == "Completed")
+                .Include(o => o.CustomerInfo) // Added CustomerInfo navigation
                 .Include(o => o.OrderPackages)
                     .ThenInclude(op => op.Packages);
         }
@@ -30,6 +31,7 @@ namespace ClothingOrderAndStockManagement.Infrastructure.Data
                 .AsNoTracking()
                 .Include(r => r.CustomerInfo)
                 .Include(r => r.OrderRecords)
+                    .ThenInclude(or => or.CustomerInfo) // Added CustomerInfo for OrderRecords
                 .Include(r => r.OrderPackage)
                     .ThenInclude(op => op.Packages);
         }
@@ -61,9 +63,7 @@ namespace ClothingOrderAndStockManagement.Infrastructure.Data
             if (orderPackage == null || orderPackage.Packages == null)
                 return false;
 
-            // Use QuantityAvailable (actual property on Package)
             orderPackage.Packages.QuantityAvailable += orderPackage.Quantity;
-
             _context.Set<Package>().Update(orderPackage.Packages);
             return true;
         }
