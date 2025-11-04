@@ -2,6 +2,7 @@
 using ClothingOrderAndStockManagement.Domain.Entities.Products;
 using ClothingOrderAndStockManagement.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace ClothingOrderAndStockManagement.Application.Repositories
 {

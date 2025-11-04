@@ -88,16 +88,25 @@
                                             <div class="package-item-row row mb-3 p-3 border rounded">
                                                 <div class="col-md-6">
                                                     <label class="form-label small">Item</label>
-                                                    @{
-                                                        var items = (IEnumerable<ItemDto>)ViewBag.Items ?? Enumerable.Empty<ItemDto>();
-                                                        var selectList = items.Select(item => new SelectListItem
+                                                    <select name="PackageItems[@i].ItemId" class="form-select item-select" required>
+                                                        <option value="">Select Item</option>
+                                                        @foreach (var item in (IEnumerable<ItemDto>)ViewBag.Items)
                                                         {
-                                                            Value = item.ItemId.ToString(),
-                                                            Text = $"{item.ItemCategoryType} - {item.Size} ({item.Color}) - Qty: {item.Quantity}",
-                                                            Selected = item.ItemId == Model.PackageItems[i].ItemId
-                                                        });
-                                                    }
-                                                    @Html.DropDownList($"PackageItems[{i}].ItemId", selectList, "Select Item", new { @class = "form-select item-select", required = "required" })
+                                                            var isSelected = item.ItemId == Model.PackageItems[i].ItemId;
+                                                            if (isSelected)
+                                                            {
+                                                                <option value="@item.ItemId" data-stock="@item.Quantity" selected>
+                                                                    @item.ItemCategoryType - @item.Size (@item.Color) - Qty: @item.Quantity
+                                                                </option>
+                                                            }
+                                                            else
+                                                            {
+                                                                <option value="@item.ItemId" data-stock="@item.Quantity">
+                                                                    @item.ItemCategoryType - @item.Size (@item.Color) - Qty: @item.Quantity
+                                                                </option>
+                                                            }
+                                                        }
+                                                    </select>
                                                 </div>
                                                 <div class="col-md-4">
                                                     <label class="form-label small">Quantity per Package</label>
@@ -119,15 +128,18 @@
                                         <div class="package-item-row row mb-3 p-3 border rounded">
                                             <div class="col-md-6">
                                                 <label class="form-label small">Item</label>
-                                                @{
-                                                    var items = (IEnumerable<ItemDto>)ViewBag.Items ?? Enumerable.Empty<ItemDto>();
-                                                    var selectList = items.Select(item => new SelectListItem
+                                                <select name="PackageItems[0].ItemId" class="form-select item-select" required>
+                                                    <option value="">Select Item</option>
+                                                    @if (ViewBag.Items != null)
                                                     {
-                                                        Value = item.ItemId.ToString(),
-                                                        Text = $"{item.ItemCategoryType} - {item.Size} ({item.Color}) - Qty: {item.Quantity}"
-                                                    });
-                                                }
-                                                @Html.DropDownList("PackageItems[0].ItemId", selectList, "Select Item", new { @class = "form-select item-select", required = "required" })
+                                                        @foreach (var item in (IEnumerable<ItemDto>)ViewBag.Items)
+                                                        {
+                                                            <option value="@item.ItemId" data-stock="@item.Quantity">
+                                                                @item.ItemCategoryType - @item.Size (@item.Color) - Qty: @item.Quantity
+                                                            </option>
+                                                        }
+                                                    }
+                                                </select>
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label small">Quantity per Package</label>

@@ -1,5 +1,6 @@
 ﻿
 using ClothingOrderAndStockManagement.Domain.Entities.Products;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace ClothingOrderAndStockManagement.Domain.Interfaces
 {
