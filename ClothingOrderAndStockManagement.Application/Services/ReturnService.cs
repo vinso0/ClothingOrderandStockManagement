@@ -1,9 +1,7 @@
 ﻿using ClothingOrderAndStockManagement.Application.Dtos.Orders;
 using ClothingOrderAndStockManagement.Application.Helpers;
-using ClothingOrderAndStockManagement.Application.Interfaces;
-using ClothingOrderAndStockManagement.Application.Repositories;
-using ClothingOrderAndStockManagement.Domain.Entities.Orders;
 using ClothingOrderAndStockManagement.Domain.Interfaces;
+using ClothingOrderAndStockManagement.Domain.Entities.Orders;
 using FluentResults;
 
 namespace ClothingOrderAndStockManagement.Application.Services
@@ -26,14 +24,45 @@ namespace ClothingOrderAndStockManagement.Application.Services
         {
             try
             {
-                var completedOrders = await _returnRepository.GetCompletedOrdersAsync(
-                    searchString, fromDate, toDate, pageIndex, pageSize);
-                return Result<PaginatedList<CompletedOrderDto>>.Success(completedOrders);
+                var query = _returnRepository.GetCompletedOrdersQuery();
+
+                // Apply filters
+                if (!string.IsNullOrWhiteSpace(searchString))
+                {
+                    query = query.Where(o =>
+                        o.CustomerId.ToString().Contains(searchString)); // Search by CustomerId since no navigation yet
+                }
+
+                if (fromDate.HasValue)
+                {
+                    query = query.Where(o => DateOnly.FromDateTime(o.OrderDatetime) >= fromDate.Value);
+                }
+
+                if (toDate.HasValue)
+                {
+                    query = query.Where(o => DateOnly.FromDateTime(o.OrderDatetime) <= toDate.Value);
+                }
+
+                // Project to DTO
+                var dtoQuery = query.Select(o => new CompletedOrderDto
+                {
+                    OrderRecordsId = o.OrderRecordsId,
+                    OrderPackagesId = o.OrderPackages.Select(x => x.OrderPackagesId).FirstOrDefault(),
+                    CustomerId = o.CustomerId,
+                    CustomerName = $"Customer {o.CustomerId}", // Placeholder until you add CustomerInfo navigation
+                    CustomerEmail = "", // Placeholder
+                    OrderDate = DateOnly.FromDateTime(o.OrderDatetime),
+                    TotalAmount = o.OrderPackages.Sum(op => op.PriceAtPurchase * op.Quantity),
+                    Status = o.OrderStatus,
+                    ItemCount = o.OrderPackages.Sum(op => op.Quantity)
+                });
+
+                var paginatedList = await PaginatedList<CompletedOrderDto>.CreateAsync(dtoQuery, pageIndex, pageSize);
+                return Result.Ok(paginatedList);
             }
             catch (Exception ex)
             {
-                return Result<PaginatedList<CompletedOrderDto>>.Failure(
-                    new Error("GetCompletedOrders.Error", ex.Message));
+                return Result.Fail<PaginatedList<CompletedOrderDto>>(ex.Message);
             }
         }
 
@@ -41,12 +70,10 @@ namespace ClothingOrderAndStockManagement.Application.Services
         {
             try
             {
-                // Manual validation
-                var validationErrors = ValidateReturnRequest(returnRequest);
-                if (validationErrors.Any())
-                {
-                    return Result<ReturnLogDto>.Failure(validationErrors.ToArray());
-                }
+                // Validate
+                var validationResult = ValidateReturnRequest(returnRequest);
+                if (validationResult.IsFailed)
+                    return validationResult;
 
                 var returnLog = new ReturnLog
                 {
@@ -56,29 +83,27 @@ namespace ClothingOrderAndStockManagement.Application.Services
                     Reason = returnRequest.Reason
                 };
 
-                var addResult = await _returnRepository.AddReturnLogAsync(returnLog);
-                if (!addResult)
-                {
-                    return Result<ReturnLogDto>.Failure(
-                        new Error("ProcessReturn.AddFailed", "Failed to add return log"));
-                }
+                // Add return log
+                await _returnRepository.AddReturnLogAsync(returnLog);
 
+                // Update order status
                 var updateResult = await _returnRepository.UpdateOrderStatusToReturnedAsync(returnRequest.OrderRecordsId);
                 if (!updateResult)
                 {
-                    return Result<ReturnLogDto>.Failure(
-                        new Error("ProcessReturn.UpdateFailed", "Failed to update order status"));
+                    return Result.Fail<ReturnLogDto>("Failed to update order status");
                 }
 
+                // Restock if requested
                 if (returnRequest.RestockItems)
                 {
                     var restockResult = await _returnRepository.RestockItemsAsync(returnRequest.OrderPackagesId);
                     if (!restockResult)
                     {
-                        return Result<ReturnLogDto>.Failure(
-                            new Error("ProcessReturn.RestockFailed", "Failed to restock items"));
+                        return Result.Fail<ReturnLogDto>("Failed to restock items");
                     }
                 }
+
+                await _returnRepository.SaveChangesAsync();
 
                 var returnDto = new ReturnLogDto
                 {
@@ -89,12 +114,11 @@ namespace ClothingOrderAndStockManagement.Application.Services
                     RestockItems = returnRequest.RestockItems
                 };
 
-                return Result<ReturnLogDto>.Success(returnDto);
+                return Result.Ok(returnDto);
             }
             catch (Exception ex)
             {
-                return Result<ReturnLogDto>.Failure(
-                    new Error("ProcessReturn.Error", ex.Message));
+                return Result.Fail<ReturnLogDto>(ex.Message);
             }
         }
 
@@ -107,41 +131,66 @@ namespace ClothingOrderAndStockManagement.Application.Services
         {
             try
             {
-                var returns = await _returnRepository.GetReturnsAsync(
-                    searchString, fromDate, toDate, pageIndex, pageSize);
-                return Result<PaginatedList<ReturnLogDto>>.Success(returns);
+                var query = _returnRepository.GetReturnsQuery();
+
+                // Apply filters
+                if (!string.IsNullOrWhiteSpace(searchString))
+                {
+                    query = query.Where(r =>
+                        r.CustomerInfo.CustomerName.Contains(searchString) ||
+                        r.Reason!.Contains(searchString));
+                }
+
+                if (fromDate.HasValue)
+                {
+                    query = query.Where(r => r.ReturnDate >= fromDate.Value);
+                }
+
+                if (toDate.HasValue)
+                {
+                    query = query.Where(r => r.ReturnDate <= toDate.Value);
+                }
+
+                // Project to DTO
+                var dtoQuery = query.Select(r => new ReturnLogDto
+                {
+                    ReturnLogsId = r.ReturnLogsId,
+                    OrderRecordsId = r.OrderRecordsId,
+                    OrderPackagesId = r.OrderPackagesId,
+                    CustomerId = r.CustomerId,
+                    ReturnDate = r.ReturnDate,
+                    Reason = r.Reason!,
+                    CustomerName = r.CustomerInfo.CustomerName,
+                    CustomerEmail = r.CustomerInfo.ContactNumber,
+                    OrderTotal = r.OrderRecords.OrderPackages.Sum(op => op.PriceAtPurchase * op.Quantity),
+                    OrderDate = DateOnly.FromDateTime(r.OrderRecords.OrderDatetime),
+                    OrderStatus = r.OrderRecords.OrderStatus
+                });
+
+                var paginatedList = await PaginatedList<ReturnLogDto>.CreateAsync(dtoQuery, pageIndex, pageSize);
+                return Result.Ok(paginatedList);
             }
             catch (Exception ex)
             {
-                return Result<PaginatedList<ReturnLogDto>>.Failure(
-                    new Error("GetReturns.Error", ex.Message));
+                return Result.Fail<PaginatedList<ReturnLogDto>>(ex.Message);
             }
         }
 
-        private List<Error> ValidateReturnRequest(ReturnRequestDto returnRequest)
+        private Result ValidateReturnRequest(ReturnRequestDto returnRequest)
         {
-            var errors = new List<Error>();
-
             if (returnRequest.OrderRecordsId <= 0)
-            {
-                errors.Add(new Error("Validation.OrderRecordsId", "Order ID is required"));
-            }
+                return Result.Fail("Order ID is required");
 
             if (returnRequest.OrderPackagesId <= 0)
-            {
-                errors.Add(new Error("Validation.OrderPackagesId", "Order Package ID is required"));
-            }
+                return Result.Fail("Order Package ID is required");
 
             if (string.IsNullOrWhiteSpace(returnRequest.Reason))
-            {
-                errors.Add(new Error("Validation.Reason", "Return reason is required"));
-            }
-            else if (returnRequest.Reason.Length > 500)
-            {
-                errors.Add(new Error("Validation.Reason", "Return reason cannot exceed 500 characters"));
-            }
+                return Result.Fail("Return reason is required");
 
-            return errors;
+            if (returnRequest.Reason.Length > 500)
+                return Result.Fail("Return reason cannot exceed 500 characters");
+
+            return Result.Ok();
         }
     }
 }

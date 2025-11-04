@@ -3,7 +3,7 @@ using ClothingOrderAndStockManagement.Domain.Entities.Account;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace ClothingOrderAndStockManagement.Application.Repositories
+namespace ClothingOrderAndStockManagement.Infrastructure.Repositories
 {
     public class UserRepository : IUserRepository
     {

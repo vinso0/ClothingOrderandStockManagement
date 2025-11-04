@@ -4,7 +4,7 @@ using ClothingOrderAndStockManagement.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace ClothingOrderAndStockManagement.Application.Repositories
+namespace ClothingOrderAndStockManagement.Infrastructure.Repositories
 {
     public class PackageRepository : IPackageRepository
     {

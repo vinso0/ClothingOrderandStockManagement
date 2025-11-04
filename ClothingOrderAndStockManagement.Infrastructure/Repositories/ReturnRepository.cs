@@ -17,23 +17,21 @@ namespace ClothingOrderAndStockManagement.Infrastructure.Data
 
         public IQueryable<OrderRecord> GetCompletedOrdersQuery()
         {
-            // Only orders with Status == "Completed"
-            // Include minimal navigations needed for projection in service
             return _context.Set<OrderRecord>()
                 .AsNoTracking()
-                .Where(o => o.Status == "Completed")
-                .Include(o => o.CustomerInfo)
-                .Include(o => o.OrderPackages);
+                .Where(o => o.OrderStatus == "Completed")
+                .Include(o => o.OrderPackages)
+                    .ThenInclude(op => op.Packages);
         }
 
         public IQueryable<ReturnLog> GetReturnsQuery()
         {
-            // Return history query with relationships used by service projection
             return _context.Set<ReturnLog>()
                 .AsNoTracking()
                 .Include(r => r.CustomerInfo)
                 .Include(r => r.OrderRecords)
-                .Include(r => r.OrderPackage);
+                .Include(r => r.OrderPackage)
+                    .ThenInclude(op => op.Packages);
         }
 
         public async Task AddReturnLogAsync(ReturnLog returnLog)
@@ -49,26 +47,24 @@ namespace ClothingOrderAndStockManagement.Infrastructure.Data
             if (order == null)
                 return false;
 
-            order.Status = "Returned";
+            order.OrderStatus = "Returned";
             _context.Set<OrderRecord>().Update(order);
             return true;
         }
 
         public async Task<bool> RestockItemsAsync(int orderPackagesId)
         {
-            // Increase package stock by the quantity sold in this order package
             var orderPackage = await _context.Set<OrderPackage>()
-                .Include(op => op.Package) // ensure Package is loaded to mutate stock
+                .Include(op => op.Packages)
                 .FirstOrDefaultAsync(op => op.OrderPackagesId == orderPackagesId);
 
-            if (orderPackage == null || orderPackage.Package == null)
+            if (orderPackage == null || orderPackage.Packages == null)
                 return false;
 
-            // Add back the quantity to package stock
-            orderPackage.Package.StockQuantity += orderPackage.Quantity;
+            // Use QuantityAvailable (actual property on Package)
+            orderPackage.Packages.QuantityAvailable += orderPackage.Quantity;
 
-            // If you also decrement per-item stock elsewhere, adjust here as needed
-            _context.Set<Package>().Update(orderPackage.Package);
+            _context.Set<Package>().Update(orderPackage.Packages);
             return true;
         }
 

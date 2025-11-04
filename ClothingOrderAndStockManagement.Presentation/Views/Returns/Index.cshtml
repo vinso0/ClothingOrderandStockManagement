@@ -1,4 +1,6 @@
-﻿@model PaginatedList<CompletedOrderDto>
+﻿@using ClothingOrderAndStockManagement.Application.Dtos.Orders
+@using ClothingOrderAndStockManagement.Application.Helpers
+@model PaginatedList<CompletedOrderDto>
 @{
     ViewData["Title"] = "Returns Management";
 }
@@ -16,17 +18,17 @@
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label for="searchString" class="form-label">Search Orders</label>
-                                <input type="text" class="form-control" id="searchString" name="searchString" 
-                                       value="@ViewData["CurrentFilter"]" placeholder="Search by customer name or email...">
+                                <input type="text" class="form-control" id="searchString" name="searchString"
+                                       value="@ViewData["CurrentFilter"]" placeholder="Search by customer ID...">
                             </div>
                             <div class="col-md-3">
                                 <label for="fromDate" class="form-label">From Date</label>
-                                <input type="date" class="form-control" id="fromDate" name="fromDate" 
+                                <input type="date" class="form-control" id="fromDate" name="fromDate"
                                        value="@ViewData["FromDate"]">
                             </div>
                             <div class="col-md-3">
                                 <label for="toDate" class="form-label">To Date</label>
-                                <input type="date" class="form-control" id="toDate" name="toDate" 
+                                <input type="date" class="form-control" id="toDate" name="toDate"
                                        value="@ViewData["ToDate"]">
                             </div>
                             <div class="col-md-2">
@@ -73,7 +75,7 @@
                                                 <span class="badge bg-success">@order.Status</span>
                                             </td>
                                             <td>
-                                                <button type="button" class="btn btn-danger btn-sm" 
+                                                <button type="button" class="btn btn-danger btn-sm"
                                                         onclick="showReturnModal(@order.OrderRecordsId, @order.OrderPackagesId, '@order.CustomerName')">
                                                     <i class="fas fa-undo"></i> Return
                                                 </button>
@@ -102,8 +104,8 @@
                         <nav aria-label="Page navigation">
                             <ul class="pagination justify-content-center">
                                 <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
-                                    <a class="page-link" 
-                                       asp-action="Index" 
+                                    <a class="page-link"
+                                       asp-action="Index"
                                        asp-route-pageIndex="@(Model.PageIndex - 1)"
                                        asp-route-searchString="@ViewData["CurrentFilter"]"
                                        asp-route-fromDate="@ViewData["FromDate"]"
@@ -111,12 +113,12 @@
                                         Previous
                                     </a>
                                 </li>
-                                
+
                                 @for (int i = 1; i <= Model.TotalPages; i++)
                                 {
                                     <li class="page-item @(i == Model.PageIndex ? "active" : "")">
-                                        <a class="page-link" 
-                                           asp-action="Index" 
+                                        <a class="page-link"
+                                           asp-action="Index"
                                            asp-route-pageIndex="@i"
                                            asp-route-searchString="@ViewData["CurrentFilter"]"
                                            asp-route-fromDate="@ViewData["FromDate"]"
@@ -125,10 +127,10 @@
                                         </a>
                                     </li>
                                 }
-                                
+
                                 <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
-                                    <a class="page-link" 
-                                       asp-action="Index" 
+                                    <a class="page-link"
+                                       asp-action="Index"
                                        asp-route-pageIndex="@(Model.PageIndex + 1)"
                                        asp-route-searchString="@ViewData["CurrentFilter"]"
                                        asp-route-fromDate="@ViewData["FromDate"]"
@@ -158,20 +160,20 @@
                     @Html.AntiForgeryToken()
                     <input type="hidden" id="orderRecordsId" name="orderRecordsId">
                     <input type="hidden" id="orderPackagesId" name="orderPackagesId">
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Customer:</label>
                         <p id="customerName" class="fw-bold"></p>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="reason" class="form-label">Return Reason <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="reason" name="reason" rows="3" 
+                        <textarea class="form-control" id="reason" name="reason" rows="3"
                                   placeholder="Please provide the reason for return..." maxlength="500"></textarea>
                         <div class="form-text">Maximum 500 characters</div>
                         <div class="invalid-feedback" id="reasonError"></div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="restockItems" name="restockItems" checked>
@@ -199,14 +201,14 @@
             document.getElementById('orderRecordsId').value = orderRecordsId;
             document.getElementById('orderPackagesId').value = orderPackagesId;
             document.getElementById('customerName').textContent = customerName;
-            
+
             // Reset form
             const reasonField = document.getElementById('reason');
             reasonField.value = '';
             reasonField.classList.remove('is-invalid');
             document.getElementById('reasonError').textContent = '';
             document.getElementById('restockItems').checked = true;
-            
+
             var modal = new bootstrap.Modal(document.getElementById('returnModal'));
             modal.show();
         }
@@ -241,7 +243,7 @@
 
             const form = document.getElementById('returnForm');
             const formData = new FormData(form);
-            
+
             const returnData = {
                 orderRecordsId: parseInt(formData.get('orderRecordsId')),
                 orderPackagesId: parseInt(formData.get('orderPackagesId')),
@@ -278,7 +280,7 @@
             const maxLength = 500;
             const currentLength = this.value.length;
             const formText = this.nextElementSibling;
-            
+
             if (currentLength > maxLength) {
                 formText.textContent = `Exceeded maximum by ${currentLength - maxLength} characters`;
                 formText.classList.add('text-danger');

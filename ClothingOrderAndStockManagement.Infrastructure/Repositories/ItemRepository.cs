@@ -3,7 +3,7 @@ using ClothingOrderAndStockManagement.Domain.Entities.Products;
 using ClothingOrderAndStockManagement.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace ClothingOrderAndStockManagement.Application.Repositories
+namespace ClothingOrderAndStockManagement.Infrastructure.Repositories
 {
     public class ItemRepository : IItemRepository
     {

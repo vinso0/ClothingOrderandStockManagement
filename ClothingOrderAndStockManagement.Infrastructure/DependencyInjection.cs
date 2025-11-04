@@ -2,7 +2,7 @@
 using ClothingOrderAndStockManagement.Domain.Interfaces.Repositories;
 using ClothingOrderAndStockManagement.Domain.Entities.Account;
 using ClothingOrderAndStockManagement.Infrastructure.Data;
-using ClothingOrderAndStockManagement.Application.Repositories;
+using ClothingOrderAndStockManagement.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -41,6 +41,14 @@ namespace ClothingOrderAndStockManagement.Infrastructure
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
+
+            services.AddScoped<IOrderRepository, OrderRepository>();
+            services.AddScoped<ICustomerRepository, CustomerRepository>();
+            services.AddScoped<IPackageRepository, PackageRepository>();
+            services.AddScoped<IItemRepository, ItemRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IItemCategoryRepository, ItemCategoryRepository>();
+            services.AddScoped<IReturnRepository, ReturnRepository>();
 
             return services;
         }
