@@ -2,6 +2,7 @@
 using ClothingOrderAndStockManagement.Application.Interfaces;
 using ClothingOrderAndStockManagement.Domain.Entities.Products;
 using ClothingOrderAndStockManagement.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using FluentResults;
 
 public class ItemCategoryService : IItemCategoryService
