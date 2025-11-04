@@ -28,11 +28,11 @@
     @await Html.PartialAsync("Partials/_AddPackageModal", ViewData["AddPackageModel"] as CreatePackageDto ?? new CreatePackageDto())
 </div>
 
-<div class="entity-card">
+<div class="reports-section">
     @if (Model != null && Model.Any())
     {
         <div class="table-responsive">
-            <table class="table table-hover entity-table">
+            <table class="table table-hover customer-table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -41,20 +41,23 @@
                         <th>Price</th>
                         <th>Available Qty</th>
                         <th>Stock Status</th>
-                        <th>Actions</th>
+                        <th class="customer-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                 @foreach (var package in Model)
                 {
-                    var badgeClass = package.QuantityAvailable == 0 ? "none" : package.QuantityAvailable <= 5 ? "low" : "ok";
                     <tr>
-                        <td>@package.PackagesId</td>
-                        <td>@package.PackageName</td>
-                        <td>@(package.Description ?? "—")</td>
-                        <td>₱@package.Price.ToString("N2")</td>
-                        <td><span class="badge-qty @badgeClass">@package.QuantityAvailable</span></td>
-                        <td>
+                        <td><span class="customer-id">@package.PackagesId</span></td>
+                        <td><span class="customer-name">@package.PackageName</span></td>
+                        <td class="customer-details">@(package.Description ?? "—")</td>
+                        <td class="customer-details">₱@package.Price.ToString("N2")</td>
+                        <td class="customer-details">
+                            <span class="badge quantity-badge @(package.QuantityAvailable > 0 ? "badge-success" : "badge-danger")">
+                                @package.QuantityAvailable
+                            </span>
+                        </td>
+                        <td class="customer-details">
                             @if (package.QuantityAvailable > 0)
                             {
                                 <span class="badge bg-success">In Stock</span>
@@ -64,20 +67,22 @@
                                 <span class="badge bg-danger">Out of Stock</span>
                             }
                         </td>
-                        <td class="entity-actions">
+                        <td class="customer-actions">
                             <div class="btn-group" role="group">
-                                <button class="btn btn-sm btn-outline-info"
+                                <button class="btn btn-sm btn-outline-info customer-order-btn"
                                         data-bs-toggle="modal" data-bs-target="#packageDetailsModal-@package.PackagesId">
+                                    <img src="~/images/icons/Search.png" alt="Details" style="width: 14px; height: 14px; margin-right: 4px;" />
                                     Details
                                 </button>
 
-                                <button class="btn btn-sm btn-outline-success"
-                                        data-bs-toggle="modal" data-bs-target="#editPackageModal-@package.PackagesId">
+                                <a class="btn btn-sm btn-outline-success customer-edit-btn"
+                                   data-bs-toggle="modal" data-bs-target="#editPackageModal-@package.PackagesId">
                                     Edit
-                                </button>
+                                </a>
 
-                                <button class="btn btn-sm btn-outline-danger"
-                                        data-bs-toggle="modal" data-bs-target="#deleteModal-@package.PackagesId">
+                                <button class="btn btn-sm btn-outline-danger customer-delete-btn"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal-@package.PackagesId">
                                     Delete
                                 </button>
                             </div>
@@ -88,18 +93,19 @@
             </table>
         </div>
 
-        <div class="entity-pagination">
+        <!-- Keep your existing pagination -->
+        <div class="pagination-section">
             <div>Page @Model.PageIndex of @Model.TotalPages</div>
             <div>
                 @if (Model.HasPreviousPage)
                 {
                     <a asp-action="Index" asp-route-pageIndex="@(Model.PageIndex - 1)"
-                       asp-route-searchString="@ViewData["CurrentFilter"]" class="btn btn-outline-secondary btn-sm">Previous</a>
+                       asp-route-searchString="@ViewData["CurrentFilter"]" class="btn btn-outline-secondary">Previous</a>
                 }
                 @if (Model.HasNextPage)
                 {
                     <a asp-action="Index" asp-route-pageIndex="@(Model.PageIndex + 1)"
-                       asp-route-searchString="@ViewData["CurrentFilter"]" class="btn btn-outline-primary btn-sm">Next</a>
+                       asp-route-searchString="@ViewData["CurrentFilter"]" class="btn btn-outline-primary">Next</a>
                 }
             </div>
         </div>
