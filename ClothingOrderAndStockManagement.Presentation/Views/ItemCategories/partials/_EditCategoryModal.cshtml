@@ -4,7 +4,7 @@
 <div class="modal fade" id="editCategoryModal-@Model.ItemCategoryId" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form asp-action="EditCategory" asp-controller="Items" method="post">
+            <form asp-action="Edit" asp-controller="ItemCategories" method="post">
                 @Html.AntiForgeryToken()
                 <div class="modal-header">
                     <h5 class="modal-title">Edit Category</h5>

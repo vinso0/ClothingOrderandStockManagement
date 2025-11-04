@@ -4,7 +4,7 @@
 <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form asp-action="CreateCategory" asp-controller="Items" method="post">
+            <form asp-action="Create" asp-controller="ItemCategories" method="post">
                 @Html.AntiForgeryToken()
                 <div class="modal-header">
                     <h5 class="modal-title">Add Category</h5>
