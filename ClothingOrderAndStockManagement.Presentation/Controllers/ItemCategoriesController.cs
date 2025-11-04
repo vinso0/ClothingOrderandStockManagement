@@ -77,14 +77,9 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             return View("Index", reload);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            var result = await _categoryService.DeleteCategoryAsync(id);
-            if (!result.IsSuccess)
-                TempData["ErrorMessage"] = string.Join("; ", result.Errors.Select(e => e.Message));
-
+            await _categoryService.DeleteCategoryAsync(id);
             return RedirectToAction(nameof(Index));
         }
     }
