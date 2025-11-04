@@ -12,7 +12,9 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <!-- Validation Summary -->
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
                 <form asp-action="Edit" asp-controller="Packages" method="post" autocomplete="off" id="editPackageForm-@Model.PackagesId">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="PackagesId" value="@Model.PackagesId" />
@@ -23,7 +25,7 @@
                                 <label class="form-label fw-semibold">
                                     <i class="fas fa-tag me-1"></i>Package Name *
                                 </label>
-                                <input type="text" name="PackageName" value="@Model.PackageName" 
+                                <input type="text" name="PackageName" value="@Model.PackageName"
                                        class="form-control" required maxlength="100" />
                             </div>
                         </div>
@@ -34,7 +36,7 @@
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text">₱</span>
-                                    <input type="number" name="Price" value="@Model.Price" 
+                                    <input type="number" name="Price" value="@Model.Price"
                                            class="form-control" step="0.01" min="0" required />
                                 </div>
                             </div>
@@ -47,7 +49,7 @@
                                 <label class="form-label fw-semibold">
                                     <i class="fas fa-boxes me-1"></i>Available Quantity *
                                 </label>
-                                <input type="number" name="QuantityAvailable" value="@Model.QuantityAvailable" 
+                                <input type="number" name="QuantityAvailable" value="@Model.QuantityAvailable"
                                        class="form-control" min="0" required />
                                 <small class="form-text text-muted">
                                     Current stock of complete packages
@@ -59,7 +61,7 @@
                                 <label class="form-label fw-semibold">
                                     <i class="fas fa-align-left me-1"></i>Description
                                 </label>
-                                <textarea name="Description" class="form-control" rows="3" 
+                                <textarea name="Description" class="form-control" rows="3"
                                           maxlength="500">@Model.Description</textarea>
                             </div>
                         </div>
@@ -75,7 +77,7 @@
                                 Items included in this package
                             </small>
                         </div>
-                        
+
                         <div class="card">
                             <div class="card-body">
                                 <div id="editPackageItems-@Model.PackagesId">
@@ -83,38 +85,26 @@
                                     {
                                         @for (int i = 0; i < Model.PackageItems.Count; i++)
                                         {
-                                            <div class="package-item-row row mb-3 p-2 border rounded">
+                                            <div class="package-item-row row mb-3 p-3 border rounded">
                                                 <div class="col-md-6">
                                                     <label class="form-label small">Item</label>
                                                     @{
                                                         var items = (IEnumerable<ItemDto>)ViewBag.Items ?? Enumerable.Empty<ItemDto>();
-                                                    }
-                                                    <select name="PackageItems[@i].ItemId" class="form-select" required>
-                                                        <option value="">Select Item</option>
-                                                        @foreach (var item in items)
+                                                        var selectList = items.Select(item => new SelectListItem
                                                         {
-                                                            var isSelected = item.ItemId == Model.PackageItems[i].ItemId;
-                                                            if (isSelected)
-                                                            {
-                                                                <option value="@item.ItemId" selected>
-                                                                    @item.ItemCategoryType - @item.Size (@item.Color) - Qty: @item.Quantity
-                                                                </option>
-                                                            }
-                                                            else
-                                                            {
-                                                                <option value="@item.ItemId">
-                                                                    @item.ItemCategoryType - @item.Size (@item.Color) - Qty: @item.Quantity
-                                                                </option>
-                                                            }
-                                                        }
-                                                    </select>
+                                                            Value = item.ItemId.ToString(),
+                                                            Text = $"{item.ItemCategoryType} - {item.Size} ({item.Color}) - Qty: {item.Quantity}",
+                                                            Selected = item.ItemId == Model.PackageItems[i].ItemId
+                                                        });
+                                                    }
+                                                    @Html.DropDownList($"PackageItems[{i}].ItemId", selectList, "Select Item", new { @class = "form-select item-select", required = "required" })
                                                 </div>
                                                 <div class="col-md-4">
                                                     <label class="form-label small">Quantity per Package</label>
                                                     <input type="number" name="PackageItems[@i].ItemQuantity"
-                                                           value="@Model.PackageItems[i].ItemQuantity" 
+                                                           value="@Model.PackageItems[i].ItemQuantity"
                                                            min="1" class="form-control item-quantity" required />
-                                                    <small class="form-text text-muted available-stock"></small>
+                                                    <small class="available-stock form-text text-muted"></small>
                                                 </div>
                                                 <div class="col-md-2 d-flex align-items-end">
                                                     <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100">
@@ -126,27 +116,24 @@
                                     }
                                     else
                                     {
-                                        <div class="package-item-row row mb-3 p-2 border rounded">
+                                        <div class="package-item-row row mb-3 p-3 border rounded">
                                             <div class="col-md-6">
                                                 <label class="form-label small">Item</label>
-                                                <select name="PackageItems[0].ItemId" class="form-select" required>
-                                                    <option value="">Select Item</option>
-                                                    @if (ViewBag.Items != null)
+                                                @{
+                                                    var items = (IEnumerable<ItemDto>)ViewBag.Items ?? Enumerable.Empty<ItemDto>();
+                                                    var selectList = items.Select(item => new SelectListItem
                                                     {
-                                                        @foreach (var item in (IEnumerable<ItemDto>)ViewBag.Items)
-                                                        {
-                                                            <option value="@item.ItemId" data-stock="@item.Quantity">
-                                                                @item.ItemCategoryType - @item.Size (@item.Color) - Stock: @item.Quantity
-                                                            </option>
-                                                        }
-                                                    }
-                                                </select>
+                                                        Value = item.ItemId.ToString(),
+                                                        Text = $"{item.ItemCategoryType} - {item.Size} ({item.Color}) - Qty: {item.Quantity}"
+                                                    });
+                                                }
+                                                @Html.DropDownList("PackageItems[0].ItemId", selectList, "Select Item", new { @class = "form-select item-select", required = "required" })
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label small">Quantity per Package</label>
-                                                <input type="number" name="PackageItems[0].ItemQuantity" 
-                                                       class="form-control item-quantity" min="1" required />
-                                                <small class="form-text text-muted available-stock"></small>
+                                                <input type="number" name="PackageItems[0].ItemQuantity"
+                                                       class="form-control item-quantity" min="1" value="1" required />
+                                                <small class="available-stock form-text text-muted"></small>
                                             </div>
                                             <div class="col-md-2 d-flex align-items-end">
                                                 <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100">
@@ -156,7 +143,7 @@
                                         </div>
                                     }
                                 </div>
-                                <button type="button" class="btn btn-outline-primary btn-sm add-package-item" 
+                                <button type="button" class="btn btn-outline-primary btn-sm add-package-item"
                                         data-package-id="@Model.PackagesId">
                                     <i class="fas fa-plus me-1"></i>Add Another Item
                                 </button>
