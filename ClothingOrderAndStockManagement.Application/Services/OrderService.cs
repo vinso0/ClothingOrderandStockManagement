@@ -191,6 +191,24 @@ namespace ClothingOrderAndStockManagement.Application.Services
             return await CreateAsync(dto);
         }
 
+        public async Task<IEnumerable<OrderRecordDto>> GetOrdersForSortingAsync()
+        {
+            var orders = await _orderRepository.Query()
+                .Include(o => o.OrderPackages).ThenInclude(op => op.Packages)
+                .Include(o => o.PaymentRecords)
+                .ToListAsync();
+
+            var customers = await _customerRepository.GetAllAsync();
+
+            // Filter for only Partially Paid and Fully Paid orders, sorted by date (newest first)
+            var allowedStatuses = new[] { "Partially Paid", "Fully Paid" };
+
+            return orders
+                .Where(o => allowedStatuses.Contains(o.OrderStatus))
+                .OrderByDescending(o => o.OrderDatetime)
+                .Select(o => MapToDto(o, customers));
+        }
+
         private OrderRecordDto MapToDto(
             OrderRecord order,
             IEnumerable<ClothingOrderAndStockManagement.Domain.Entities.Customers.CustomerInfo> customers)

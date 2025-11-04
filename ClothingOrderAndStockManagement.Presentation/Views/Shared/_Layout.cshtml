@@ -125,7 +125,7 @@
         @if (User.IsInRole("Staff"))
         {
             <a class="sidebar-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Staff" ? "active" : "")"
-            asp-controller="Home" asp-action="Staff">
+            asp-controller="Staff" asp-action="Index">
                 <img src="~/images/icons/Orders.png" alt="Orders to Sort" class="sidebar-icon-img" />
                 Orders to Sort
             </a>
