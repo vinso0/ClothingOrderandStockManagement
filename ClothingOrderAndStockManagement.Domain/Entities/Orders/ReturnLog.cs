@@ -15,13 +15,10 @@ public partial class ReturnLog
 
     public int CustomerId { get; set; }
 
-    public string UserId { get; set; } = null!;
-
     public DateOnly ReturnDate { get; set; }
 
     public string? Reason { get; set; }
 
-    public string? ReturnStatus { get; set; }
 
     // --- NAVIGATION PROPERTIES TO ADD ---
     public virtual OrderRecord OrderRecords { get; set; } = null!;
@@ -31,7 +28,4 @@ public partial class ReturnLog
 
     // Add this for the relationship to CustomerInfo
     public virtual CustomerInfo CustomerInfo { get; set; } = null!;
-
-    // Add this for the relationship to AspNetUsers
-    public virtual Users User { get; set; } = null!;
 }

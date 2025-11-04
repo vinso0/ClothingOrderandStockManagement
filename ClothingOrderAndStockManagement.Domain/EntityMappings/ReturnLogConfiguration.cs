@@ -14,12 +14,6 @@ namespace ClothingOrderAndStockManagement.Domain.EntityMappings
             entity.Property(e => e.Reason)
                 .HasMaxLength(255);
 
-            entity.Property(e => e.ReturnStatus)
-                .HasMaxLength(50);
-
-            entity.Property(e => e.UserId)
-                .HasMaxLength(450);
-
             // EXISTING RELATIONSHIP - OrderRecord
             entity.HasOne(d => d.OrderRecords)
                 .WithMany(p => p.ReturnLogs)
@@ -40,13 +34,6 @@ namespace ClothingOrderAndStockManagement.Domain.EntityMappings
                 .HasForeignKey(d => d.CustomerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ReturnLogs_Customer");
-
-            // ADD THIS - User relationship
-            entity.HasOne(d => d.User)
-                .WithMany() // Assuming User doesn't have a ReturnLogs collection
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_ReturnLogs_User");
         }
     }
 }
