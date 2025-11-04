@@ -1,0 +1,145 @@
+﻿/* Shared base */
+.entity-header h2 {
+    color: #333;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.entity-search-add {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.entity-search-form {
+    flex: 1;
+    max-width: 420px;
+}
+
+.entity-add-btn {
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+/* Table shell */
+.entity-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.08);
+    overflow: hidden;
+}
+
+.entity-table {
+    margin-bottom: 0;
+}
+
+    .entity-table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+        padding: 1rem .75rem;
+    }
+
+    .entity-table td {
+        padding: 1rem .75rem;
+        vertical-align: middle;
+    }
+
+    .entity-table tr:hover {
+        background-color: #f8f9fa;
+    }
+
+/* Actions */
+.entity-actions .btn {
+    margin-right: .25rem;
+}
+
+    .entity-actions .btn:last-child {
+        margin-right: 0;
+    }
+
+/* Empty state */
+.entity-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6c757d;
+}
+
+    .entity-empty svg {
+        margin-bottom: 1rem;
+        opacity: .6;
+    }
+
+/* Pagination */
+.entity-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+/* Badges and numeric highlights */
+.badge-qty {
+    padding: .375rem .75rem;
+    border-radius: .375rem;
+    font-weight: 600;
+    color: #fff;
+    min-width: 40px;
+    display: inline-block;
+    text-align: center;
+}
+
+    .badge-qty.ok {
+        background-color: #28a745;
+    }
+
+    .badge-qty.low {
+        background-color: #ffc107;
+        color: #212529;
+    }
+
+    .badge-qty.none {
+        background-color: #dc3545;
+    }
+
+/* Forms in modals */
+.modal .form-label {
+    font-weight: 600;
+}
+
+.stock-note {
+    font-size: .85rem;
+}
+
+    .stock-note.ok {
+        color: #198754;
+    }
+
+    .stock-note.warn {
+        color: #ffc107;
+    }
+
+    .stock-note.error {
+        color: #dc3545;
+    }
+
+/* Small utility buttons (like “Order” in customers) */
+.entity-inline-btn {
+    border-radius: 4px;
+    font-size: 12px;
+    padding: 4px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+}
+
+    .entity-inline-btn:hover {
+        filter: brightness(.95);
+    }

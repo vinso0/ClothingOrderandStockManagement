@@ -1,142 +1,119 @@
 ﻿@model ClothingOrderAndStockManagement.Application.Helpers.PaginatedList<PackageDto>
-@using ClothingOrderAndStockManagement.Application.Dtos.Items
 @using ClothingOrderAndStockManagement.Application.Dtos.Packages
 @{
     ViewData["Title"] = "Packages";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="package-header">
+<div class="entity-header">
     <h2>Packages</h2>
 </div>
 
-<div class="package-search-add-section">
-    <!-- Search Form -->
-    <form asp-controller="Packages" asp-action="Index" method="get" class="package-search-form" autocomplete="off">
+<div class="entity-search-add">
+    <form asp-controller="Packages" asp-action="Index" method="get" class="entity-search-form" autocomplete="off">
         <div class="input-group">
             <input type="text" name="searchString" class="form-control" placeholder="Search packages..." value="@Context.Request.Query["searchString"]" />
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-search"></i>
+            <button type="submit" class="btn btn-primary d-flex align-items-center">
+                <img src="~/images/icons/Search.png" alt="Search" style="width: 18px; height: 18px;" />
             </button>
         </div>
     </form>
 
-    <!-- Add Package Button -->
-    <button class="btn btn-outline-primary package-add-btn"
+    <button class="btn btn-outline-primary entity-add-btn"
             data-bs-toggle="modal" data-bs-target="#addPackageModal">
-        <i class="fas fa-plus"></i>
+        <img src="~/images/icons/Add.png" alt="Add" style="width: 18px; height: 18px;" />
         Add Package
     </button>
+
+    @await Html.PartialAsync("Partials/_AddPackageModal", ViewData["AddPackageModel"] as CreatePackageDto ?? new CreatePackageDto())
 </div>
 
-<!-- Add Package Modal -->
-@await Html.PartialAsync("Partials/_AddPackageModal", ViewData["AddPackageModel"] as CreatePackageDto ?? new CreatePackageDto())
-
-<div class="reports-section">
+<div class="entity-card">
     @if (Model != null && Model.Any())
     {
         <div class="table-responsive">
-            <table class="table table-hover package-table">
+            <table class="table table-hover entity-table">
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>Package Name</th>
                         <th>Description</th>
                         <th>Price</th>
-                        <th>Available Quantity</th>
+                        <th>Available Qty</th>
                         <th>Stock Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var package in Model)
-                    {
-                        <tr>
-                            <td>@package.PackagesId</td>
-                            <td>@package.PackageName</td>
-                            <td>@(package.Description ?? "No description")</td>
-                            <td>₱@package.Price.ToString("N2")</td>
-                            <td class="text-center">
-                                <span class="quantity-badge @(package.QuantityAvailable <= 5 ? "low-stock" : "normal-stock")">
-                                    @package.QuantityAvailable
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                @if (package.QuantityAvailable > 0)
-                                {
-                                    <span class="badge bg-success">
-                                        <i class="fas fa-check-circle"></i> In Stock
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-danger">
-                                        <i class="fas fa-times-circle"></i> Out of Stock
-                                    </span>
-                                }
-                            </td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    <button class="btn btn-sm btn-outline-info"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#packageDetailsModal-@package.PackagesId"
-                                            title="View Details">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
+                @foreach (var package in Model)
+                {
+                    var badgeClass = package.QuantityAvailable == 0 ? "none" : package.QuantityAvailable <= 5 ? "low" : "ok";
+                    <tr>
+                        <td>@package.PackagesId</td>
+                        <td>@package.PackageName</td>
+                        <td>@(package.Description ?? "—")</td>
+                        <td>₱@package.Price.ToString("N2")</td>
+                        <td><span class="badge-qty @badgeClass">@package.QuantityAvailable</span></td>
+                        <td>
+                            @if (package.QuantityAvailable > 0)
+                            {
+                                <span class="badge bg-success">In Stock</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Out of Stock</span>
+                            }
+                        </td>
+                        <td class="entity-actions">
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-info"
+                                        data-bs-toggle="modal" data-bs-target="#packageDetailsModal-@package.PackagesId">
+                                    Details
+                                </button>
 
-                                    <button class="btn btn-sm btn-outline-success"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#editPackageModal-@package.PackagesId"
-                                            title="Edit Package">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
+                                <button class="btn btn-sm btn-outline-success"
+                                        data-bs-toggle="modal" data-bs-target="#editPackageModal-@package.PackagesId">
+                                    Edit
+                                </button>
 
-                                    <button class="btn btn-sm btn-outline-danger"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#deleteModal-@package.PackagesId"
-                                            title="Delete Package">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    }
+                                <button class="btn btn-sm btn-outline-danger"
+                                        data-bs-toggle="modal" data-bs-target="#deleteModal-@package.PackagesId">
+                                    Delete
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
                 </tbody>
             </table>
         </div>
 
-        <!-- Pagination -->
-        <div class="pagination-section">
-            <div class="pagination-info">
-                Page @Model.PageIndex of @Model.TotalPages
-            </div>
-            <div class="pagination-controls">
+        <div class="entity-pagination">
+            <div>Page @Model.PageIndex of @Model.TotalPages</div>
+            <div>
                 @if (Model.HasPreviousPage)
                 {
-                    <a asp-action="Index"
-                       asp-route-pageIndex="@(Model.PageIndex - 1)"
-                       asp-route-searchString="@ViewData["CurrentFilter"]"
-                       class="btn btn-outline-secondary btn-sm">Previous</a>
+                    <a asp-action="Index" asp-route-pageIndex="@(Model.PageIndex - 1)"
+                       asp-route-searchString="@ViewData["CurrentFilter"]" class="btn btn-outline-secondary btn-sm">Previous</a>
                 }
-
                 @if (Model.HasNextPage)
                 {
-                    <a asp-action="Index"
-                       asp-route-pageIndex="@(Model.PageIndex + 1)"
-                       asp-route-searchString="@ViewData["CurrentFilter"]"
-                       class="btn btn-outline-primary btn-sm">Next</a>
+                    <a asp-action="Index" asp-route-pageIndex="@(Model.PageIndex + 1)"
+                       asp-route-searchString="@ViewData["CurrentFilter"]" class="btn btn-outline-primary btn-sm">Next</a>
                 }
             </div>
         </div>
     }
     else
     {
-        <div class="no-packages-section">
-            <div class="text-center py-5">
-                <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
-                <h5>No packages found</h5>
-                <p class="text-muted">Start by creating your first package using the "Add Package" button above.</p>
-            </div>
+        <div class="entity-empty">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="9" cy="9" r="2" />
+                <path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+            </svg>
+            <h5>No packages found</h5>
+            <p>Start by creating your first package using the "Add Package" button above.</p>
         </div>
     }
 </div>
@@ -169,129 +146,16 @@
     }
 }
 
-<style>
-    .package-header h2 {
-        color: #333;
-        margin-bottom: 2rem;
-        font-weight: 600;
-    }
-
-    .package-search-add-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        gap: 1rem;
-    }
-
-    .package-search-form {
-        flex: 1;
-        max-width: 400px;
-    }
-
-    .package-add-btn {
-        white-space: nowrap;
-        gap: 0.5rem;
-    }
-
-    .reports-section {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        overflow: hidden;
-    }
-
-    .package-table {
-        margin-bottom: 0;
-    }
-
-    .package-table th {
-        background-color: #f8f9fa;
-        font-weight: 600;
-        border-bottom: 2px solid #dee2e6;
-        padding: 1rem 0.75rem;
-    }
-
-    .package-table td {
-        padding: 1rem 0.75rem;
-        vertical-align: middle;
-    }
-
-    .package-table tr:hover {
-        background-color: #f8f9fa;
-    }
-
-    .quantity-badge {
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.375rem;
-        font-weight: 600;
-        color: white;
-        min-width: 40px;
-        display: inline-block;
-    }
-
-    .quantity-badge.normal-stock {
-        background-color: #28a745;
-    }
-
-    .quantity-badge.low-stock {
-        background-color: #ffc107;
-        color: #212529;
-    }
-
-    .stock-status .badge {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.875rem;
-        gap: 0.25rem;
-    }
-
-    .btn-group .btn {
-        margin-right: 0.25rem;
-    }
-
-    .btn-group .btn:last-child {
-        margin-right: 0;
-    }
-
-    .no-packages-section {
-        padding: 2rem;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .pagination-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem 1.5rem;
-        background-color: #f8f9fa;
-        border-top: 1px solid #dee2e6;
-    }
-
-    .pagination-info {
-        font-size: 0.875rem;
-        color: #6c757d;
-    }
-
-    .pagination-controls {
-        display: flex;
-        gap: 0.5rem;
-    }
-</style>
-
 @section Scripts {
     <script src="~/js/packages.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Auto-open Add Package Modal on validation errors
             var showAddModal = '@ViewData["ShowAddPackageModal"]';
             if (showAddModal) {
                 var addModal = new bootstrap.Modal(document.getElementById('addPackageModal'));
                 addModal.show();
             }
 
-            // Auto-open Edit Package Modal on validation errors
             var showEditModalId = '@ViewData["ShowEditPackageModalId"]';
             if (showEditModalId) {
                 var editModalElement = document.getElementById('editPackageModal-' + showEditModalId);
@@ -303,4 +167,3 @@
         });
     </script>
 }
-
