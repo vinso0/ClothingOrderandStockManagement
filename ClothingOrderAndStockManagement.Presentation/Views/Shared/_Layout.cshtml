@@ -64,7 +64,16 @@
             <a class="sidebar-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Items" ? "active" : "")"
                asp-controller="Items" asp-action="Index">
                 <img src="~/images/icons/Inventory.png" alt="Inventory" class="sidebar-icon-img" />
-                Items Inventory
+                Items Management
+            </a>
+        }
+
+        @if (User.IsInRole("Inventory Admin"))
+        {
+            <a class="sidebar-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "ItemCategories" ? "active" : "")"
+               asp-controller="ItemCategories" asp-action="Index">
+                <img src="~/images/icons/Inventory.png" alt="Inventory" class="sidebar-icon-img" />
+                Item Categories
             </a>
         }
 
@@ -73,7 +82,7 @@
             <a class="sidebar-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Packages" ? "active" : "")"
                asp-controller="Packages" asp-action="Index">
                 <img src="~/images/icons/Inventory.png" alt="Inventory" class="sidebar-icon-img" />
-                Packages Inventory
+                Packages Management
             </a>
         }
 

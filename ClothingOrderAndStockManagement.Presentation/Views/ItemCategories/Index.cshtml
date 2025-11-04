@@ -1,0 +1,140 @@
+﻿@model ClothingOrderAndStockManagement.Application.Helpers.PaginatedList<ItemCategoryDto>
+@using ClothingOrderAndStockManagement.Application.Dtos.Items
+@using ClothingOrderAndStockManagement.Application.Helpers
+@{
+    ViewData["Title"] = "Item Categories";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Item Categories Section -->
+<div class="categories-section">
+    <div class="customer-header section-title">
+        <h2>Item Categories</h2>
+    </div>
+
+    <!-- Add search form for categories -->
+    <div class="customer-search-add-section">
+        <!-- Category Search Form -->
+        <form asp-controller="Items" asp-action="Index" method="get" class="entity-search-form" autocomplete="off">
+            <input type="hidden" name="searchString" value="@ViewData["CurrentFilter"]" />
+            <input type="hidden" name="pageIndex" value="@Model.PageIndex" />
+            <div class="input-group">
+                <input type="text" name="categorySearch" class="form-control" placeholder="Search categories..." value="@ViewData["CategoryCurrentFilter"]" />
+                <button type="submit" class="btn btn-primary d-flex align-items-center">
+                    <img src="~/images/icons/Search.png" alt="Search" style="width: 18px; height: 18px;" />
+                </button>
+            </div>
+        </form>
+
+        <button class="btn btn-outline-primary customer-add-btn"
+                data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+            <img src="~/images/icons/Add.png" alt="Add" class="add-icon-img" />
+            Add Category
+        </button>
+    </div>
+
+    <div class="reports-section">
+        @if (ViewBag.Categories != null && ((PaginatedList<ItemCategoryDto>)ViewBag.Categories).Any())
+        {
+            var categories = (PaginatedList<ItemCategoryDto>)ViewBag.Categories;
+
+            <div class="table-responsive">
+                <table class="table table-hover customer-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Category Name</th>
+                            <th>Items Count</th>
+                            <th class="customer-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var category in categories)
+                        {
+                            <tr>
+                                <td><span class="customer-id">@category.ItemCategoryId</span></td>
+                                <td><span class="customer-name">@category.ItemCategoryType</span></td>
+                                <td class="customer-details">
+                                    <span class="badge quantity-badge @(category.ItemsCount > 0 ? "badge-success" : "badge-secondary")">
+                                        @category.ItemsCount
+                                    </span>
+                                </td>
+                                <td class="customer-actions">
+                                    <div class="btn-group" role="group">
+                                        <a class="btn btn-sm btn-outline-success customer-edit-btn"
+                                           data-bs-toggle="modal" data-bs-target="#editCategoryModal-@category.ItemCategoryId">
+                                            Edit
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-danger customer-delete-btn"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteCategoryModal-@category.ItemCategoryId">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Categories Pagination (same style as items) -->
+            <div class="pagination-section">
+                <div>
+                    Page @categories.PageIndex of @categories.TotalPages
+                </div>
+                <div>
+                    @if (categories.HasPreviousPage)
+                    {
+                        <a asp-action="Index"
+                           asp-route-pageIndex="@Model.PageIndex"
+                           asp-route-searchString="@ViewData["CurrentFilter"]"
+                           asp-route-categorySearch="@ViewData["CategoryCurrentFilter"]"
+                           asp-route-categoryPageIndex="@(categories.PageIndex - 1)"
+                           class="btn btn-outline-secondary">
+                            Previous
+                        </a>
+                    }
+
+                    @if (categories.HasNextPage)
+                    {
+                        <a asp-action="Index"
+                           asp-route-pageIndex="@Model.PageIndex"
+                           asp-route-searchString="@ViewData["CurrentFilter"]"
+                           asp-route-categorySearch="@ViewData["CategoryCurrentFilter"]"
+                           asp-route-categoryPageIndex="@(categories.PageIndex + 1)"
+                           class="btn btn-outline-primary">
+                            Next
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="no-customers-section">
+                <h5>No categories found</h5>
+                <p>Create your first category using the "Add Category" button above.</p>
+            </div>
+        }
+    </div>
+
+    <!-- Category Modals - Updated to work with paginated categories -->
+    @await Html.PartialAsync("Partials/_AddCategoryModal", ViewData["AddCategoryModel"] as CreateItemCategoryDto ?? new CreateItemCategoryDto())
+
+    @if (ViewBag.Categories != null)
+    {
+        var categories = (PaginatedList<ItemCategoryDto>)ViewBag.Categories;
+        @foreach (var category in categories)
+        {
+            @await Html.PartialAsync("Partials/_EditCategoryModal", new UpdateItemCategoryDto
+            {
+                ItemCategoryId = category.ItemCategoryId,
+                ItemCategoryType = category.ItemCategoryType
+            })
+
+            @await Html.PartialAsync("_DeleteModal", ("Category", "DeleteCategory", category.ItemCategoryId, category.ItemCategoryType))
+        }
+    }
+</div>
+

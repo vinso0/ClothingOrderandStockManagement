@@ -9,27 +9,21 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
     public class ItemsController : Controller
     {
         private readonly IItemService _itemService;
-        private readonly IItemCategoryService _categoryService;
 
-        public ItemsController(IItemService itemService, IItemCategoryService categoryService)
+        public ItemsController(IItemService itemService)
         {
             _itemService = itemService;
-            _categoryService = categoryService;
         }
 
-        public async Task<IActionResult> Index(string searchString, int pageIndex = 1, string categorySearch = "", int categoryPageIndex = 1)
+        public async Task<IActionResult> Index(string searchString, int pageIndex = 1)
         {
             int pageSize = 5;
-            var result = await _itemService.GetItemsAsync(pageIndex, pageSize, searchString);
+            var items = await _itemService.GetItemsAsync(pageIndex, pageSize, searchString);
 
             ViewData["CurrentFilter"] = searchString;
-            ViewData["CategoryCurrentFilter"] = categorySearch;
+            ViewBag.Categories = await _itemService.GetItemCategoriesAsync();
 
-            // Load paginated categories
-            var categories = await _categoryService.GetCategoriesAsync(categoryPageIndex, 5, categorySearch);
-            ViewBag.Categories = categories;
-
-            return View(result);
+            return View(items);
         }
 
         [HttpPost]
@@ -103,65 +97,6 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             await _itemService.DeleteItemAsync(id);
-            return RedirectToAction(nameof(Index));
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateCategory(CreateItemCategoryDto dto)
-        {
-            if (ModelState.IsValid)
-            {
-                var result = await _categoryService.AddCategoryAsync(dto);
-                if (result.IsSuccess)
-                    return RedirectToAction(nameof(Index));
-
-                ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
-            }
-
-            // Reload page with modal open
-            ViewData["ShowAddCategoryModal"] = true;
-            ViewData["AddCategoryModel"] = dto;
-
-            var items = await _itemService.GetItemsAsync(1, 5, "");
-            var categories = await _categoryService.GetAllCategoriesAsync();
-            ViewBag.Categories = categories;
-
-            return View("Index", items);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditCategory(UpdateItemCategoryDto dto)
-        {
-            if (ModelState.IsValid)
-            {
-                var result = await _categoryService.UpdateCategoryAsync(dto);
-                if (result.IsSuccess)
-                    return RedirectToAction(nameof(Index));
-
-                ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
-            }
-
-            // Reload page with modal open
-            ViewData["ShowEditCategoryModalId"] = dto.ItemCategoryId;
-            ViewData["EditCategoryModel"] = dto;
-
-            var items = await _itemService.GetItemsAsync(1, 5, "");
-            var categories = await _categoryService.GetAllCategoriesAsync();
-            ViewBag.Categories = categories;
-
-            return View("Index", items);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteCategory(int id)
-        {
-            var result = await _categoryService.DeleteCategoryAsync(id);
-            if (!result.IsSuccess)
-                ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
-
             return RedirectToAction(nameof(Index));
         }
     }
