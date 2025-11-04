@@ -136,4 +136,89 @@
             }
         </div>
     </div>
+
+    <!-- Item Categories Section -->
+    <hr class="my-4" />
+
+    <div class="customer-header">
+        <h2>Item Categories</h2>
+    </div>
+
+    <div class="customer-search-add-section">
+        <button class="btn btn-outline-primary customer-add-btn"
+                data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+            <img src="~/images/icons/Add.png" alt="Add" class="add-icon-img" />
+            Add Category
+        </button>
+    </div>
+
+    <div class="reports-section">
+        @if (ViewBag.Categories != null && ((IEnumerable<ItemCategoryDto>)ViewBag.Categories).Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover customer-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Category Name</th>
+                            <th>Items Count</th>
+                            <th class="customer-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var category in (IEnumerable<ItemCategoryDto>)ViewBag.Categories)
+                        {
+                            <tr>
+                                <td><span class="customer-id">@category.ItemCategoryId</span></td>
+                                <td><span class="customer-name">@category.ItemCategoryType</span></td>
+                                <td class="customer-details">
+                                    <span class="badge quantity-badge @(category.ItemsCount > 0 ? "badge-success" : "badge-secondary")">
+                                        @category.ItemsCount
+                                    </span>
+                                </td>
+                                <td class="customer-actions">
+                                    <div class="btn-group" role="group">
+                                        <a class="btn btn-sm btn-outline-success customer-edit-btn"
+                                           data-bs-toggle="modal" data-bs-target="#editCategoryModal-@category.ItemCategoryId">
+                                            Edit
+                                        </a>
+
+                                        <button class="btn btn-sm btn-outline-danger customer-delete-btn"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteCategoryModal-@category.ItemCategoryId">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="no-customers-section">
+                <h5>No categories found</h5>
+                <p>Create your first category using the "Add Category" button above.</p>
+            </div>
+        }
+    </div>
+
+    <!-- Category Modals -->
+    @await Html.PartialAsync("Partials/_AddCategoryModal", ViewData["AddCategoryModel"] as CreateItemCategoryDto ?? new CreateItemCategoryDto())
+
+    @if (ViewBag.Categories != null)
+    {
+        @foreach (var category in (IEnumerable<ItemCategoryDto>)ViewBag.Categories)
+        {
+            @await Html.PartialAsync("Partials/_EditCategoryModal", new UpdateItemCategoryDto
+            {
+                ItemCategoryId = category.ItemCategoryId,
+        ItemCategoryType = category.ItemCategoryType
+        })
+
+    @await Html.PartialAsync("_DeleteModal", ("Category", "DeleteCategory", category.ItemCategoryId, category.ItemCategoryType))
+        }
+    }
 </div>

@@ -20,6 +20,7 @@ namespace ClothingOrderAndStockManagement.Application
             services.AddScoped<IItemService, ItemService>();
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IInventoryService, InventoryService>();
+            services.AddScoped<IItemCategoryService, ItemCategoryService>();
 
             // Application repositories
             services.AddScoped<IOrderRepository, OrderRepository>();
