@@ -32,6 +32,7 @@ namespace ClothingOrderAndStockManagement.Infrastructure.Repositories
         public async Task UpdateAsync(ItemCategory category)
         {
             _context.Set<ItemCategory>().Update(category);
+            await Task.CompletedTask;
         }
 
         public async Task DeleteAsync(int id)

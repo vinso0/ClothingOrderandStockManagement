@@ -17,15 +17,16 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             _categoryService = categoryService;
         }
 
-        public async Task<IActionResult> Index(string searchString, int pageIndex = 1)
+        public async Task<IActionResult> Index(string searchString, int pageIndex = 1, string categorySearch = "", int categoryPageIndex = 1)
         {
             int pageSize = 5;
             var result = await _itemService.GetItemsAsync(pageIndex, pageSize, searchString);
 
             ViewData["CurrentFilter"] = searchString;
+            ViewData["CategoryCurrentFilter"] = categorySearch;
 
-            // Load categories for the categories table
-            var categories = await _categoryService.GetAllCategoriesAsync();
+            // Load paginated categories
+            var categories = await _categoryService.GetCategoriesAsync(categoryPageIndex, 5, categorySearch);
             ViewBag.Categories = categories;
 
             return View(result);

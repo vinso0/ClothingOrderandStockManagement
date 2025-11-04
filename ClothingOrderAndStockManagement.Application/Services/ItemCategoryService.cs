@@ -1,9 +1,10 @@
 ﻿using ClothingOrderAndStockManagement.Application.Dtos.Items;
+using ClothingOrderAndStockManagement.Application.Helpers;
 using ClothingOrderAndStockManagement.Application.Interfaces;
 using ClothingOrderAndStockManagement.Domain.Entities.Products;
 using ClothingOrderAndStockManagement.Domain.Interfaces;
-using Microsoft.EntityFrameworkCore;
 using FluentResults;
+using Microsoft.EntityFrameworkCore;
 
 public class ItemCategoryService : IItemCategoryService
 {
@@ -18,16 +19,38 @@ public class ItemCategoryService : IItemCategoryService
 
     public async Task<IEnumerable<ItemCategoryDto>> GetAllCategoriesAsync()
     {
+        // Projects categories to DTO and computes item counts via navigation
         var categories = await _repo.Query()
             .Select(c => new ItemCategoryDto
             {
                 ItemCategoryId = c.ItemCategoryId,
                 ItemCategoryType = c.ItemCategoryType,
-                ItemsCount = c.Items.Count() // Count related items
+                ItemsCount = c.Items.Count()
             })
             .ToListAsync();
 
         return categories;
+    }
+
+    // Add this method to your ItemCategoryService class
+    public async Task<PaginatedList<ItemCategoryDto>> GetCategoriesAsync(int pageIndex, int pageSize, string searchString = "")
+    {
+        var query = _repo.Query().AsQueryable();
+
+        // Apply search filter if provided
+        if (!string.IsNullOrWhiteSpace(searchString))
+        {
+            query = query.Where(c => c.ItemCategoryType.Contains(searchString));
+        }
+
+        var categoriesQuery = query.Select(c => new ItemCategoryDto
+        {
+            ItemCategoryId = c.ItemCategoryId,
+            ItemCategoryType = c.ItemCategoryType,
+            ItemsCount = c.Items.Count()
+        });
+
+        return await PaginatedList<ItemCategoryDto>.CreateAsync(categoriesQuery, pageIndex, pageSize);
     }
 
     public async Task<Result> AddCategoryAsync(CreateItemCategoryDto dto)

@@ -7,6 +7,37 @@
     font-weight: 600;
 }
 
+/* === SIMPLE SECTION SEPARATION === */
+
+/* Add space and visual separation between Items and Categories sections */
+.items-categories-divider {
+    margin: 3rem 0;
+    border: none;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, #8B7355 50%, transparent 100%);
+    opacity: 0.6;
+}
+
+/* Add subtle background and padding to each section */
+.items-section {
+    background: transparent;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.categories-section {
+    background: transparent;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Keep your existing header styling but add a subtle border */
+.section-title {
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
 /* Search and Add Section */
 .entity-search-add {
     display: flex;
