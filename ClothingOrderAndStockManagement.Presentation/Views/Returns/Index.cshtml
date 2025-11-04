@@ -60,45 +60,37 @@
                                 <tr>
                                     <th>Order ID</th>
                                     <th>Customer</th>
-                                    <th>Date &amp; Time</th>
+                                    <th>Date & Time</th>
                                     <th>Status</th>
                                     <th class="customer-actions">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @if (Model.Completed != null && Model.Completed.Any())
-                                {
-                                    @foreach (var o in Model.Completed)
-                                    {
-                                        <tr>
-                                            <td><span class="customer-id">#@o.OrderRecordsId</span></td>
-                                            <td><span class="customer-name">@o.CustomerName</span></td>
-                                            <td class="customer-details">
-                                                @o.OrderDate.ToString("MMM dd, yyyy")
-                                                <br />
-                                                <small>@o.OrderDate.ToDateTime(TimeOnly.MinValue).ToString("hh:mm tt")</small>
-                                            </td>
-                                            <td>
-                                                <span class="badge @GetStatusBadgeClass(o.Status)">@o.Status</span>
-                                            </td>
-                                            <td class="customer-actions">
-                                                <button class="btn btn-sm btn-danger"
-                                                        onclick="showReturnModal(@o.OrderRecordsId, @o.OrderPackagesId, '@o.CustomerName')">
-                                                    Return
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                                else
+                                @foreach (var o in Model.Completed)
                                 {
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">No completed orders found.</td>
+                                        <td><span class="customer-id">#@o.OrderRecordsId</span></td>
+                                        <td><span class="customer-name">@o.CustomerName</span></td>
+                                        <td class="customer-details">
+                                            @o.OrderDate.ToString("MMM dd, yyyy")
+                                            <br />
+                                            <small class="text-muted">@o.OrderDate.ToDateTime(TimeOnly.MinValue).ToString("hh:mm tt")</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge @GetStatusBadgeClass(o.Status)">@o.Status</span>
+                                        </td>
+                                        <td class="customer-actions">
+                                            <button class="btn btn-sm btn-danger"
+                                                    onclick="showReturnModal(@o.OrderRecordsId, @o.OrderPackagesId, '@o.CustomerName')">
+                                                Return
+                                            </button>
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
                     </div>
+
 
                     <!-- Pagination for Completed list -->
                     @if (Model.Completed != null && (Model.Completed.HasPreviousPage || Model.Completed.HasNextPage))

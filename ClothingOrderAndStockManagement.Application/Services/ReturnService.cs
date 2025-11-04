@@ -3,6 +3,7 @@ using ClothingOrderAndStockManagement.Application.Helpers;
 using ClothingOrderAndStockManagement.Domain.Interfaces;
 using ClothingOrderAndStockManagement.Domain.Entities.Orders;
 using FluentResults;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClothingOrderAndStockManagement.Application.Services
 {
@@ -24,38 +25,45 @@ namespace ClothingOrderAndStockManagement.Application.Services
         {
             try
             {
-                var query = _returnRepository.GetCompletedOrdersQuery();
+                var baseQuery = _returnRepository.GetCompletedOrdersQuery();
 
-                // Apply filters
+                // Project to DTO with customer info via ReturnLogs navigation
+                var dtoQuery = baseQuery
+                    .Select(o => new CompletedOrderDto
+                    {
+                        OrderRecordsId = o.OrderRecordsId,
+                        OrderPackagesId = o.OrderPackages.Select(p => p.OrderPackagesId).FirstOrDefault(),
+                        CustomerId = o.CustomerId,
+                        // Get customer name via ReturnLogs -> CustomerInfo navigation
+                        CustomerName = o.ReturnLogs
+                            .Select(rl => rl.CustomerInfo.CustomerName)
+                            .FirstOrDefault() ?? $"Customer {o.CustomerId}",
+                        CustomerEmail = o.ReturnLogs
+                            .Select(rl => rl.CustomerInfo.ContactNumber)
+                            .FirstOrDefault() ?? "",
+                        OrderDate = DateOnly.FromDateTime(o.OrderDatetime),
+                        TotalAmount = o.OrderPackages.Sum(op => op.PriceAtPurchase * op.Quantity),
+                        Status = o.OrderStatus,
+                        ItemCount = o.OrderPackages.Sum(op => op.Quantity)
+                    });
+
+                // Apply filters on the DTO query
                 if (!string.IsNullOrWhiteSpace(searchString))
                 {
-                    query = query.Where(o =>
-                        o.CustomerId.ToString().Contains(searchString)); // Search by CustomerId since no navigation yet
+                    dtoQuery = dtoQuery.Where(d =>
+                        d.CustomerName.Contains(searchString) ||
+                        d.CustomerEmail.Contains(searchString));
                 }
 
                 if (fromDate.HasValue)
                 {
-                    query = query.Where(o => DateOnly.FromDateTime(o.OrderDatetime) >= fromDate.Value);
+                    dtoQuery = dtoQuery.Where(d => d.OrderDate >= fromDate.Value);
                 }
 
                 if (toDate.HasValue)
                 {
-                    query = query.Where(o => DateOnly.FromDateTime(o.OrderDatetime) <= toDate.Value);
+                    dtoQuery = dtoQuery.Where(d => d.OrderDate <= toDate.Value);
                 }
-
-                // Project to DTO
-                var dtoQuery = query.Select(o => new CompletedOrderDto
-                {
-                    OrderRecordsId = o.OrderRecordsId,
-                    OrderPackagesId = o.OrderPackages.Select(x => x.OrderPackagesId).FirstOrDefault(),
-                    CustomerId = o.CustomerId,
-                    CustomerName = $"Customer {o.CustomerId}", // Placeholder until you add CustomerInfo navigation
-                    CustomerEmail = "", // Placeholder
-                    OrderDate = DateOnly.FromDateTime(o.OrderDatetime),
-                    TotalAmount = o.OrderPackages.Sum(op => op.PriceAtPurchase * op.Quantity),
-                    Status = o.OrderStatus,
-                    ItemCount = o.OrderPackages.Sum(op => op.Quantity)
-                });
 
                 var paginatedList = await PaginatedList<CompletedOrderDto>.CreateAsync(dtoQuery, pageIndex, pageSize);
                 return Result.Ok(paginatedList);
