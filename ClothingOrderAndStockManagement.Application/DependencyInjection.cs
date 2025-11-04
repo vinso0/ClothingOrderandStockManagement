@@ -3,6 +3,7 @@ using ClothingOrderAndStockManagement.Application.Repositories;
 using ClothingOrderAndStockManagement.Application.Services;
 using ClothingOrderAndStockManagement.Domain.Interfaces;
 using ClothingOrderAndStockManagement.Domain.Interfaces.Repositories;
+using ClothingOrderAndStockManagement.Infrastructure.Repositories;
 using ClothingOrderAndStockManagement.Infrastructure.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -28,6 +29,7 @@ namespace ClothingOrderAndStockManagement.Application
             services.AddScoped<IPackageRepository, PackageRepository>();
             services.AddScoped<IItemRepository, ItemRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IItemCategoryRepository, ItemCategoryRepository>();
 
             return services;
         }
