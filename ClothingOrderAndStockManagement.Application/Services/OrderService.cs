@@ -220,11 +220,15 @@ namespace ClothingOrderAndStockManagement.Application.Services
         {
             try
             {
+                // Get all completed orders with packages loaded
                 var orders = await GetAllAsync();
 
+                // CRITICAL: only keep completed orders that actually have packages
                 var completedOrders = orders
-                    .Where(o => o.OrderStatus == "Completed" && o.OrderPackages.Any()) // Add this check
-                    .AsEnumerable(); // Convert to IEnumerable for LINQ operations
+                    .Where(o => o.OrderStatus == "Completed"
+                             && o.OrderPackages != null
+                             && o.OrderPackages.Any())
+                    .AsEnumerable();
 
                 // Apply search filters
                 if (!string.IsNullOrWhiteSpace(searchString))

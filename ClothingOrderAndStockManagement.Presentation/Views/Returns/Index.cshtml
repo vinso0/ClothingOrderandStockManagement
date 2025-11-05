@@ -54,6 +54,9 @@
                 <tbody>
                     @foreach (var order in Model.CompletedOrders)
                     {
+                        var hasPackages = order.OrderPackages != null && order.OrderPackages.Any();
+                        var firstPackageId = hasPackages ? order.OrderPackages!.First().OrderPackagesId : 0;
+
                         <tr>
                             <td><span class="customer-id">#@order.OrderRecordsId</span></td>
                             <td><span class="customer-name">@order.CustomerName</span></td>
@@ -67,11 +70,12 @@
                             </td>
                             <td class="customer-details">@order.TotalAmount.ToString("C")</td>
                             <td class="text-center">
-                                @if (order.OrderPackages != null && order.OrderPackages.Any())
+                                @if (hasPackages && firstPackageId > 0)
                                 {
-                                    <button class="btn btn-sm btn-danger customer-delete-btn return-btn"
+                                    <button type="button" 
+                                            class="btn btn-sm btn-danger customer-delete-btn return-btn"
                                             data-order-id="@order.OrderRecordsId"
-                                            data-package-id="@order.OrderPackages.First().OrderPackagesId"
+                                            data-package-id="@firstPackageId"
                                             data-customer-name="@order.CustomerName">
                                         Return
                                     </button>
@@ -87,7 +91,6 @@
             </table>
         </div>
         
-        <!-- Pagination for Completed Orders -->
         <div class="returns-pagination">
             <div class="pagination-section">
                 <div>Page @Model.CompletedOrders.PageIndex of @Model.CompletedOrders.TotalPages</div>
@@ -171,7 +174,6 @@
             </table>
         </div>
         
-        <!-- Pagination for Return History -->
         <div class="returns-pagination">
             <div class="pagination-section">
                 <div>Page @Model.ReturnHistory.PageIndex of @Model.ReturnHistory.TotalPages</div>
@@ -222,8 +224,8 @@
             <div class="modal-body">
                 <form id="returnForm">
                     @Html.AntiForgeryToken()
-                    <input type="hidden" id="orderRecordsId" name="orderRecordsId">
-                    <input type="hidden" id="orderPackagesId" name="orderPackagesId">
+                    <input type="hidden" id="orderRecordsId" name="orderRecordsId" />
+                    <input type="hidden" id="orderPackagesId" name="orderPackagesId" />
 
                     <div class="mb-3">
                         <label class="form-label">Customer:</label>
@@ -240,7 +242,7 @@
 
                     <div class="mb-3">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="restockItems" name="restockItems" checked>
+                            <input class="form-check-input" type="checkbox" id="restockItems" name="restockItems" checked />
                             <label class="form-check-label" for="restockItems">
                                 Restock items (add back to inventory)
                             </label>
@@ -251,7 +253,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" onclick="processReturn()">
+                <button type="button" class="btn btn-danger" id="processReturnBtn">
                     <i class="fas fa-undo"></i> Process Return
                 </button>
             </div>
@@ -260,7 +262,6 @@
 </div>
 
 @functions {
-    // Helper method to determine the CSS class for the status badge
     private string GetStatusBadgeClass(string status)
     {
         return status switch
@@ -278,125 +279,70 @@
 }
 
 @section Scripts {
-    <script>
-        // Handle return button clicks using event delegation
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add event listeners to all return buttons
-            document.querySelectorAll('.return-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const orderRecordsId = parseInt(this.dataset.orderId);
-                    const orderPackagesId = parseInt(this.dataset.packageId);
-                    const customerName = this.dataset.customerName;
-                    
-                    showReturnModal(orderRecordsId, orderPackagesId, customerName);
-                });
-            });
+<script>
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.return-btn');
+    if (!btn) return;
+
+    const orderId = parseInt(btn.dataset.orderId || '0', 10);
+    const pkgId   = parseInt(btn.dataset.packageId || '0', 10);
+    const name    = btn.dataset.customerName || 'Customer';
+
+    console.log('Return clicked:', { orderId, pkgId, name }); // verify in console
+
+    if (!orderId) { alert('Error: Invalid Order ID'); return; }
+    if (!pkgId)   { alert('Error: No package linked to this order'); return; }
+
+    // Set hidden inputs
+    document.getElementById('orderRecordsId').value = orderId;
+    document.getElementById('orderPackagesId').value = pkgId;
+    document.getElementById('customerName').textContent = name;
+
+    // reset form
+    const reason = document.getElementById('reason');
+    reason.value = '';
+    reason.classList.remove('is-invalid');
+    document.getElementById('reasonError').textContent = '';
+    document.getElementById('restockItems').checked = true;
+
+    new bootstrap.Modal(document.getElementById('returnModal')).show();
+});
+
+document.getElementById('processReturnBtn').addEventListener('click', async function () {
+    const orderId = parseInt(document.getElementById('orderRecordsId').value || '0', 10);
+    const pkgId   = parseInt(document.getElementById('orderPackagesId').value || '0', 10);
+    const reasonEl = document.getElementById('reason');
+    const reason   = (reasonEl.value || '').trim();
+
+    if (!orderId) { alert('Error: Order ID is required'); return; }
+    if (!pkgId)   { alert('Error: Order Package ID is required'); return; }
+    if (!reason)  { reasonEl.classList.add('is-invalid'); document.getElementById('reasonError').textContent = 'Return reason is required.'; return; }
+    if (reason.length > 500) { reasonEl.classList.add('is-invalid'); document.getElementById('reasonError').textContent = 'Return reason cannot exceed 500 characters.'; return; }
+
+    const payload = { orderRecordsId: orderId, orderPackagesId: pkgId, reason, restockItems: document.getElementById('restockItems').checked };
+    console.log('Submitting return payload:', payload); // verify ids
+
+    try {
+        const res = await fetch('@Url.Action("ProcessReturn", "Returns")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+            },
+            body: JSON.stringify(payload)
         });
-
-        function showReturnModal(orderRecordsId, orderPackagesId, customerName) {
-            // Validate required parameters
-            if (!orderRecordsId || orderRecordsId <= 0) {
-                alert('Error: Invalid Order ID');
-                console.error('Invalid orderRecordsId:', orderRecordsId);
-                return;
-            }
-            
-            if (!orderPackagesId || orderPackagesId <= 0) {
-                alert('Error: No packages found for this order');
-                console.error('Invalid orderPackagesId:', orderPackagesId);
-                return;
-            }
-
-            // Set form values
-            document.getElementById('orderRecordsId').value = orderRecordsId;
-            document.getElementById('orderPackagesId').value = orderPackagesId;
-            document.getElementById('customerName').textContent = customerName || 'Unknown Customer';
-
-            // Reset form state
-            const reasonField = document.getElementById('reason');
-            reasonField.value = '';
-            reasonField.classList.remove('is-invalid');
-            document.getElementById('reasonError').textContent = '';
-            document.getElementById('restockItems').checked = true;
-
-            // Show modal
-            var modal = new bootstrap.Modal(document.getElementById('returnModal'));
-            modal.show();
+        const json = await res.json();
+        if (json.success) {
+            bootstrap.Modal.getInstance(document.getElementById('returnModal')).hide();
+            location.reload();
+        } else {
+            alert('Error: ' + (json.message || 'Unknown error'));
         }
-
-        function validateForm() {
-            const reasonField = document.getElementById('reason');
-            const reasonError = document.getElementById('reasonError');
-            let isValid = true;
-
-            // Reset validation state
-            reasonField.classList.remove('is-invalid');
-            reasonError.textContent = '';
-
-            // Validate reason field
-            if (!reasonField.value || reasonField.value.trim() === '') {
-                reasonField.classList.add('is-invalid');
-                reasonError.textContent = 'Return reason is required.';
-                isValid = false;
-            } else if (reasonField.value.length > 500) {
-                reasonField.classList.add('is-invalid');
-                reasonError.textContent = 'Return reason cannot exceed 500 characters.';
-                isValid = false;
-            }
-
-            return isValid;
-        }
-
-        async function processReturn() {
-            if (!validateForm()) return;
-
-            const form = document.getElementById('returnForm');
-            const formData = new FormData(form);
-
-            // Validate form data before sending
-            const orderRecordsId = parseInt(formData.get('orderRecordsId'));
-            const orderPackagesId = parseInt(formData.get('orderPackagesId'));
-            
-            if (!orderRecordsId || !orderPackagesId) {
-                alert('Error: Missing required order information');
-                return;
-            }
-
-            const returnData = {
-                orderRecordsId: orderRecordsId,
-                orderPackagesId: orderPackagesId,
-                reason: formData.get('reason'),
-                restockItems: formData.get('restockItems') === 'on'
-            };
-
-            console.log('Sending return data:', returnData); // Debug log
-
-            try {
-                const response = await fetch('@Url.Action("ProcessReturn", "Returns")', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    },
-                    body: JSON.stringify(returnData)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-                if (result.success) {
-                    alert('Return processed successfully!');
-                    bootstrap.Modal.getInstance(document.getElementById('returnModal')).hide();
-                    location.reload();
-                } else {
-                    alert('Error: ' + (result.message || 'Unknown error occurred'));
-                }
-            } catch (error) {
-                console.error('Return processing error:', error);
-                alert('An error occurred while processing the return: ' + error.message);
-            }
-        }
-    </script>
+    } catch (err) {
+        console.error('ProcessReturn error:', err);
+        alert('Unexpected error: ' + err.message);
+    }
+});
+</script>
 }
+
