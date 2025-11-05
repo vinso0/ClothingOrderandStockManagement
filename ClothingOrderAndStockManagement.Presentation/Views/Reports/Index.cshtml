@@ -1,0 +1,287 @@
+﻿@model ClothingOrderAndStockManagement.Application.Dtos.Report.SystemReportDto
+@{
+    ViewData["Title"] = "System Reports";
+}
+
+<link rel="stylesheet" href="~/css/reports.css" asp-append-version="true" />
+
+<div class="reports-header">
+    <h2>System Reports & Analytics</h2>
+    <p class="text-muted">Overview of your business performance and key metrics</p>
+</div>
+
+<!-- Key Metrics Cards -->
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="metric-card orders">
+            <div class="metric-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <path d="M16 10a4 4 0 0 1-8 0" />
+                </svg>
+            </div>
+            <div class="metric-info">
+                <h3>@Model.TotalOrders</h3>
+                <p>Total Orders</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="metric-card customers">
+            <div class="metric-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+            </div>
+            <div class="metric-info">
+                <h3>@Model.TotalCustomers</h3>
+                <p>Customers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="metric-card revenue">
+            <div class="metric-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23" />
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+            </div>
+            <div class="metric-info">
+                <h3>₱@Model.TotalRevenue.ToString("N0")</h3>
+                <p>Total Revenue</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="metric-card packages">
+            <div class="metric-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7l3-7z" />
+                </svg>
+            </div>
+            <div class="metric-info">
+                <h3>@Model.TotalPackages</h3>
+                <p>Packages</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="metric-card items">
+            <div class="metric-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                    <line x1="8" y1="21" x2="16" y2="21" />
+                    <line x1="12" y1="17" x2="12" y2="21" />
+                </svg>
+            </div>
+            <div class="metric-info">
+                <h3>@Model.TotalItems</h3>
+                <p>Items</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="metric-card users">
+            <div class="metric-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="8.5" cy="7" r="4" />
+                    <path d="M20 8v6" />
+                    <path d="M23 11h-6" />
+                </svg>
+            </div>
+            <div class="metric-info">
+                <h3>@Model.TotalUsers</h3>
+                <p>System Users</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Overview -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="financial-card">
+            <h5>Financial Overview</h5>
+            <div class="financial-item">
+                <span>Total Revenue:</span>
+                <span class="amount revenue">₱@Model.TotalRevenue.ToString("N2")</span>
+            </div>
+            <div class="financial-item">
+                <span>Total Collected:</span>
+                <span class="amount collected">₱@Model.TotalPaid.ToString("N2")</span>
+            </div>
+            <div class="financial-item">
+                <span>Pending Payments:</span>
+                <span class="amount pending">₱@Model.PendingPayments.ToString("N2")</span>
+            </div>
+            <hr />
+            <div class="financial-item">
+                <span>Collection Rate:</span>
+                <span class="rate">@Model.CollectionRate.ToString("F1")%</span>
+            </div>
+            <div class="financial-item">
+                <span>Avg. Order Value:</span>
+                <span class="amount">₱@Model.AverageOrderValue.ToString("N2")</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="activity-card">
+            <h5>Recent Activity (30 Days)</h5>
+            <div class="activity-item">
+                <span>New Orders:</span>
+                <span class="count">@Model.RecentOrdersCount</span>
+            </div>
+            <div class="activity-item">
+                <span>Revenue Generated:</span>
+                <span class="amount">₱@Model.RecentRevenue.ToString("N2")</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="status-card">
+            <h5>Order Status Breakdown</h5>
+            @foreach (var status in Model.OrdersByStatus)
+            {
+                <div class="status-item">
+                    <span class="badge @GetStatusBadgeClass(status.Key)">@status.Key</span>
+                    <span class="count">@status.Value orders</span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Performance Tables -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="performance-section">
+            <h5>Top 5 Customers</h5>
+            @if (Model.TopCustomers.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm performance-table">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Orders</th>
+                                <th>Total Spent</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var customer in Model.TopCustomers)
+                            {
+                                <tr>
+                                    <td>@customer.CustomerName</td>
+                                    <td>@customer.OrderCount</td>
+                                    <td class="amount">₱@customer.TotalSpent.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">No customer data available.</p>
+            }
+        </div>
+
+        <div class="performance-section mt-4">
+            <h5>Popular Packages</h5>
+            @if (Model.PopularPackages.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm performance-table">
+                        <thead>
+                            <tr>
+                                <th>Package</th>
+                                <th>Sold</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var package in Model.PopularPackages)
+                            {
+                                <tr>
+                                    <td>@package.PackageName</td>
+                                    <td>@package.TotalSold</td>
+                                    <td class="amount">₱@package.Revenue.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">No package data available.</p>
+            }
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="performance-section">
+            <h5>Inventory Alerts</h5>
+            @if (Model.LowStockItems.Any())
+            {
+                <div class="alert alert-warning">
+                    <strong>Low Stock Alert!</strong> @Model.LowStockItems.Count items need restocking.
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm performance-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Category</th>
+                                <th>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.LowStockItems)
+                            {
+                                <tr>
+                                    <td>@item.ItemName</td>
+                                    <td>@item.CategoryName</td>
+                                    <td>
+                                        <span class="badge @(item.CurrentStock <= 5 ? "bg-danger" : "bg-warning")">
+                                            @item.CurrentStock
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-success">
+                    <strong>All Good!</strong> No items are currently low in stock.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Awaiting Payment" => "bg-danger",
+            "Partially Paid" => "bg-warning",
+            "Fully Paid" => "bg-info",
+            "Completed" => "bg-success",
+            "Returned" => "bg-secondary",
+            "Cancelled" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+}

@@ -97,17 +97,8 @@
 
         @if (User.IsInRole("Owner"))
         {
-            <a class="sidebar-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")"
-            asp-controller="Home" asp-action="Index">
-                <img src="~/images/icons/dashboard.png" alt="Dashboard" class="sidebar-icon-img" />
-                Dashboard
-            </a>
-        }
-
-        @if (User.IsInRole("Owner"))
-        {
             <a class="sidebar-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" ? "active" : "")"
-            asp-controller="Home" asp-action="Owner">
+            asp-controller="Reports" asp-action="Index">
                 <img src="~/images/icons/Reports.png" alt="Reports" class="sidebar-icon-img" />
                 Reports
             </a>

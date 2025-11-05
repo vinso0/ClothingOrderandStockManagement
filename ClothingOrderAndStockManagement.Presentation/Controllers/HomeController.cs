@@ -38,9 +38,9 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         }
 
         [Authorize(Roles = "Owner")]
-        public IActionResult Owner()
+        public IActionResult Reports()
         {
-            return View();
+            return RedirectToAction("Index", "Reports");
         }
 
         [Authorize(Roles = "Inventory Admin")]

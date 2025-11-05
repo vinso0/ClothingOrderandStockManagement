@@ -29,14 +29,15 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         // List all orders
         public async Task<IActionResult> Index(string? status, int pageIndex = 1)
         {
-            // Get all orders first
             var orders = await _orderService.GetAllAsync();
 
             var allowed = new[] { "Awaiting Payment", "Partially Paid", "Fully Paid", "Completed", "Returned", "Cancelled" };
-            if (!string.IsNullOrWhiteSpace(status) && allowed.Contains(status))
+            var normalized = string.IsNullOrWhiteSpace(status) ? "" : status.Trim();
+
+            if (!string.IsNullOrEmpty(normalized) && allowed.Any(s => string.Equals(s, normalized, StringComparison.Ordinal)))
             {
-                orders = orders.Where(o => o.OrderStatus == status);
-                ViewData["CurrentStatus"] = status;
+                orders = orders.Where(o => string.Equals(o.OrderStatus, normalized, StringComparison.Ordinal));
+                ViewData["CurrentStatus"] = normalized;
             }
             else
             {
@@ -45,7 +46,7 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
 
             var sortedOrders = orders.OrderByDescending(o => o.OrderDatetime).ToList();
 
-            const int pageSize = 3;
+            const int pageSize = 5;
             var totalCount = sortedOrders.Count;
             var pagedOrders = sortedOrders
                 .Skip((pageIndex - 1) * pageSize)
@@ -53,7 +54,6 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
                 .ToList();
 
             var paginatedList = new PaginatedList<OrderRecordDto>(pagedOrders, totalCount, pageIndex, pageSize);
-
             return View(paginatedList);
         }
 
