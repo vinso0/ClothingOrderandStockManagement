@@ -83,10 +83,18 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 if (validationResult.IsFailed)
                     return validationResult;
 
+                // Get the order to extract the CustomerId
+                var order = await _returnRepository.GetCompletedOrdersQuery()
+                    .FirstOrDefaultAsync(o => o.OrderRecordsId == returnRequest.OrderRecordsId);
+
+                if (order == null)
+                    return Result.Fail<ReturnLogDto>("Order not found or not eligible for return");
+
                 var returnLog = new ReturnLog
                 {
                     OrderRecordsId = returnRequest.OrderRecordsId,
                     OrderPackagesId = returnRequest.OrderPackagesId,
+                    CustomerId = order.CustomerId,  // THIS IS THE CRITICAL FIX
                     ReturnDate = DateOnly.FromDateTime(DateTime.Now),
                     Reason = returnRequest.Reason
                 };
@@ -117,6 +125,7 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 {
                     OrderRecordsId = returnLog.OrderRecordsId,
                     OrderPackagesId = returnLog.OrderPackagesId,
+                    CustomerId = returnLog.CustomerId,
                     ReturnDate = returnLog.ReturnDate,
                     Reason = returnLog.Reason,
                     RestockItems = returnRequest.RestockItems
@@ -129,6 +138,7 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 return Result.Fail<ReturnLogDto>(ex.Message);
             }
         }
+
 
         public async Task<Result<PaginatedList<ReturnLogDto>>> GetReturnsAsync(
             string searchString,

@@ -60,7 +60,7 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ProcessReturn(ReturnRequestDto returnRequest)
+        public async Task<IActionResult> ProcessReturn([FromBody] ReturnRequestDto returnRequest)
         {
             var result = await _returnService.ProcessReturnAsync(returnRequest);
             if (result.IsSuccess)

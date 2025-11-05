@@ -53,9 +53,9 @@
                 </thead>
                 <tbody>
                     @foreach (var order in Model.CompletedOrders)
-                    {
+{
                         var hasPackages = order.OrderPackages != null && order.OrderPackages.Any();
-                        var firstPackageId = hasPackages ? order.OrderPackages!.First().OrderPackagesId : 0;
+                        var firstPackageId = hasPackages ? order.OrderPackages.First().OrderPackagesId : 0;
 
                         <tr>
                             <td><span class="customer-id">#@order.OrderRecordsId</span></td>
@@ -70,10 +70,10 @@
                             </td>
                             <td class="customer-details">@order.TotalAmount.ToString("C")</td>
                             <td class="text-center">
-                                @if (hasPackages && firstPackageId > 0)
+                                @if (firstPackageId > 0)
                                 {
-                                    <button type="button" 
-                                            class="btn btn-sm btn-danger customer-delete-btn return-btn"
+                                    <button type="button"
+                                            class="btn btn-sm btn-danger return-btn"
                                             data-order-id="@order.OrderRecordsId"
                                             data-package-id="@firstPackageId"
                                             data-customer-name="@order.CustomerName">
@@ -280,33 +280,18 @@
 
 @section Scripts {
 <script>
-document.addEventListener('click', function (e) {
-    const btn = e.target.closest('.return-btn');
-    if (!btn) return;
-
-    const orderId = parseInt(btn.dataset.orderId || '0', 10);
-    const pkgId   = parseInt(btn.dataset.packageId || '0', 10);
-    const name    = btn.dataset.customerName || 'Customer';
-
-    console.log('Return clicked:', { orderId, pkgId, name }); // verify in console
-
-    if (!orderId) { alert('Error: Invalid Order ID'); return; }
-    if (!pkgId)   { alert('Error: No package linked to this order'); return; }
-
-    // Set hidden inputs
-    document.getElementById('orderRecordsId').value = orderId;
-    document.getElementById('orderPackagesId').value = pkgId;
-    document.getElementById('customerName').textContent = name;
-
-    // reset form
-    const reason = document.getElementById('reason');
-    reason.value = '';
-    reason.classList.remove('is-invalid');
-    document.getElementById('reasonError').textContent = '';
-    document.getElementById('restockItems').checked = true;
-
-    new bootstrap.Modal(document.getElementById('returnModal')).show();
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.return-btn');
+  if (!btn) return;
+  const orderId = parseInt(btn.dataset.orderId || '0', 10);
+  const pkgId   = parseInt(btn.dataset.packageId || '0', 10);
+  console.log('open modal with:', { orderId, pkgId });
+  if (!orderId || !pkgId) { alert('Missing order/package id'); return; }
+  document.getElementById('orderRecordsId').value = orderId;
+  document.getElementById('orderPackagesId').value = pkgId;
+  new bootstrap.Modal(document.getElementById('returnModal')).show();
 });
+
 
 document.getElementById('processReturnBtn').addEventListener('click', async function () {
     const orderId = parseInt(document.getElementById('orderRecordsId').value || '0', 10);
