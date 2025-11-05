@@ -22,55 +22,28 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         public async Task<IActionResult> Index()
         {
             var user = await _userManager.GetUserAsync(User);
-
-            if (user == null)
-            {
-                _logger.LogWarning("User is null. Unable to retrieve roles.");
-                return RedirectToAction("Error");
-            }
+            if (user == null) { _logger.LogWarning("User is null."); return RedirectToAction("Error"); }
 
             var roles = await _userManager.GetRolesAsync(user);
 
-            ViewData["UserRoles"] = roles;
+            if (roles.Contains("Owner"))
+                return RedirectToAction("Index", "Reports");      // Reports landing [ClothingOrderAndStockManagement.Presentation/Controllers/HomeController.cs]
 
+            if (roles.Contains("Inventory Admin"))
+                return RedirectToAction("Index", "Items");         // Items first in sidebar [ClothingOrderAndStockManagement.Presentation/Controllers/HomeController.cs]
 
-            return View();
+            if (roles.Contains("Orders Admin"))
+                return RedirectToAction("Index", "Customers");     // Customers first in sidebar [ClothingOrderAndStockManagement.Presentation/Controllers/HomeController.cs]
+
+            if (roles.Contains("Returns Admin"))
+                return RedirectToAction("Index", "Returns");       // Returns list [ClothingOrderAndStockManagement.Presentation/Controllers/HomeController.cs]
+
+            if (roles.Contains("Staff"))
+                return RedirectToAction("Index", "Staff");         // Staff landing [ClothingOrderAndStockManagement.Presentation/Controllers/HomeController.cs]
+
+            return RedirectToAction("Error");                      // fallback [ClothingOrderAndStockManagement.Presentation/Controllers/HomeController.cs]
         }
 
-        [Authorize(Roles = "Owner")]
-        public IActionResult Reports()
-        {
-            return RedirectToAction("Index", "Reports");
-        }
 
-        [Authorize(Roles = "Inventory Admin")]
-        public IActionResult InventoryAdmin()
-        {
-            return RedirectToAction("Index", "Items");
-        }
-
-        [Authorize(Roles = "Orders Admin")]
-        public IActionResult OrdersAdmin()
-        {
-            return RedirectToAction("Index", "Customers");
-        }
-
-        [Authorize(Roles = "Returns Admin")]
-        public IActionResult ReturnsAdmin()
-        {
-            return RedirectToAction("Index", "Returns");
-        }
-
-        [Authorize(Roles = "Staff")]
-        public IActionResult Staff()
-        {
-            return RedirectToAction("Index", "Staff");
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
     }
 }
