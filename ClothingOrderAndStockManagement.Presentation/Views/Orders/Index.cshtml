@@ -1,7 +1,7 @@
 ﻿@model ClothingOrderAndStockManagement.Application.Helpers.PaginatedList<ClothingOrderAndStockManagement.Application.Dtos.Orders.OrderRecordDto>
 @{
     ViewData["Title"] = "Orders";
-    var currentStatus = (string?)ViewData["CurrentStatus"] ?? "";
+    var currentStatus = (string?)(ViewData["CurrentStatus"] ?? "");
     var statuses = new[] { "Awaiting Payment", "Partially Paid", "Fully Paid", "Completed", "Returned", "Cancelled" };
 }
 
@@ -13,10 +13,10 @@
 <div class="orders-filter-section d-flex justify-content-between align-items-center mb-3">
     <form asp-controller="Orders" asp-action="Index" method="get" class="d-flex gap-2">
         <select name="status" class="form-select" style="max-width: 220px;">
-            <option value="">All statuses</option>
+            <option value="" selected="@(string.IsNullOrWhiteSpace(currentStatus) ? "selected" : null)">All statuses</option>
             @foreach (var s in statuses)
             {
-                <option value="@s" selected="@(currentStatus == s ? "selected" : null)">@s</option>
+                <option value="@s" selected="@(string.Equals(currentStatus?.Trim(), s, StringComparison.Ordinal) ? "selected" : null)">@s</option>
             }
         </select>
         <button type="submit" class="btn btn-primary">Filter</button>
