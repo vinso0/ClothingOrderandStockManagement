@@ -1,8 +1,10 @@
 ﻿using ClothingOrderAndStockManagement.Application.Dtos.Orders;
+using ClothingOrderAndStockManagement.Application.Helpers;
 using ClothingOrderAndStockManagement.Application.Interfaces;
 using ClothingOrderAndStockManagement.Domain.Entities.Orders;
 using ClothingOrderAndStockManagement.Domain.Interfaces;
 using ClothingOrderAndStockManagement.Domain.Interfaces.Repositories;
+using FluentResults;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
@@ -208,6 +210,58 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 .OrderByDescending(o => o.OrderDatetime)
                 .Select(o => MapToDto(o, customers));
         }
+
+        public async Task<Result<PaginatedList<OrderRecordDto>>> GetOrdersForReturnsAsync(
+        string? searchString = null,
+        DateOnly? fromDate = null,
+        DateOnly? toDate = null,
+        int pageIndex = 1,
+        int pageSize = 10)
+        {
+            try
+            {
+                // Get all completed orders (same logic as Staff function but filter for "Completed" status)
+                var orders = await GetAllAsync();
+
+                var completedOrders = orders.Where(o => o.OrderStatus == "Completed");
+
+                // Apply search filters
+                if (!string.IsNullOrWhiteSpace(searchString))
+                {
+                    completedOrders = completedOrders.Where(o =>
+                        o.CustomerName.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+                        o.OrderRecordsId.ToString().Contains(searchString));
+                }
+
+                if (fromDate.HasValue)
+                {
+                    completedOrders = completedOrders.Where(o => DateOnly.FromDateTime(o.OrderDatetime) >= fromDate.Value);
+                }
+
+                if (toDate.HasValue)
+                {
+                    completedOrders = completedOrders.Where(o => DateOnly.FromDateTime(o.OrderDatetime) <= toDate.Value);
+                }
+
+                var sortedOrders = completedOrders.OrderByDescending(o => o.OrderDatetime).ToList();
+
+                var totalCount = sortedOrders.Count;
+                var pagedOrders = sortedOrders
+                    .Skip((pageIndex - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                var paginatedResult = new PaginatedList<OrderRecordDto>(pagedOrders, totalCount, pageIndex, pageSize);
+
+                return Result.Ok(paginatedResult);
+            }
+            catch (Exception ex)
+            {
+                var error = new Error("Database").CausedBy(ex.Message);
+                return Result.Fail<PaginatedList<OrderRecordDto>>(error);
+            }
+        }
+
 
         private OrderRecordDto MapToDto(
             OrderRecord order,

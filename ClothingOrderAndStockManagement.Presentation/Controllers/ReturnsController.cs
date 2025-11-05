@@ -8,13 +8,16 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
     public class ReturnsController : Controller
     {
         private readonly IReturnService _returnService;
+        private readonly IOrderService _orderService; // Add this to reuse order logic
 
-        public ReturnsController(IReturnService returnService)
+        public ReturnsController(IReturnService returnService, IOrderService orderService)
         {
             _returnService = returnService;
+            _orderService = orderService;
         }
 
-        public async Task<IActionResult> Index(string searchString, string fromDate, string toDate, int pageIndex = 1)
+        public async Task<IActionResult> Index(string searchString, string fromDate, string toDate,
+                                              int completedPageIndex = 1, int historyPageIndex = 1)
         {
             int pageSize = 10;
 
@@ -27,11 +30,11 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             if (DateOnly.TryParse(toDate, out var parsedToDate))
                 toDateParsed = parsedToDate;
 
-            // Completed orders for processing returns
-            var completed = await _returnService.GetCompletedOrdersAsync(searchString, fromDateParsed, toDateParsed, pageIndex, pageSize);
+            // Use OrderService to get completed orders (like Staff function)
+            var completedOrders = await _orderService.GetOrdersForReturnsAsync(searchString, fromDateParsed, toDateParsed, completedPageIndex, pageSize);
 
-            // Return history (use same filters and page for simplicity; can split later)
-            var history = await _returnService.GetReturnsAsync(searchString, fromDateParsed, toDateParsed, pageIndex, pageSize);
+            // Get return history using ReturnService
+            var returnHistory = await _returnService.GetReturnsAsync(searchString, fromDateParsed, toDateParsed, historyPageIndex, pageSize);
 
             ViewData["CurrentFilter"] = searchString;
             ViewData["FromDate"] = fromDate;
@@ -39,18 +42,18 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
 
             var vm = new ReturnsIndexViewModel
             {
-                Completed = completed.IsSuccess
-                    ? completed.Value
-                    : new PaginatedList<CompletedOrderDto>(new List<CompletedOrderDto>(), 0, pageIndex, pageSize),
-                History = history.IsSuccess
-                    ? history.Value
-                    : new PaginatedList<ReturnLogDto>(new List<ReturnLogDto>(), 0, pageIndex, pageSize)
+                CompletedOrders = completedOrders.IsSuccess
+                    ? completedOrders.Value
+                    : new PaginatedList<OrderRecordDto>(new List<OrderRecordDto>(), 0, completedPageIndex, pageSize),
+                ReturnHistory = returnHistory.IsSuccess
+                    ? returnHistory.Value
+                    : new PaginatedList<ReturnLogDto>(new List<ReturnLogDto>(), 0, historyPageIndex, pageSize)
             };
 
-            if (!completed.IsSuccess)
-                ModelState.AddModelError(string.Empty, string.Join("; ", completed.Errors.Select(e => e.Message)));
-            if (!history.IsSuccess)
-                ModelState.AddModelError(string.Empty, string.Join("; ", history.Errors.Select(e => e.Message)));
+            if (!completedOrders.IsSuccess)
+                ModelState.AddModelError(string.Empty, string.Join("; ", completedOrders.Errors.Select(e => e.Message)));
+            if (!returnHistory.IsSuccess)
+                ModelState.AddModelError(string.Empty, string.Join("; ", returnHistory.Errors.Select(e => e.Message)));
 
             return View(vm);
         }
