@@ -220,10 +220,11 @@ namespace ClothingOrderAndStockManagement.Application.Services
         {
             try
             {
-                // Get all completed orders (same logic as Staff function but filter for "Completed" status)
                 var orders = await GetAllAsync();
 
-                var completedOrders = orders.Where(o => o.OrderStatus == "Completed");
+                var completedOrders = orders
+                    .Where(o => o.OrderStatus == "Completed" && o.OrderPackages.Any()) // Add this check
+                    .AsEnumerable(); // Convert to IEnumerable for LINQ operations
 
                 // Apply search filters
                 if (!string.IsNullOrWhiteSpace(searchString))
@@ -261,6 +262,7 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 return Result.Fail<PaginatedList<OrderRecordDto>>(error);
             }
         }
+
 
 
         private OrderRecordDto MapToDto(

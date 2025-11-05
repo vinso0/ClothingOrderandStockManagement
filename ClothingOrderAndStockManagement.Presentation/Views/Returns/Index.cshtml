@@ -5,7 +5,35 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<!-- Completed Orders Section using OrderRecordDto -->
+<link rel="stylesheet" href="~/css/returns.css" asp-append-version="true" />
+
+<div class="returns-header">
+    <h2>Returns Management</h2>
+</div>
+
+<div class="returns-search-add-section">
+    <form asp-action="Index" method="get" class="returns-search-form">
+        <div class="form-group">
+            <input type="text" name="searchString" class="form-control" 
+                   placeholder="Search by customer ID, name, or reason..." 
+                   value="@ViewData["CurrentFilter"]" />
+        </div>
+        <div class="form-group">
+            <input type="date" name="fromDate" class="form-control" 
+                   value="@ViewData["FromDate"]" />
+        </div>
+        <div class="form-group">
+            <input type="date" name="toDate" class="form-control" 
+                   value="@ViewData["ToDate"]" />
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <img src="~/images/icons/Search.png" alt="Search" style="width: 18px; height: 18px;" />
+        </button>
+        <a asp-action="Index" class="btn btn-secondary">Clear</a>
+    </form>
+</div>
+
+<!-- Completed Orders Section -->
 <div class="returns-section">
     <h5 class="returns-section-title">Completed Orders</h5>
     
@@ -39,27 +67,67 @@
                             </td>
                             <td class="customer-details">@order.TotalAmount.ToString("C")</td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-danger customer-delete-btn"
-                                        onclick="showReturnModal(@order.OrderRecordsId, @order.OrderPackages.FirstOrDefault()?.OrderPackagesId, '@order.CustomerName')">
-                                    Return
-                                </button>
+                                @if (order.OrderPackages != null && order.OrderPackages.Any())
+                                {
+                                    <button class="btn btn-sm btn-danger customer-delete-btn return-btn"
+                                            data-order-id="@order.OrderRecordsId"
+                                            data-package-id="@order.OrderPackages.First().OrderPackagesId"
+                                            data-customer-name="@order.CustomerName">
+                                        Return
+                                    </button>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">No packages</span>
+                                }
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
+        
+        <!-- Pagination for Completed Orders -->
+        <div class="returns-pagination">
+            <div class="pagination-section">
+                <div>Page @Model.CompletedOrders.PageIndex of @Model.CompletedOrders.TotalPages</div>
+                <div>
+                    @if (Model.CompletedOrders.HasPreviousPage)
+                    {
+                        <a asp-action="Index"
+                           asp-route-completedPageIndex="@(Model.CompletedOrders.PageIndex - 1)"
+                           asp-route-searchString="@ViewData["CurrentFilter"]"
+                           asp-route-fromDate="@ViewData["FromDate"]"
+                           asp-route-toDate="@ViewData["ToDate"]"
+                           class="btn btn-outline-secondary">Previous</a>
+                    }
+                    @if (Model.CompletedOrders.HasNextPage)
+                    {
+                        <a asp-action="Index"
+                           asp-route-completedPageIndex="@(Model.CompletedOrders.PageIndex + 1)"
+                           asp-route-searchString="@ViewData["CurrentFilter"]"
+                           asp-route-fromDate="@ViewData["FromDate"]"
+                           asp-route-toDate="@ViewData["ToDate"]"
+                           class="btn btn-outline-primary">Next</a>
+                    }
+                </div>
+            </div>
+        </div>
     }
     else
     {
         <div class="no-returns-section">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18l-2 13H5L3 6z"/>
+                <path d="M8 6V4a2 2 0 0 1 4 0v2"/>
+            </svg>
             <h5>No completed orders found</h5>
             <p>Completed orders eligible for returns will appear here.</p>
         </div>
     }
 </div>
 
-<!-- Return History Section remains using ReturnLogDto -->
+<!-- Return History Section -->
 <div class="returns-section">
     <h5 class="returns-section-title">Return History</h5>
     
@@ -95,25 +163,6 @@
                             </td>
                             <td>
                                 <span class="badge status-badge @GetStatusBadgeClass(returnItem.OrderStatus)">@returnItem.OrderStatus</span>
-
-                               @functions {
-                                    // Helper method to determine the CSS class for the status badge
-                                    private string GetStatusBadgeClass(string status)
-                                    {
-                                        return status switch
-                                        {
-                                            "Awaiting Payment" => "status-badge-danger",
-                                            "Partially Paid" => "status-badge-warning", 
-                                            "Fully Paid" => "status-badge-info",
-                                            "Completed" => "status-badge-success",
-                                            "Returned" => "status-badge-secondary",
-                                            "Cancelled" => "status-badge-dark",
-                                            "Pending" => "status-badge-warning",
-                                            _ => "status-badge-secondary"
-                                        };
-                                    }
-                                }
-
                             </td>
                             <td class="customer-details">@returnItem.Reason</td>
                         </tr>
@@ -122,7 +171,7 @@
             </table>
         </div>
         
-        <!-- Simplified Pagination -->
+        <!-- Pagination for Return History -->
         <div class="returns-pagination">
             <div class="pagination-section">
                 <div>Page @Model.ReturnHistory.PageIndex of @Model.ReturnHistory.TotalPages</div>
@@ -130,7 +179,7 @@
                     @if (Model.ReturnHistory.HasPreviousPage)
                     {
                         <a asp-action="Index"
-                           asp-route-historyPage="@(Model.ReturnHistory.PageIndex - 1)"
+                           asp-route-historyPageIndex="@(Model.ReturnHistory.PageIndex - 1)"
                            asp-route-searchString="@ViewData["CurrentFilter"]"
                            asp-route-fromDate="@ViewData["FromDate"]"
                            asp-route-toDate="@ViewData["ToDate"]"
@@ -139,7 +188,7 @@
                     @if (Model.ReturnHistory.HasNextPage)
                     {
                         <a asp-action="Index"
-                           asp-route-historyPage="@(Model.ReturnHistory.PageIndex + 1)"
+                           asp-route-historyPageIndex="@(Model.ReturnHistory.PageIndex + 1)"
                            asp-route-searchString="@ViewData["CurrentFilter"]"
                            asp-route-fromDate="@ViewData["FromDate"]"
                            asp-route-toDate="@ViewData["ToDate"]"
@@ -162,7 +211,7 @@
     }
 </div>
 
-<!-- Return Modal (unchanged) -->
+<!-- Return Modal -->
 <div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -210,19 +259,67 @@
     </div>
 </div>
 
+@functions {
+    // Helper method to determine the CSS class for the status badge
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Awaiting Payment" => "status-badge-danger",
+            "Partially Paid" => "status-badge-warning", 
+            "Fully Paid" => "status-badge-info",
+            "Completed" => "status-badge-success",
+            "Returned" => "status-badge-secondary",
+            "Cancelled" => "status-badge-dark",
+            "Pending" => "status-badge-warning",
+            _ => "status-badge-secondary"
+        };
+    }
+}
+
 @section Scripts {
     <script>
+        // Handle return button clicks using event delegation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners to all return buttons
+            document.querySelectorAll('.return-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const orderRecordsId = parseInt(this.dataset.orderId);
+                    const orderPackagesId = parseInt(this.dataset.packageId);
+                    const customerName = this.dataset.customerName;
+                    
+                    showReturnModal(orderRecordsId, orderPackagesId, customerName);
+                });
+            });
+        });
+
         function showReturnModal(orderRecordsId, orderPackagesId, customerName) {
+            // Validate required parameters
+            if (!orderRecordsId || orderRecordsId <= 0) {
+                alert('Error: Invalid Order ID');
+                console.error('Invalid orderRecordsId:', orderRecordsId);
+                return;
+            }
+            
+            if (!orderPackagesId || orderPackagesId <= 0) {
+                alert('Error: No packages found for this order');
+                console.error('Invalid orderPackagesId:', orderPackagesId);
+                return;
+            }
+
+            // Set form values
             document.getElementById('orderRecordsId').value = orderRecordsId;
             document.getElementById('orderPackagesId').value = orderPackagesId;
-            document.getElementById('customerName').textContent = customerName;
+            document.getElementById('customerName').textContent = customerName || 'Unknown Customer';
 
+            // Reset form state
             const reasonField = document.getElementById('reason');
             reasonField.value = '';
             reasonField.classList.remove('is-invalid');
             document.getElementById('reasonError').textContent = '';
             document.getElementById('restockItems').checked = true;
 
+            // Show modal
             var modal = new bootstrap.Modal(document.getElementById('returnModal'));
             modal.show();
         }
@@ -232,9 +329,11 @@
             const reasonError = document.getElementById('reasonError');
             let isValid = true;
 
+            // Reset validation state
             reasonField.classList.remove('is-invalid');
             reasonError.textContent = '';
 
+            // Validate reason field
             if (!reasonField.value || reasonField.value.trim() === '') {
                 reasonField.classList.add('is-invalid');
                 reasonError.textContent = 'Return reason is required.';
@@ -254,12 +353,23 @@
             const form = document.getElementById('returnForm');
             const formData = new FormData(form);
 
+            // Validate form data before sending
+            const orderRecordsId = parseInt(formData.get('orderRecordsId'));
+            const orderPackagesId = parseInt(formData.get('orderPackagesId'));
+            
+            if (!orderRecordsId || !orderPackagesId) {
+                alert('Error: Missing required order information');
+                return;
+            }
+
             const returnData = {
-                orderRecordsId: parseInt(formData.get('orderRecordsId')),
-                orderPackagesId: parseInt(formData.get('orderPackagesId')),
+                orderRecordsId: orderRecordsId,
+                orderPackagesId: orderPackagesId,
                 reason: formData.get('reason'),
                 restockItems: formData.get('restockItems') === 'on'
             };
+
+            console.log('Sending return data:', returnData); // Debug log
 
             try {
                 const response = await fetch('@Url.Action("ProcessReturn", "Returns")', {
@@ -271,15 +381,20 @@
                     body: JSON.stringify(returnData)
                 });
 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const result = await response.json();
                 if (result.success) {
                     alert('Return processed successfully!');
                     bootstrap.Modal.getInstance(document.getElementById('returnModal')).hide();
                     location.reload();
                 } else {
-                    alert('Error: ' + result.message);
+                    alert('Error: ' + (result.message || 'Unknown error occurred'));
                 }
             } catch (error) {
+                console.error('Return processing error:', error);
                 alert('An error occurred while processing the return: ' + error.message);
             }
         }
