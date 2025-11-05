@@ -32,7 +32,6 @@ public class ItemCategoryService : IItemCategoryService
         return categories;
     }
 
-    // Add this method to your ItemCategoryService class
     public async Task<PaginatedList<ItemCategoryDto>> GetCategoriesAsync(int pageIndex, int pageSize, string searchString = "")
     {
         var query = _repo.Query().AsQueryable();

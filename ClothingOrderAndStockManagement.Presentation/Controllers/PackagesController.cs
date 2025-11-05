@@ -18,11 +18,12 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
 
         public async Task<IActionResult> Index(string searchString, int pageIndex = 1)
         {
-            int pageSize = 5;
+            const int pageSize = 5;
             var result = await _packageService.GetPackagesAsync(searchString, pageIndex, pageSize);
 
             ViewData["CurrentFilter"] = searchString;
 
+            // Items list for modals
             var itemsResult = await _itemService.GetItemsAsync(1, 100, "");
             ViewBag.Items = itemsResult.Where(i => i.Quantity > 0);
 
@@ -37,49 +38,48 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreatePackageDto createPackageDto)
         {
-            if (ModelState.IsValid)
-            {
-                var result = await _packageService.AddPackageAsync(createPackageDto);
-                if (result.IsSuccess)
-                    return RedirectToAction(nameof(Index));
+            if (!ModelState.IsValid)
+                return await RebuildIndexForCreateAsync(createPackageDto);
 
-                ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
-            }
+            var result = await _packageService.AddPackageAsync(createPackageDto);
+            if (result.IsSuccess)
+                return RedirectToAction(nameof(Index));
 
-            int pageIndex = 1;
-            int pageSize = 5;
-            var packagesResult = await _packageService.GetPackagesAsync("", pageIndex, pageSize);
-
-            ViewData["ShowAddPackageModal"] = true;
-            ViewData["AddPackageModel"] = createPackageDto;
-
-            var itemsResult = await _itemService.GetItemsAsync(1, 100, "");
-            ViewBag.Items = itemsResult.Where(i => i.Quantity > 0);
-
-            return View("Index", packagesResult.IsSuccess
-                ? packagesResult.Value
-                : new PaginatedList<PackageDto>(new List<PackageDto>(), 0, pageIndex, pageSize));
+            ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
+            return await RebuildIndexForCreateAsync(createPackageDto);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(UpdatePackageDto updatePackageDto)
         {
-            if (ModelState.IsValid)
-            {
-                var result = await _packageService.UpdatePackageAsync(updatePackageDto);
-                if (result.IsSuccess)
-                    return RedirectToAction(nameof(Index));
+            if (!ModelState.IsValid)
+                return await RebuildIndexForEditAsync(updatePackageDto);
 
-                ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
-            }
+            var result = await _packageService.UpdatePackageAsync(updatePackageDto);
+            if (result.IsSuccess)
+                return RedirectToAction(nameof(Index));
 
-            int pageIndex = 1;
-            int pageSize = 5;
+            ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
+            return await RebuildIndexForEditAsync(updatePackageDto);
+        }
+
+        public async Task<IActionResult> Delete(int id)
+        {
+            var result = await _packageService.DeletePackageAsync(id);
+            if (!result.IsSuccess)
+                TempData["Error"] = string.Join("; ", result.Errors.Select(e => e.Message));
+            return RedirectToAction(nameof(Index));
+        }
+
+        private async Task<IActionResult> RebuildIndexForCreateAsync(CreatePackageDto model)
+        {
+            const int pageIndex = 1;
+            const int pageSize = 5;
             var packagesResult = await _packageService.GetPackagesAsync("", pageIndex, pageSize);
 
-            ViewData["ShowEditPackageModalId"] = updatePackageDto.PackagesId;
-            ViewData["EditPackageModel"] = updatePackageDto;
+            ViewData["ShowAddPackageModal"] = true;
+            ViewData["AddPackageModel"] = model;
 
             var itemsResult = await _itemService.GetItemsAsync(1, 100, "");
             ViewBag.Items = itemsResult.Where(i => i.Quantity > 0);
@@ -89,10 +89,21 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
                 : new PaginatedList<PackageDto>(new List<PackageDto>(), 0, pageIndex, pageSize));
         }
 
-        public async Task<IActionResult> Delete(int id)
+        private async Task<IActionResult> RebuildIndexForEditAsync(UpdatePackageDto model)
         {
-            var result = await _packageService.DeletePackageAsync(id);
-            return RedirectToAction(nameof(Index));
+            const int pageIndex = 1;
+            const int pageSize = 5;
+            var packagesResult = await _packageService.GetPackagesAsync("", pageIndex, pageSize);
+
+            ViewData["ShowEditPackageModalId"] = model.PackagesId;
+            ViewData["EditPackageModel"] = model;
+
+            var itemsResult = await _itemService.GetItemsAsync(1, 100, "");
+            ViewBag.Items = itemsResult.Where(i => i.Quantity > 0);
+
+            return View("Index", packagesResult.IsSuccess
+                ? packagesResult.Value
+                : new PaginatedList<PackageDto>(new List<PackageDto>(), 0, pageIndex, pageSize));
         }
     }
 }

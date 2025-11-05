@@ -24,7 +24,6 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
                 return View(result.Value);
 
             ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
-            // Render an empty report model to avoid null refs in the view
             return View(new ClothingOrderAndStockManagement.Application.Dtos.Report.SystemReportDto());
         }
     }

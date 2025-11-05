@@ -8,7 +8,7 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
     public class ReturnsController : Controller
     {
         private readonly IReturnService _returnService;
-        private readonly IOrderService _orderService; // Add this to reuse order logic
+        private readonly IOrderService _orderService;
 
         public ReturnsController(IReturnService returnService, IOrderService orderService)
         {
@@ -30,10 +30,8 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             if (DateOnly.TryParse(toDate, out var parsedToDate))
                 toDateParsed = parsedToDate;
 
-            // Use OrderService to get completed orders (like Staff function)
             var completedOrders = await _orderService.GetOrdersForReturnsAsync(searchString, fromDateParsed, toDateParsed, completedPageIndex, pageSize);
 
-            // Get return history using ReturnService
             var returnHistory = await _returnService.GetReturnsAsync(searchString, fromDateParsed, toDateParsed, historyPageIndex, pageSize);
 
             ViewData["CurrentFilter"] = searchString;

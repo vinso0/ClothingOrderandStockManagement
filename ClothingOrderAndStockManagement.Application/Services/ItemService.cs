@@ -3,6 +3,7 @@ using ClothingOrderAndStockManagement.Application.Helpers;
 using ClothingOrderAndStockManagement.Application.Interfaces;
 using ClothingOrderAndStockManagement.Domain.Entities.Products;
 using ClothingOrderAndStockManagement.Domain.Interfaces;
+using FluentResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClothingOrderAndStockManagement.Application.Services
@@ -55,7 +56,6 @@ namespace ClothingOrderAndStockManagement.Application.Services
         public async Task<ItemDto?> GetItemByIdAsync(int itemId)
         {
             var item = await _itemRepository.GetByIdAsync(itemId);
-
             if (item == null) return null;
 
             return new ItemDto
@@ -69,73 +69,6 @@ namespace ClothingOrderAndStockManagement.Application.Services
             };
         }
 
-        public async Task<ItemDto> CreateItemAsync(CreateItemDto createItemDto)
-        {
-            var item = new Item
-            {
-                ItemCategoryId = createItemDto.ItemCategoryId,
-                Size = createItemDto.Size,
-                Color = createItemDto.Color,
-                Quantity = createItemDto.Quantity
-            };
-
-            await _itemRepository.AddAsync(item);
-            var createdItem = await _itemRepository.GetByIdAsync(item.ItemId);
-
-            await UpdateAffectedPackageQuantitiesAsync(item.ItemId);
-
-            return new ItemDto
-            {
-                ItemId = createdItem!.ItemId,
-                ItemCategoryId = createdItem.ItemCategoryId,
-                Size = createdItem.Size,
-                Color = createdItem.Color,
-                Quantity = createdItem.Quantity,
-                ItemCategoryType = createdItem.ItemCategory.ItemCategoryType
-            };
-        }
-
-        public async Task<ItemDto> UpdateItemAsync(UpdateItemDto updateItemDto)
-        {
-            var existingItem = await _itemRepository.GetByIdAsync(updateItemDto.ItemId);
-            if (existingItem == null)
-            {
-                throw new ArgumentException("Item not found.");
-            }
-
-            existingItem.ItemCategoryId = updateItemDto.ItemCategoryId;
-            existingItem.Size = updateItemDto.Size;
-            existingItem.Color = updateItemDto.Color;
-            existingItem.Quantity = updateItemDto.Quantity;
-
-            await _itemRepository.UpdateAsync(existingItem);
-
-            await UpdateAffectedPackageQuantitiesAsync(updateItemDto.ItemId);
-
-            var updatedItem = await _itemRepository.GetByIdAsync(existingItem.ItemId);
-
-            return new ItemDto
-            {
-                ItemId = updatedItem!.ItemId,
-                ItemCategoryId = updatedItem.ItemCategoryId,
-                Size = updatedItem.Size,
-                Color = updatedItem.Color,
-                Quantity = updatedItem.Quantity,
-                ItemCategoryType = updatedItem.ItemCategory.ItemCategoryType
-            };
-        }
-
-        public async Task<bool> DeleteItemAsync(int itemId)
-        {
-            var exists = await _itemRepository.ItemExistsAsync(itemId);
-            if (!exists) return false;
-
-            await UpdateAffectedPackageQuantitiesAsync(itemId);
-
-            await _itemRepository.DeleteAsync(itemId);
-            return true;
-        }
-
         public async Task<IEnumerable<ItemCategoryDto>> GetItemCategoriesAsync()
         {
             var categories = await _itemRepository.GetItemCategoriesAsync();
@@ -145,6 +78,88 @@ namespace ClothingOrderAndStockManagement.Application.Services
                 ItemCategoryId = c.ItemCategoryId,
                 ItemCategoryType = c.ItemCategoryType
             });
+        }
+
+        public async Task<Result> CreateItemAsync(CreateItemDto createItemDto)
+        {
+            try
+            {
+                if (createItemDto.Quantity < 0)
+                    return Result.Fail("Quantity cannot be negative.");
+
+                var item = new Item
+                {
+                    ItemCategoryId = createItemDto.ItemCategoryId,
+                    Size = createItemDto.Size,
+                    Color = createItemDto.Color,
+                    Quantity = createItemDto.Quantity
+                };
+
+                await _itemRepository.AddAsync(item);
+
+                var createdItem = await _itemRepository.GetByIdAsync(item.ItemId);
+                if (createdItem == null)
+                    return Result.Fail("Failed to create item.");
+
+                await UpdateAffectedPackageQuantitiesAsync(createdItem.ItemId);
+
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                return Result.Fail(ex.Message);
+            }
+        }
+
+        public async Task<Result> UpdateItemAsync(UpdateItemDto updateItemDto)
+        {
+            try
+            {
+                var existingItem = await _itemRepository.GetByIdAsync(updateItemDto.ItemId);
+                if (existingItem == null)
+                    return Result.Fail("Item not found.");
+
+                if (updateItemDto.Quantity < 0)
+                    return Result.Fail("Quantity cannot be negative.");
+
+                existingItem.ItemCategoryId = updateItemDto.ItemCategoryId;
+                existingItem.Size = updateItemDto.Size;
+                existingItem.Color = updateItemDto.Color;
+                existingItem.Quantity = updateItemDto.Quantity;
+
+                await _itemRepository.UpdateAsync(existingItem);
+
+                await UpdateAffectedPackageQuantitiesAsync(updateItemDto.ItemId);
+
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                return Result.Fail(ex.Message);
+            }
+        }
+
+        public async Task<Result> DeleteItemAsync(int itemId)
+        {
+            try
+            {
+                var exists = await _itemRepository.ItemExistsAsync(itemId);
+                if (!exists)
+                    return Result.Fail("Item not found.");
+
+                await UpdateAffectedPackageQuantitiesAsync(itemId);
+
+                await _itemRepository.DeleteAsync(itemId);
+                return Result.Ok();
+            }
+            catch (DbUpdateException)
+            {
+                return Result.Fail("Cannot delete item because it is referenced by one or more packages.");
+            }
+            catch (Exception ex)
+            {
+                return Result.Fail(ex.Message);
+            }
         }
 
         private async Task UpdateAffectedPackageQuantitiesAsync(int itemId)
@@ -161,10 +176,8 @@ namespace ClothingOrderAndStockManagement.Application.Services
                     await _inventoryService.UpdatePackageQuantityAsync(packageId);
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                // Log the error but don't break the main operation
-                Console.WriteLine($"Error updating package quantities: {ex.Message}");
             }
         }
     }

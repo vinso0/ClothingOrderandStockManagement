@@ -17,7 +17,8 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
 
         public async Task<IActionResult> Index(string searchString, int pageIndex = 1)
         {
-            int pageSize = 5;
+            const int pageSize = 5;
+
             var items = await _itemService.GetItemsAsync(pageIndex, pageSize, searchString);
 
             ViewData["CurrentFilter"] = searchString;
@@ -30,28 +31,17 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateItemDto createItemDto)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    await _itemService.CreateItemAsync(createItemDto);
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError(string.Empty, "An error occurred while creating the item: " + ex.Message);
-                }
+                return await RebuildIndexForCreateAsync(createItemDto);
             }
 
-            int pageIndex = 1;
-            int pageSize = 5;
-            var items = await _itemService.GetItemsAsync(pageIndex, pageSize, "");
+            var result = await _itemService.CreateItemAsync(createItemDto);
+            if (result.IsSuccess)
+                return RedirectToAction(nameof(Index));
 
-            ViewData["ShowAddItemModal"] = true;
-            ViewData["AddItemModel"] = createItemDto;
-            ViewBag.Categories = await _itemService.GetItemCategoriesAsync();
-
-            return View("Index", items);
+            ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
+            return await RebuildIndexForCreateAsync(createItemDto);
         }
 
         public async Task<IActionResult> Edit(int id)
@@ -77,27 +67,40 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(UpdateItemDto updateItemDto)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    await _itemService.UpdateItemAsync(updateItemDto);
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError(string.Empty, "An error occurred while updating the item: " + ex.Message);
-                }
+                ViewBag.Categories = await _itemService.GetItemCategoriesAsync();
+                return View(updateItemDto);
             }
 
+            var result = await _itemService.UpdateItemAsync(updateItemDto);
+            if (result.IsSuccess)
+                return RedirectToAction(nameof(Index));
+
+            ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
             ViewBag.Categories = await _itemService.GetItemCategoriesAsync();
             return View(updateItemDto);
         }
 
         public async Task<IActionResult> Delete(int id)
         {
-            await _itemService.DeleteItemAsync(id);
+            var result = await _itemService.DeleteItemAsync(id);
+            if (!result.IsSuccess)
+                TempData["Error"] = string.Join("; ", result.Errors.Select(e => e.Message));
             return RedirectToAction(nameof(Index));
+        }
+
+        private async Task<IActionResult> RebuildIndexForCreateAsync(CreateItemDto createItemDto)
+        {
+            const int pageIndex = 1;
+            const int pageSize = 5;
+
+            var items = await _itemService.GetItemsAsync(pageIndex, pageSize, "");
+            ViewData["ShowAddItemModal"] = true;
+            ViewData["AddItemModel"] = createItemDto;
+            ViewBag.Categories = await _itemService.GetItemCategoriesAsync();
+
+            return View("Index", items);
         }
     }
 }
