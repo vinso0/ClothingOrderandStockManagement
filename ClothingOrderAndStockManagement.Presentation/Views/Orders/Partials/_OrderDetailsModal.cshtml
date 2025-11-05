@@ -1,0 +1,190 @@
+﻿@model ClothingOrderAndStockManagement.Application.Dtos.Orders.OrderRecordDto
+
+<div class="modal-header">
+    <h5 class="modal-title">Order Details - #@Model.OrderRecordsId</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<div class="modal-body">
+    <div class="row">
+        <!-- Order Information -->
+        <div class="col-md-6">
+            <h6 class="fw-bold">Order Information</h6>
+            <table class="table table-sm">
+                <tr>
+                    <td><strong>Order ID:</strong></td>
+                    <td>#@Model.OrderRecordsId</td>
+                </tr>
+                <tr>
+                    <td><strong>Customer:</strong></td>
+                    <td>@Model.CustomerName</td>
+                </tr>
+                <tr>
+                    <td><strong>Date & Time:</strong></td>
+                    <td>
+                        @Model.OrderDatetime.ToString("MMM dd, yyyy")
+                        <br />
+                        <small>@Model.OrderDatetime.ToString("hh:mm tt")</small>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Status:</strong></td>
+                    <td>
+                        <span class="badge @GetStatusBadgeClass(Model.OrderStatus)">@Model.OrderStatus</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Payment Information -->
+        <div class="col-md-6">
+            <h6 class="fw-bold">Payment Information</h6>
+            <table class="table table-sm">
+                <tr>
+                    <td><strong>Total Amount:</strong></td>
+                    <td class="text-primary fw-bold">₱@Model.TotalAmount.ToString("N2")</td>
+                </tr>
+                <tr>
+                    <td><strong>Amount Paid:</strong></td>
+                    <td class="text-success fw-bold">₱@Model.TotalPaid.ToString("N2")</td>
+                </tr>
+                <tr>
+                    <td><strong>Balance:</strong></td>
+                    <td class="@(Model.RemainingBalance > 0 ? "text-danger" : "text-success") fw-bold">
+                        ₱@Model.RemainingBalance.ToString("N2")
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <hr />
+
+    <!-- Packages/Items Information -->
+    <div class="row">
+        <div class="col-12">
+            <h6 class="fw-bold">Package Details</h6>
+            @if (Model.OrderPackages.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Package Name</th>
+                                <th>Quantity</th>
+                                <th>Price per Item</th>
+                                <th>Total Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var pkg in Model.OrderPackages)
+                            {
+                                <tr>
+                                    <td>@pkg.PackageName</td>
+                                    <td>@pkg.Quantity</td>
+                                    <td>₱@pkg.PriceAtPurchase.ToString("N2")</td>
+                                    <td>₱@((pkg.PriceAtPurchase * pkg.Quantity).ToString("N2"))</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">No packages found for this order.</p>
+            }
+        </div>
+    </div>
+
+    @if (Model.PaymentRecords.Any())
+    {
+        <hr />
+        <!-- Payment History -->
+        <div class="row">
+            <div class="col-12">
+                <h6 class="fw-bold">Payment History</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Payment Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Proof</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var payment in Model.PaymentRecords.OrderByDescending(p => p.PaymentDate))
+                            {
+                                <tr>
+                                    <td>
+                                        @payment.PaymentDate.ToString("MMM dd, yyyy")
+                                        <br />
+                                        <small>@payment.PaymentDate.ToString("hh:mm tt")</small>
+                                    </td>
+                                    <td class="text-success fw-bold">₱@payment.Amount.ToString("N2")</td>
+                                    <td>
+                                        <span class="badge @GetPaymentStatusBadgeClass(payment.PaymentStatus)">
+                                            @payment.PaymentStatus
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(payment.ProofUrl))
+                                        {
+                                            <a href="@payment.ProofUrl" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                View Proof
+                                            </a>
+                                        }
+                                        @if (!string.IsNullOrEmpty(payment.ProofUrl2))
+                                        {
+                                            <a href="@payment.ProofUrl2" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                View Proof 2
+                                            </a>
+                                        }
+                                        @if (string.IsNullOrEmpty(payment.ProofUrl) && string.IsNullOrEmpty(payment.ProofUrl2))
+                                        {
+                                            <span class="text-muted">No proof</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+</div>
+
+@functions {
+    string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Awaiting Payment" => "bg-danger",
+            "Partially Paid" => "bg-warning",
+            "Fully Paid" => "bg-info",
+            "Completed" => "bg-success",
+            "Returned" => "bg-secondary",
+            "Cancelled" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    string GetPaymentStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Paid" => "bg-success",
+            "Pending" => "bg-warning",
+            "Failed" => "bg-danger",
+            "Refunded" => "bg-info",
+            _ => "bg-secondary"
+        };
+    }
+}

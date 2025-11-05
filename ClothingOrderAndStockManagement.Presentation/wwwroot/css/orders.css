@@ -313,6 +313,18 @@ input[type="file"].form-control {
         border-color: #33A1E0;
     }
 
+.btn-info {
+    background-color: #E8DDD4; /* Bootstrap primary color */
+    color: #33A1E0;
+    border-color: #33A1E0;
+}
+
+    .btn-info:hover {
+        background-color: #33A1E0;
+        border-color: #33A1E0;
+        color: white;
+    }
+
 .btn-add-payment {
     background: white;
     border-color: #28a745;

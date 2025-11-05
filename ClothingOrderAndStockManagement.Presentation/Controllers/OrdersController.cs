@@ -57,6 +57,17 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             return View(paginatedList);
         }
 
+        // Get order details (NEW METHOD)
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
+        {
+            var order = await _orderService.GetByIdAsync(id);
+            if (order == null)
+            {
+                return NotFound();
+            }
+            return PartialView("Partials/_OrderDetailsModal", order);
+        }
 
         // Create order for specific customer (GET)
         [HttpGet]
@@ -195,7 +206,6 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-
 
         private async Task PopulateViewDataAsync(int customerId)
         {
