@@ -23,13 +23,13 @@
 }
 
     .returns-search-form .form-control {
-        border: hidden;
+        border: 1;
         background-color: #fff6ef;
     }
 
     .returns-search-form .btn-primary {
         background-color: #e8ddd4;
-        border: hidden;
+        border: 1;
         color: #333;
     }
 

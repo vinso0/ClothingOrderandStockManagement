@@ -12,74 +12,40 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         private readonly IOrderService _orderService;
         private readonly ILogger<StaffController> _logger;
 
-        public StaffController(
-            IOrderService orderService,
-            ILogger<StaffController> logger)
+        public StaffController(IOrderService orderService, ILogger<StaffController> logger)
         {
             _orderService = orderService;
             _logger = logger;
         }
 
-        // Order sorting page - shows only Partially Paid and Fully Paid orders
+        // Shows only Partially Paid and Fully Paid orders
         public async Task<IActionResult> Index(int pageIndex = 1)
         {
-            try
-            {
-                // Get filtered orders from service
-                var pendingOrders = await _orderService.GetOrdersForSortingAsync();
+            const int pageSize = 5;
+            var result = await _orderService.GetStaffOrdersAsync(pageIndex, pageSize);
 
-                const int pageSize = 5;
-                var totalCount = pendingOrders.Count();
-                var pagedOrders = pendingOrders
-                    .Skip((pageIndex - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToList();
+            if (result.IsSuccess)
+                return View(result.Value);
 
-                var paginatedList = new PaginatedList<OrderRecordDto>(pagedOrders, totalCount, pageIndex, pageSize);
-
-                return View(paginatedList);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving orders for sorting");
-                TempData["Error"] = "Error loading orders. Please try again.";
-                return View(new PaginatedList<OrderRecordDto>(new List<OrderRecordDto>(), 0, pageIndex, 5));
-            }
+            ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
+            return View(new PaginatedList<OrderRecordDto>(new List<OrderRecordDto>(), 0, pageIndex, pageSize));
         }
 
-        // Complete order processing
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CompleteOrder(int orderId)
         {
-            try
+            var result = await _orderService.CompleteOrderAsync(orderId);
+
+            if (result.IsSuccess)
             {
-                var order = await _orderService.GetByIdAsync(orderId);
-                if (order == null)
-                {
-                    TempData["Error"] = "Order not found.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                // Verify the order is in a valid state for completion
-                var allowedStatuses = new[] { "Partially Paid", "Fully Paid" };
-                if (!allowedStatuses.Contains(order.OrderStatus))
-                {
-                    TempData["Error"] = "Order cannot be completed. Only Partially Paid or Fully Paid orders can be marked as completed.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                // Update status to Completed
-                order.OrderStatus = "Completed";
-                await _orderService.UpdateAsync(order);
-
-                TempData["Success"] = $"Order #{order.OrderRecordsId} has been successfully completed and processed!";
+                TempData["Success"] = $"Order #{orderId} has been successfully completed and processed!";
                 _logger.LogInformation("Order {OrderId} marked as completed by staff", orderId);
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Error completing order {OrderId}", orderId);
-                TempData["Error"] = $"Error completing order: {ex.Message}";
+                TempData["Error"] = string.Join("; ", result.Errors.Select(e => e.Message));
+                _logger.LogWarning("Failed to complete order {OrderId}: {Errors}", orderId, string.Join("; ", result.Errors.Select(e => e.Message)));
             }
 
             return RedirectToAction(nameof(Index));

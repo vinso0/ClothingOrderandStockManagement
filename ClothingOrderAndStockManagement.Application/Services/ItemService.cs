@@ -130,7 +130,6 @@ namespace ClothingOrderAndStockManagement.Application.Services
             var exists = await _itemRepository.ItemExistsAsync(itemId);
             if (!exists) return false;
 
-            // Update affected package quantities before deletion
             await UpdateAffectedPackageQuantitiesAsync(itemId);
 
             await _itemRepository.DeleteAsync(itemId);
@@ -148,7 +147,6 @@ namespace ClothingOrderAndStockManagement.Application.Services
             });
         }
 
-        // *** HELPER METHOD ***
         private async Task UpdateAffectedPackageQuantitiesAsync(int itemId)
         {
             try

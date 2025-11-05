@@ -1,5 +1,4 @@
 ﻿using ClothingOrderAndStockManagement.Application.Dtos.Orders;
-using ClothingOrderAndStockManagement.Application.Helpers;
 using ClothingOrderAndStockManagement.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,50 +25,31 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             _logger = logger;
         }
 
-        // List all orders
         public async Task<IActionResult> Index(string? status, int pageIndex = 1)
         {
-            var orders = await _orderService.GetAllAsync();
+            var result = await _orderService.GetFilteredOrdersAsync(status, pageIndex);
 
-            var allowed = new[] { "Awaiting Payment", "Partially Paid", "Fully Paid", "Completed", "Returned", "Cancelled" };
-            var normalized = string.IsNullOrWhiteSpace(status) ? "" : status.Trim();
+            ViewData["CurrentStatus"] = string.IsNullOrWhiteSpace(status) ? "" : status.Trim();
 
-            if (!string.IsNullOrEmpty(normalized) && allowed.Any(s => string.Equals(s, normalized, StringComparison.Ordinal)))
-            {
-                orders = orders.Where(o => string.Equals(o.OrderStatus, normalized, StringComparison.Ordinal));
-                ViewData["CurrentStatus"] = normalized;
-            }
-            else
-            {
-                ViewData["CurrentStatus"] = "";
-            }
+            if (result.IsSuccess)
+                return View(result.Value);
 
-            var sortedOrders = orders.OrderByDescending(o => o.OrderDatetime).ToList();
-
-            const int pageSize = 5;
-            var totalCount = sortedOrders.Count;
-            var pagedOrders = sortedOrders
-                .Skip((pageIndex - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-
-            var paginatedList = new PaginatedList<OrderRecordDto>(pagedOrders, totalCount, pageIndex, pageSize);
-            return View(paginatedList);
+            ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
+            return View(new ClothingOrderAndStockManagement.Application.Helpers.PaginatedList<OrderRecordDto>(
+                new List<OrderRecordDto>(), 0, pageIndex, 5));
         }
 
-        // Get order details (NEW METHOD)
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            var order = await _orderService.GetByIdAsync(id);
-            if (order == null)
-            {
+            var result = await _orderService.GetByIdAsync(id);
+
+            if (!result.IsSuccess)
                 return NotFound();
-            }
-            return PartialView("Partials/_OrderDetailsModal", order);
+
+            return PartialView("Partials/_OrderDetailsModal", result.Value);
         }
 
-        // Create order for specific customer (GET)
         [HttpGet]
         public async Task<IActionResult> Create(int customerId)
         {
@@ -80,10 +60,7 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
                 return RedirectToAction("Index", "Customers");
             }
 
-            var packages = await _packageService.GetAllPackagesAsync();
-
-            ViewBag.Customer = customerResult.Value;
-            ViewBag.Packages = packages.ToList();
+            await PopulateViewDataAsync(customerId);
 
             var model = new CreateOrderDto
             {
@@ -93,7 +70,6 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             return View(model);
         }
 
-        // Create order (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateOrderDto dto)
@@ -104,22 +80,19 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
                 return View(dto);
             }
 
-            try
+            var result = await _orderService.CreateAsync(dto);
+
+            if (result.IsSuccess)
             {
-                var orderId = await _orderService.CreateAsync(dto);
-                TempData["Success"] = $"Order #{orderId} created successfully! You can now add payment.";
+                TempData["Success"] = $"Order #{result.Value} created successfully! You can now add payment.";
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating order");
-                TempData["Error"] = $"Error creating order: {ex.Message}";
-                await PopulateViewDataAsync(dto.CustomerId);
-                return View(dto);
-            }
+
+            ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
+            await PopulateViewDataAsync(dto.CustomerId);
+            return View(dto);
         }
 
-        // Add payment to existing order (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddPayment(AddPaymentDto dto, IFormFile? ProofImage, IFormFile? ProofImage2)
@@ -130,78 +103,51 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            try
-            {
-                var success = await _orderService.AddPaymentAsync(dto, ProofImage, ProofImage2);
+            var result = await _orderService.AddPaymentAsync(dto, ProofImage, ProofImage2);
 
-                if (success)
-                {
-                    TempData["Success"] = "Payment added successfully!";
-                }
-                else
-                {
-                    TempData["Error"] = "Order not found.";
-                }
-            }
-            catch (Exception ex)
+            if (result.IsSuccess)
             {
-                _logger.LogError(ex, "Error adding payment");
-                TempData["Error"] = $"Error adding payment: {ex.Message}";
+                TempData["Success"] = "Payment added successfully!";
+            }
+            else
+            {
+                TempData["Error"] = string.Join("; ", result.Errors.Select(e => e.Message));
             }
 
             return RedirectToAction(nameof(Index));
         }
 
-        // Update order status
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStatus(int OrderRecordsId, string OrderStatus)
         {
-            try
-            {
-                var order = await _orderService.GetByIdAsync(OrderRecordsId);
-                if (order == null)
-                {
-                    TempData["Error"] = "Order not found.";
-                    return RedirectToAction(nameof(Index));
-                }
+            var result = await _orderService.UpdateOrderStatusAsync(OrderRecordsId, OrderStatus);
 
-                order.OrderStatus = OrderStatus;
-                await _orderService.UpdateAsync(order);
+            if (result.IsSuccess)
+            {
                 TempData["Success"] = "Order status updated successfully!";
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Error updating status");
-                TempData["Error"] = $"Error updating status: {ex.Message}";
+                TempData["Error"] = string.Join("; ", result.Errors.Select(e => e.Message));
             }
 
             return RedirectToAction(nameof(Index));
         }
 
-        // Cancel order
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id)
         {
-            try
-            {
-                var order = await _orderService.GetByIdAsync(id);
-                if (order == null)
-                {
-                    TempData["Error"] = "Order not found.";
-                    return RedirectToAction(nameof(Index));
-                }
+            var result = await _orderService.UpdateOrderStatusAsync(id, "Cancelled");
 
-                // Update status to Cancelled
-                order.OrderStatus = "Cancelled";
-                await _orderService.UpdateAsync(order);
+            if (result.IsSuccess)
+            {
                 TempData["Success"] = "Order cancelled successfully!";
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Error cancelling order");
-                TempData["Error"] = $"Error cancelling order: {ex.Message}";
+                TempData["Error"] = string.Join("; ", result.Errors.Select(e => e.Message));
             }
 
             return RedirectToAction(nameof(Index));

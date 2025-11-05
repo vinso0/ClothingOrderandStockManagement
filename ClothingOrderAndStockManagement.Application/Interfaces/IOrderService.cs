@@ -7,19 +7,26 @@ namespace ClothingOrderAndStockManagement.Domain.Interfaces
 {
     public interface IOrderService
     {
-        Task<IEnumerable<OrderRecordDto>> GetAllAsync();
-        Task<OrderRecordDto?> GetByIdAsync(int id);
-        Task<int> CreateAsync(CreateOrderDto dto);
-        Task<bool> UpdateAsync(OrderRecordDto orderDto);
-        Task<bool> DeleteAsync(int id);
-        Task<bool> AddPaymentAsync(AddPaymentDto dto, IFormFile? proof1, IFormFile? proof2);
-        Task<int> CreateWithPaymentAsync(CreateOrderDto dto, IFormFile? proof1, IFormFile? proof2);
-        Task<IEnumerable<OrderRecordDto>> GetOrdersForSortingAsync();
+        Task<Result<IEnumerable<OrderRecordDto>>> GetAllAsync();
+        Task<Result<OrderRecordDto>> GetByIdAsync(int id);
+        Task<Result<int>> CreateAsync(CreateOrderDto dto);
+        Task<Result> UpdateAsync(OrderRecordDto orderDto);
+        Task<Result> DeleteAsync(int id);
+        Task<Result> AddPaymentAsync(AddPaymentDto dto, IFormFile? proof1, IFormFile? proof2);
+        Task<Result<int>> CreateWithPaymentAsync(CreateOrderDto dto, IFormFile? proof1, IFormFile? proof2);
+        Task<Result<IEnumerable<OrderRecordDto>>> GetOrdersForSortingAsync();
         Task<Result<PaginatedList<OrderRecordDto>>> GetOrdersForReturnsAsync(
-        string? searchString = null,
-        DateOnly? fromDate = null,
-        DateOnly? toDate = null,
-        int pageIndex = 1,
-        int pageSize = 10);
+            string? searchString = null,
+            DateOnly? fromDate = null,
+            DateOnly? toDate = null,
+            int pageIndex = 1,
+            int pageSize = 10);
+
+        Task<Result<PaginatedList<OrderRecordDto>>> GetFilteredOrdersAsync(string? status, int pageIndex, int pageSize = 5);
+        Task<Result<bool>> IsValidOrderStatusAsync(string status);
+        Task<Result> UpdateOrderStatusAsync(int orderId, string newStatus);
+        Task<Result<string[]>> GetValidOrderStatusesAsync();
+        Task<Result<PaginatedList<OrderRecordDto>>> GetStaffOrdersAsync(int pageIndex, int pageSize);
+        Task<Result> CompleteOrderAsync(int orderId);
     }
 }

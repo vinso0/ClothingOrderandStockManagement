@@ -23,7 +23,6 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
 
             ViewData["CurrentFilter"] = searchString;
 
-            // Get items for modal dropdowns
             var itemsResult = await _itemService.GetItemsAsync(1, 100, "");
             ViewBag.Items = itemsResult.Where(i => i.Quantity > 0);
 
@@ -54,7 +53,6 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             ViewData["ShowAddPackageModal"] = true;
             ViewData["AddPackageModel"] = createPackageDto;
 
-            // Get items for modal dropdowns
             var itemsResult = await _itemService.GetItemsAsync(1, 100, "");
             ViewBag.Items = itemsResult.Where(i => i.Quantity > 0);
 
@@ -76,7 +74,6 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
                 ModelState.AddModelError(string.Empty, string.Join("; ", result.Errors.Select(e => e.Message)));
             }
 
-            // On validation failure, reload Index with the edit modal open
             int pageIndex = 1;
             int pageSize = 5;
             var packagesResult = await _packageService.GetPackagesAsync("", pageIndex, pageSize);
@@ -84,7 +81,6 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
             ViewData["ShowEditPackageModalId"] = updatePackageDto.PackagesId;
             ViewData["EditPackageModel"] = updatePackageDto;
 
-            // Get items for modal dropdowns
             var itemsResult = await _itemService.GetItemsAsync(1, 100, "");
             ViewBag.Items = itemsResult.Where(i => i.Quantity > 0);
 

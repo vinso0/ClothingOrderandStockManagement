@@ -20,8 +20,9 @@ namespace ClothingOrderAndStockManagement.Application
             services.AddScoped<IInventoryService, InventoryService>();
             services.AddScoped<IItemCategoryService, ItemCategoryService>();
             services.AddScoped<IReturnService, ReturnService>();
+            services.AddScoped<IReportService, ReportService>();
 
-			return services;
+            return services;
         }
     }
 }
