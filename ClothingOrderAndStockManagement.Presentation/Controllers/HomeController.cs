@@ -46,25 +46,25 @@ namespace ClothingOrderAndStockManagement.Web.Controllers
         [Authorize(Roles = "Inventory Admin")]
         public IActionResult InventoryAdmin()
         {
-            return View();
+            return RedirectToAction("Index", "Items");
         }
 
         [Authorize(Roles = "Orders Admin")]
         public IActionResult OrdersAdmin()
         {
-            return View();
+            return RedirectToAction("Index", "Customers");
         }
 
         [Authorize(Roles = "Returns Admin")]
         public IActionResult ReturnsAdmin()
         {
-            return View();
+            return RedirectToAction("Index", "Returns");
         }
 
         [Authorize(Roles = "Staff")]
         public IActionResult Staff()
         {
-            return View();
+            return RedirectToAction("Index", "Staff");
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
